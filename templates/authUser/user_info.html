@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit User Information</title>
+</head>
+<body>
+    <h1>Edit User Information</h1>
+    
+    <form method="POST" enctype="multipart/form-data">
+        {% csrf_token %}
+        
+        <!-- Edit Basic User Info -->
+        <h2>Basic Info</h2>
+        <ul>
+            <li><strong>Full Name:</strong> <input type="text" name="full_name" value="{{ user.full_name }}"></li>
+            <li><strong>Email:</strong> <input type="email" name="email" value="{{ user.email }}" readonly></li>
+            <li><strong>Phone:</strong> <input type="text" name="phone" value="{{ user.phone }}"></li>
+            <li><strong>Gender:</strong>
+                <select name="gender">
+                    <option value="male" {% if user.gender == "male" %}selected{% endif %}>Male</option>
+                    <option value="female" {% if user.gender == "female" %}selected{% endif %}>Female</option>
+                </select>
+            </li>
+        </ul>
+
+        <!-- Edit Profile Info -->
+        {% if profile %}
+        <h2>Profile Info</h2>
+        <ul>
+            {% if user.user_type == 'vet' %}
+                <li><strong>Clinic Name:</strong> <input type="text" name="clinic_name" value="{{ profile.clinic_name }}"></li>
+                <li><strong>Specialization:</strong> <input type="text" name="specialization" value="{{ profile.specialization }}"></li>
+                <li><strong>Years of Experience:</strong> <input type="number" name="experience_years" value="{{ profile.experience_years }}"></li>
+                <li><strong>License Number:</strong> <input type="text" name="license_number" value="{{ profile.license_number }}"></li>
+                <li><strong>Country:</strong> <input type="text" name="country" value="{{ profile.country }}"></li>
+                <li><strong>City:</strong> <input type="text" name="city" value="{{ profile.city }}"></li>
+                <li><strong>Address:</strong> <textarea name="address">{{ profile.address }}</textarea></li>
+            {% elif user.user_type == 'pet_owner' %}
+                <li><strong>Bio:</strong> <textarea name="bio">{{ profile.bio }}</textarea></li>
+                <li><strong>Pets Owned:</strong> <input type="number" name="pets_owned" value="{{ profile.pets_owned }}"></li>
+                <li><strong>Country:</strong> <input type="text" name="country" value="{{ profile.country }}"></li>
+                <li><strong>City:</strong> <input type="text" name="city" value="{{ profile.city }}"></li>
+                <li><strong>Address:</strong> <textarea name="address">{{ profile.address }}</textarea></li>
+            {% endif %}
+        </ul>
+        {% endif %}
+
+        <button type="submit">Save Changes</button>
+    </form>
+
+    <!-- User's Posts -->
+    <h2>Your Posts</h2>
+    {% if posts %}
+        <ul>
+            {% for post in posts %}
+            <li><strong>{{ post.title }}</strong> - {{ post.content }}</li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p>You haven't created any posts yet.</p>
+    {% endif %}
+
+    <!-- User's Comments -->
+    <h2>Your Comments</h2>
+    {% if comments %}
+        <ul>
+            {% for comment in comments %}
+            <li><strong>On Post:</strong> {{ comment.post.title }} - {{ comment.comment }}</li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p>You haven't commented on any posts yet.</p>
+    {% endif %}
+
+    <!-- User's Reply Comments -->
+    <h2>Your Reply Comments</h2>
+    {% if reply_comments %}
+        <ul>
+            {% for reply in reply_comments %}
+            <li><strong>On Comment:</strong> {{ reply.comment}} - {{ reply.reply }}</li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p>You haven't replied to any comments yet.</p>
+    {% endif %}
+
+    <a href="{% url 'authUser:logoutUser' %}">Logout</a>
+</body>
+</html>
