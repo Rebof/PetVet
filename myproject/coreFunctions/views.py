@@ -9,13 +9,21 @@ from django.utils.timesince import timesince
 
 # Create your views here.
 
-@login_required(login_url='authUser:register')  
+@login_required(login_url='authUser:register')
 def index(request):
+    # Check if the user is a vet and their profile is completed but not verified
+    if request.user.user_type == 'vet' and request.user.profile_completed and not request.user.status_verification:
+        # Redirect to a verification in progress page
+        return redirect('authUser:profile_verification_in_progress')  # Redirect to verification page
+    
+    # Normal feed logic (if the profile is verified)
     posts = Post.objects.all()
     categories = Category.objects.all()
-    context = {'posts': posts,
-               'categories': categories       
+    context = {
+        'posts': posts,
+        'categories': categories
     }
+    
     return render(request, 'coreFunctions/index.html', context)
 
 

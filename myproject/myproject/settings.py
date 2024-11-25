@@ -46,6 +46,7 @@ INSTALLED_APPS = [
     'authUser',
     'coreFunctions',
     'extensions',
+    'django_admin',
 
     #third party
     'crispy_forms',

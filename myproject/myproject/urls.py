@@ -10,7 +10,8 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path("", include("coreFunctions.urls")),
     path("user/", include("authUser.urls")),
-    path("complete-profile/", complete_profile, name="complete-profile"),  # Add the view here
+    path("django-admin/", include("django_admin.urls")),
+    path("complete-profile/", complete_profile, name="complete-profile"),
 
 ]
 

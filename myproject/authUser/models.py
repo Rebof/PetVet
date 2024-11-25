@@ -34,7 +34,7 @@ class User(AbstractUser):
     email = models.EmailField(unique=True)
     phone = models.CharField(max_length=100, null=True, blank=True)
     gender = models.CharField(max_length=100, choices=GENDER, null=True, blank=True)
-
+    status_verification = models.BooleanField(default=False)
     profile_completed = models.BooleanField(default=False)  # new field added
 
     # Added user_type field to distinguish between Vet and Pet Owner
@@ -62,6 +62,7 @@ class VetProfile(models.Model):
     city = models.CharField(max_length=100, null=True, blank=True)
     address = models.CharField(max_length=1000, null=True, blank=True)
     verified = models.BooleanField(default=False)
+    status_change = models.DateTimeField(null=True, blank=True)
     # blocked = models.ManyToManyField(User, blank=True, related_name="blocked")
     slug = models.SlugField(max_length=200, unique=True, blank=True)  # Add slug field
 
@@ -104,7 +105,7 @@ class PetOwnerProfile(models.Model):
         super(PetOwnerProfile, self).save(*args, **kwargs)  # Call the original save method
 
     def __str__(self):
-        return str(self.full_name if self.full_name else self.user.username)
+        return str(self.user.username)
 
 
 # Signal to create appropriate profile based on user_type

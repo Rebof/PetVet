@@ -48,7 +48,7 @@ def RegisterView(request):
             
             # Redirect to complete-profile if the profile is incomplete
             if not user.profile_completed:  # Assume `profile_complete` is a boolean field in the user model
-                return redirect("authUser:complete-profile")
+                return redirect("complete-profile")
 
             return redirect("coreFunctions:feed")
         else:
@@ -130,6 +130,11 @@ def user_info(request):
     return render(request, 'authUser/user_info.html', context)
 
 
+from django.shortcuts import render, redirect
+from django.contrib import messages
+from .forms import VetProfileForm, PetOwnerProfileForm
+from .models import VetProfile, PetOwnerProfile
+
 def complete_profile(request):
     # Determine which profile and form to use based on user type
     if request.user.user_type == 'vet':
@@ -150,9 +155,25 @@ def complete_profile(request):
             request.user.profile_completed = True
             request.user.save()
             messages.success(request, "Your profile has been completed successfully.")
-            return redirect('/')
+            
+            # Redirect to verification progress if vet profile is not verified yet
+            if request.user.status_verification is False:
+                return redirect('authUser:profile_verification_in_progress')  # Redirect to verification progress page
+
+            return redirect('/')  # Redirect to home page if everything is fine
     else:
         form = FormClass(instance=profile)
 
-    print("yeta samma ugyo")
     return render(request, 'authUser/profile.html', {'form': form})
+
+
+def profile_verification_in_progress(request):
+    # Check if the user is a vet and their profile is completed but not verified yet
+    if request.user.user_type == 'vet' and request.user.profile_completed and not request.user.status_verification:
+        return render(request, 'authUser/profile_verification_in_progress.html')
+    # If the profile is verified, redirect to the feed page
+    elif request.user.user_type == 'vet' and request.user.status_verification:
+        return redirect("coreFunctions:feed")
+    else:
+        # If the user is not a vet or verification is not needed
+        return redirect("coreFunctions:feed")
