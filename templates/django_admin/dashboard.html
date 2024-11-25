@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .logout-btn { float: right; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background-color: #f4f4f4; }
+        .btn-container { display: flex; gap: 10px; }
+        .action-box { padding: 10px; text-align: center; border-radius: 5px; }
+        .btn-approve { background-color: #4CAF50; color: white; border: none; text-decoration: none; display: block; }
+        .btn-decline { background-color: #f44336; color: white; border: none; text-decoration: none; display: block; }
+        .action-box-approve { background-color: #e8f5e9; border: 1px solid #4CAF50; }
+        .action-box-decline { background-color: #ffebee; border: 1px solid #f44336; }
+        .action-box:hover { box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); }
+    </style>
+</head>
+<body>
+    <h1>Welcome, {{ admin_user.username }}</h1>
+    <a href="{% url 'django_admin:admin_logout' %}" class="logout-btn">Logout</a>
+
+    <h2>Pending Vet Approvals</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Vet Name</th>
+                <th>Email</th>
+                <th>Clinic Name</th>
+                <th>Requested At</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for vet in pending_vets %}
+            <tr>
+                <td>{{ vet.user.full_name }}</td>
+                <td>{{ vet.user.email }}</td>
+                <td>{{ vet.clinic_name }}</td>
+                <td>{{ vet.date }}</td>
+                <td>
+                    <div class="btn-container">
+                        <div class="action-box action-box-approve">
+                            <a href="{% url 'django_admin:approve_vet' vet.id %}" class="btn-approve">Approve</a>
+                        </div>
+                        <div class="action-box action-box-decline">
+                            <a href="{% url 'django_admin:decline_vet' vet.id %}" class="btn-decline">Decline</a>
+                        </div>
+                    </div>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="5">No pending requests.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <h2>Recently Approved Vets</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Vet Name</th>
+                <th>Email</th>
+                <th>Clinic Name</th>
+                <th>Approved At</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for vet in recently_approved_vets %}
+            <tr>
+                <td>{{ vet.user.full_name }}</td>
+                <td>{{ vet.user.email }}</td>
+                <td>{{ vet.clinic_name }}</td>
+                <td>{{ vet.user.date_joined }}</td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="4">No recent approvals.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <h2>Recently Declined Vets</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Vet Name</th>
+                <th>Email</th>
+                <th>Clinic Name</th>
+                <th>Declined At</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for vet in recently_declined_vets %}
+            <tr>
+                <td>{{ vet.user.full_name }}</td>
+                <td>{{ vet.user.email }}</td>
+                <td>{{ vet.clinic_name }}</td>
+                <td>{{ vet.date }}</td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="4">No recent declines.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</body>
+</html>
