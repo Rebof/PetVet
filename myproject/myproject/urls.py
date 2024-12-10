@@ -12,6 +12,8 @@ urlpatterns = [
     path("user/", include("authUser.urls")),
     path("django-admin/", include("django_admin.urls")),
     path("complete-profile/", complete_profile, name="complete-profile"),
+    path("appointment/", include("appointment.urls")),
+    # path('verify-otp/', VerifyOTPView, name='verify-otp'), 
 
 ]
 

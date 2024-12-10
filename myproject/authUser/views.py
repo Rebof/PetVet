@@ -6,9 +6,8 @@ from .models import VetProfile, PetOwnerProfile
 from django.contrib.auth.decorators import login_required
 from django.urls import reverse
 from coreFunctions.models import Post, Comment, ReplyComment
-
-
-
+import random
+from django.core.mail import send_mail
 
 
 def RegisterView(request):
@@ -22,11 +21,25 @@ def RegisterView(request):
         # Save the new user
         user = form.save(commit=False)
         user.set_password(form.cleaned_data.get("password1"))
+        user.otp = str(random.randint(100000, 999999))
         user.save()
 
         full_name = form.cleaned_data.get("full_name")
         email = form.cleaned_data.get("email")
         user_type = form.cleaned_data.get("user_type")
+
+         # Send OTP email for pet_owner users
+        if user_type == "pet_owner":
+            subject = "Your OTP for Verification"
+            message = f"Hi {full_name},\n\nYour OTP for verification is: {user.otp}.\nPlease enter this OTP to complete your registration."
+            send_mail(
+                subject,
+                message,
+                'no-reply@example.com', 
+                [email],
+                fail_silently=False,
+            )
+            messages.info(request, "An OTP has been sent to your email. Please verify to proceed.")
 
         # Authenticate the user
         user = authenticate(email=email, password=form.cleaned_data.get("password1"))
@@ -56,6 +69,22 @@ def RegisterView(request):
 
     context = {'form': form}
     return render(request, "authUser/register.html", context)
+
+
+
+# def VerifyOTPView(request):
+#     if request.method == "POST":
+#         entered_otp = request.POST.get("otp")
+#         if request.user.otp == entered_otp:
+#             request.user.status_verification = True
+#             request.user.otp = ""  # Clear OTP after successful verification
+#             request.user.save()
+#             messages.success(request, "Your account has been verified successfully!")
+#             return redirect("complete-profile")
+#         else:
+#             messages.error(request, "Invalid OTP. Please try again.")
+    
+#     return render(request, "authUser/verify_otp.html")
 
 
 
@@ -158,7 +187,7 @@ def complete_profile(request):
             
             # Redirect to verification progress if vet profile is not verified yet
             if request.user.status_verification is False:
-                return redirect('authUser:profile_verification_in_progress')  # Redirect to verification progress page
+                return redirect('authUser:profile_verification_in_progress')
 
             return redirect('/')  # Redirect to home page if everything is fine
     else:
@@ -171,9 +200,31 @@ def profile_verification_in_progress(request):
     # Check if the user is a vet and their profile is completed but not verified yet
     if request.user.user_type == 'vet' and request.user.profile_completed and not request.user.status_verification:
         return render(request, 'authUser/profile_verification_in_progress.html')
+    elif request.user.user_type == 'pet_owner' and request.user.profile_completed and not request.user.status_verification:
+        return render(request, 'authUser/verify_otp.html')
     # If the profile is verified, redirect to the feed page
     elif request.user.user_type == 'vet' and request.user.status_verification:
         return redirect("coreFunctions:feed")
     else:
         # If the user is not a vet or verification is not needed
         return redirect("coreFunctions:feed")
+    
+
+def verify_otp(request):
+    if request.method == 'POST':
+        entered_otp = request.POST.get('otp')
+
+        # Compare the entered OTP with the OTP in the user model
+        if request.user.otp == entered_otp:
+            # OTP is correct, update the user's verification status
+            request.user.status_verification = True
+            request.user.otp = ""  # Clear OTP after successful verification
+            request.user.save()
+            messages.success(request, "Your email has been verified successfully!")
+            return redirect('coreFunctions:feed')  # Redirect to the feed page
+        else:
+            messages.error(request, "Invalid OTP. Please try again.")
+    
+    # If the request is not POST, render the OTP verification page
+    return render(request, 'authUser/verify_otp.html')
+    

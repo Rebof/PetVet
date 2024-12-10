@@ -63,17 +63,14 @@ def decline_vet(request, vet_id):
     # Get the VetProfile object (which is related to the User)
     vet_profile = get_object_or_404(VetProfile, id=vet_id)
     
-    # Update the profile_completed field in the related User model
     vet_profile.user.profile_completed = False  # Set profile_completed to False in the User model
     vet_profile.user.save()  # Save the User model with updated field
     
-    # Update the VetProfile status change time
     vet_profile.status_change = now()  # Track the time of the decline action
     
     # Save the changes to the VetProfile
     vet_profile.save()
 
-    # Optionally, delete the VetProfile if required
     #vet_profile.delete()  # Delete the VetProfile record
     
     return redirect('django_admin:admin_dashboard')

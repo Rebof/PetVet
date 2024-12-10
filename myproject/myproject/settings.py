@@ -47,11 +47,13 @@ INSTALLED_APPS = [
     'coreFunctions',
     'extensions',
     'django_admin',
+    'appointment',
 
     #third party
     'crispy_forms',
     'taggit',
     'import_export',
+    'verify_email.apps.VerifyEmailConfig',
 ]
 
 MIDDLEWARE = [
@@ -206,3 +208,14 @@ JAZZMIN_UI_TWEAKS = {
         "success": "btn-success"
     }
 }
+
+
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = 'rebofrebok@gmail.com'
+EMAIL_HOST_PASSWORD = 'lxvs lnjo rwpv pdkn'
+
+EXPIRE_AFTER = '1d'  
+MAX_RETRIES = 3  
