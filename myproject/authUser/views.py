@@ -18,7 +18,6 @@ def RegisterView(request):
     form = UserRegistrationForm(request.POST or None)
 
     if form.is_valid():
-        # Save the new user
         user = form.save(commit=False)
         user.set_password(form.cleaned_data.get("password1"))
         user.otp = str(random.randint(100000, 999999))
@@ -41,7 +40,7 @@ def RegisterView(request):
             )
             messages.info(request, "An OTP has been sent to your email. Please verify to proceed.")
 
-        # Authenticate the user
+        
         user = authenticate(email=email, password=form.cleaned_data.get("password1"))
 
         if user is not None:
@@ -60,7 +59,7 @@ def RegisterView(request):
             messages.success(request, f"Hi {full_name}, your account was created successfully.")
             
             # Redirect to complete-profile if the profile is incomplete
-            if not user.profile_completed:  # Assume `profile_complete` is a boolean field in the user model
+            if not user.profile_completed:  
                 return redirect("complete-profile")
 
             return redirect("coreFunctions:feed")
@@ -69,23 +68,6 @@ def RegisterView(request):
 
     context = {'form': form}
     return render(request, "authUser/register.html", context)
-
-
-
-# def VerifyOTPView(request):
-#     if request.method == "POST":
-#         entered_otp = request.POST.get("otp")
-#         if request.user.otp == entered_otp:
-#             request.user.status_verification = True
-#             request.user.otp = ""  # Clear OTP after successful verification
-#             request.user.save()
-#             messages.success(request, "Your account has been verified successfully!")
-#             return redirect("complete-profile")
-#         else:
-#             messages.error(request, "Invalid OTP. Please try again.")
-    
-#     return render(request, "authUser/verify_otp.html")
-
 
 
 def LoginView(request):
@@ -105,7 +87,7 @@ def LoginView(request):
             messages.success(request, "You are logged in")
             
             # Redirect to complete-profile if the profile is incomplete
-            if not user.profile_completed:  # Assume `profile_complete` is a boolean field in the user model
+            if not user.profile_completed: 
                 print("redirect bhayo")
                 return redirect("complete-profile")
             
@@ -133,22 +115,18 @@ def user_info(request):
     # Fetch posts created by the user
     posts = Post.objects.filter(user=user)
 
-    # Fetch comments made by the user
     comments = Comment.objects.filter(user=user)
 
-    # Fetch reply comments made by the user
     reply_comments = ReplyComment.objects.filter(user=user)
 
-    # Prepare context for rendering the template
     context = {
         'user': user,
         'profile': None,
-        'posts': posts,  # Updated key for posts
-        'comments': comments,  # Updated key for comments
-        'reply_comments': reply_comments,  # Updated key for reply comments
+        'posts': posts,  
+        'comments': comments,  
+        'reply_comments': reply_comments,  
     }
 
-    # Determine user profile type and retrieve profile data
     if user.user_type == 'vet':
         profile = VetProfile.objects.get(user=user)
         context['profile'] = profile
@@ -165,7 +143,7 @@ from .forms import VetProfileForm, PetOwnerProfileForm
 from .models import VetProfile, PetOwnerProfile
 
 def complete_profile(request):
-    # Determine which profile and form to use based on user type
+
     if request.user.user_type == 'vet':
         profile = VetProfile.objects.get(user=request.user)
         FormClass = VetProfileForm
@@ -173,9 +151,8 @@ def complete_profile(request):
         profile = PetOwnerProfile.objects.get(user=request.user)
         FormClass = PetOwnerProfileForm
     else:
-        return redirect('/')  # Redirect for invalid user type
-
-    # Handle form submission
+        return redirect('/') 
+    
     if request.method == 'POST':
         form = FormClass(request.POST, request.FILES, instance=profile)
         if form.is_valid():
@@ -185,11 +162,10 @@ def complete_profile(request):
             request.user.save()
             messages.success(request, "Your profile has been completed successfully.")
             
-            # Redirect to verification progress if vet profile is not verified yet
             if request.user.status_verification is False:
                 return redirect('authUser:profile_verification_in_progress')
 
-            return redirect('/')  # Redirect to home page if everything is fine
+            return redirect('/')  
     else:
         form = FormClass(instance=profile)
 
@@ -214,17 +190,16 @@ def verify_otp(request):
     if request.method == 'POST':
         entered_otp = request.POST.get('otp')
 
-        # Compare the entered OTP with the OTP in the user model
+        # Compare the entered OTPs
         if request.user.otp == entered_otp:
-            # OTP is correct, update the user's verification status
             request.user.status_verification = True
-            request.user.otp = ""  # Clear OTP after successful verification
+            request.user.otp = ""  # Clear OTP 
             request.user.save()
             messages.success(request, "Your email has been verified successfully!")
-            return redirect('coreFunctions:feed')  # Redirect to the feed page
+            return redirect('coreFunctions:feed')  
         else:
             messages.error(request, "Invalid OTP. Please try again.")
     
-    # If the request is not POST, render the OTP verification page
+    
     return render(request, 'authUser/verify_otp.html')
     

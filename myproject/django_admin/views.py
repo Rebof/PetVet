@@ -14,7 +14,7 @@ def admin_login(request):
         if user is not None:
             login(request, user)
             messages.success(request, "Login successful!")
-            return redirect('django_admin:admin_dashboard')  # Redirect to the admin dashboard or homepage
+            return redirect('django_admin:admin_dashboard') 
         else:
             messages.error(request, "Invalid email or password")
     return render(request, 'django_admin/login.html')
@@ -60,15 +60,14 @@ def approve_vet(request, vet_id):
     return redirect('django_admin:admin_dashboard')
 
 def decline_vet(request, vet_id):
-    # Get the VetProfile object (which is related to the User)
+    
     vet_profile = get_object_or_404(VetProfile, id=vet_id)
     
     vet_profile.user.profile_completed = False  # Set profile_completed to False in the User model
-    vet_profile.user.save()  # Save the User model with updated field
+    vet_profile.user.save()  
     
     vet_profile.status_change = now()  # Track the time of the decline action
     
-    # Save the changes to the VetProfile
     vet_profile.save()
 
     #vet_profile.delete()  # Delete the VetProfile record

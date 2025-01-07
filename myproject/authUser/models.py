@@ -35,9 +35,9 @@ class User(AbstractUser):
     phone = models.CharField(max_length=100, null=True, blank=True)
     gender = models.CharField(max_length=100, choices=GENDER, null=True, blank=True)
     status_verification = models.BooleanField(default=False)
-    profile_completed = models.BooleanField(default=False)  # new field added
+    profile_completed = models.BooleanField(default=False)  
 
-    # Added user_type field to distinguish between Vet and Pet Owner
+    
     user_type = models.CharField(max_length=20, choices=USER_TYPE_CHOICES, default='pet_owner')
     
     otp = models.CharField(max_length=100, null=True, blank=True)
@@ -69,10 +69,10 @@ class VetProfile(models.Model):
     date = models.DateTimeField(auto_now_add=True, null=True, blank=True)
 
     def save(self, *args, **kwargs):
-        if self.slug == "" or self.slug is None:  # Check if slug is empty or None
+        if self.slug == "" or self.slug is None: 
             uuid_key = shortuuid.uuid()  # Generate a short UUID
             uniqueid = uuid_key[:2]  # Get the first 2 characters of the UUID
-            self.slug = slugify(self.user.full_name) + '.' + str(uniqueid.lower())  # Create slug
+            self.slug = slugify(self.user.full_name) + '.' + str(uniqueid.lower())  
         super(VetProfile, self).save(*args, **kwargs)  # Call the original save method
 
 
@@ -85,7 +85,7 @@ class PetOwnerProfile(models.Model):
     pid = ShortUUIDField(length=7, max_length=25, alphabet="abcdefghijklmnopqrstuvxyz123")
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     bio = models.CharField(max_length=100, null=True, blank=True)
-    pets_owned = models.IntegerField(null=True, blank=True)  # Number of pets
+    pets_owned = models.IntegerField(null=True, blank=True)  
     human_image = models.ImageField(upload_to=user_directory_path, default="default.jpg", null=True, blank=True)
     pet_image = models.ImageField(upload_to=user_directory_path, default="default.jpg", null=True, blank=True)
     country = models.CharField(max_length=100, null=True, blank=True)
@@ -94,7 +94,7 @@ class PetOwnerProfile(models.Model):
     # blocked = models.ManyToManyField(User, blank=True, related_name="blocked")
     date = models.DateTimeField(auto_now_add=True, null=True, blank=True)
     verified = models.BooleanField(default=False)
-    slug = models.SlugField(max_length=200, unique=True, blank=True)  # Add slug field
+    slug = models.SlugField(max_length=200, unique=True, blank=True)
 
 
     def save(self, *args, **kwargs):

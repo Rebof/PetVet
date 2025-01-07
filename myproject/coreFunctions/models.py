@@ -25,7 +25,7 @@ class Category(models.Model):
 class Post(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     title = models.CharField(max_length=100)
-    body = models.TextField(blank=True, null=True)  # Body/content of the post
+    body = models.TextField(blank=True, null=True) 
     image = models.ImageField(upload_to=user_directory_path, blank=True, null=True)
     video = models.FileField(upload_to=user_directory_path, blank=True, null=True)
     pid = ShortUUIDField(length=7, max_length=25, alphabet='abcdefgijklmnopqrstuvwxyz')
