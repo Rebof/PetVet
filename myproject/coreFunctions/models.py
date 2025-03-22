@@ -83,3 +83,16 @@ class ReplyComment(models.Model):
         verbose_name = 'Reply Comment'
         verbose_name_plural = 'Reply Comments'
 
+
+class ChatMessage(models.Model):
+    user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name="chat_user")
+    sender = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name="sender")
+    receiver = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name="receiver")
+
+    message = models.CharField(max_length=1000)
+    is_read = models.BooleanField(default=False)
+    date = models.DateTimeField(auto_now_add=True)
+    mid = ShortUUIDField(length=7, max_length=25, alphabet='abcdefghijklmnopqrstuvwxyz')
+
+    # def __str__(self):
+    #     return self.sender

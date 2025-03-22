@@ -15,5 +15,12 @@ urlpatterns = [
 
     path("comment-reply/", views.comment_reply, name="comment-reply"),
 
+    # path("chat/inbox/", views.inbox_detail, name="inbox_detail"),
+    # path("chat/inbox/<str:username>/", views.inbox_details, name="inbox_details"),
+
+    path('inbox/', views.inbox_details, name='inbox'),
+    path('inbox/<str:username>/', views.inbox_details, name='inbox_details'),
+
+
 
 ]

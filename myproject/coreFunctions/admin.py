@@ -1,5 +1,5 @@
 from django.contrib import admin
-from coreFunctions.models import Post, Category, Comment, ReplyComment
+from coreFunctions.models import Post, Category, Comment, ReplyComment, ChatMessage
 # Register your models here.
 
 
@@ -16,6 +16,11 @@ class CategoryAdmin(admin.ModelAdmin):
 
 admin.site.register(Category, CategoryAdmin)
 
+class ChatMessageAdmin(admin.ModelAdmin):
+    list_editable = ['message']
+    list_display = ['sender', 'receiver', 'message', 'is_read']
+
+admin.site.register(ChatMessage, ChatMessageAdmin)
 
 admin.site.register(Comment)
 admin.site.register(ReplyComment)
