@@ -28,7 +28,13 @@ DEBUG = True
 
 ALLOWED_HOSTS = []
 
+ASGI_APPLICATION = 'myproject.asgi.application'
 
+CHANNEL_LAYER = {
+    'default':{
+        'BACKEND': 'channels.layers.InMemoryChannelLayer'
+    }
+}
 # Application definition
 
 INSTALLED_APPS = [
@@ -54,6 +60,7 @@ INSTALLED_APPS = [
     'taggit',
     'import_export',
     'verify_email.apps.VerifyEmailConfig',
+    'channels'
 ]
 
 MIDDLEWARE = [
