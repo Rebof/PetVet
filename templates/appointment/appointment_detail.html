@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Appointment Details</title>
+</head>
+<body>
+    <h1>Appointment Details</h1>
+    
+    <p><strong>Pet Owner:</strong> {{ appointment.pet_owner.user.full_name }}</p>
+    <p><strong>Vet:</strong> Dr. {{ appointment.vet.user.full_name }}</p>
+    <p><strong>Schedule:</strong> {{ appointment.schedule.day_of_week }} - {{ appointment.schedule.start_time }} to {{ appointment.schedule.end_time }}</p>
+    <p><strong>Reason:</strong> {{ appointment.reason }}</p>
+    <p><strong>Status:</strong> {{ appointment.status }}</p>
+
+    <br><br>
+    <a href="{% url 'appointment:vet_schedule' appointment.vet.id %}">Back to Vet's Schedule</a>
+
+    {% if appointment.status == 'pending' %}
+        <!-- Optionally add a button to cancel the appointment -->
+        <a href="{% url 'appointment:cancel_appointment' appointment.id %}">
+            <button>Cancel Appointment</button>
+        </a>
+    {% endif %}
+</body>
+</html>

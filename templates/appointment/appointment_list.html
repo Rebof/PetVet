@@ -1,0 +1,18 @@
+
+
+{% block content %}
+<h2>My Appointments</h2>
+<ul>
+    {% for appointment in appointments %}
+        <li>
+            <a href="{% url 'appointment:appointment_detail' appointment.id %}">
+                Appointment with {{ appointment.vet.user.full_name }} - 
+                {{ appointment.schedule.day_of_week }} 
+                ({{ appointment.schedule.start_time }} - {{ appointment.schedule.end_time }})
+            </a>
+        </li>
+    {% empty %}
+        <p>No appointments found.</p>
+    {% endfor %}
+</ul>
+{% endblock %}

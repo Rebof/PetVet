@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pending Appointment Requests</title>
+</head>
+<body>
+    <h1>Pending Appointment Requests for Dr. {{ vet.user.full_name }}</h1>
+
+    {% if pending_appointments %}
+        <ul>
+            {% for appointment in pending_appointments %}
+                <li>
+                    <p><strong>Pet Owner:</strong> {{ appointment.pet_owner.user.full_name }}</p>
+                    <p><strong>Reason:</strong> {{ appointment.reason }}</p>
+                    <p><strong>Requested Time:</strong> {{ appointment.schedule.start_time }} - {{ appointment.schedule.end_time }}</p>
+                    
+                    <form method="POST" action="{% url 'appointment:accept_appointment' appointment.id %}">
+                        {% csrf_token %}
+                        <button type="submit">Accept</button>
+                    </form>
+
+                    <form method="POST" action="{% url 'appointment:reject_appointment' appointment.id %}">
+                        {% csrf_token %}
+                        <button type="submit">Reject</button>
+                    </form>
+                </li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p>No pending appointments</p>
+    {% endif %}
+</body>
+</html>

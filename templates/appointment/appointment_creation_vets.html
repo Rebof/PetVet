@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add Vet Schedule</title>
+</head>
+<body>
+    <h1>Add New Vet Schedule</h1>
+    <form method="POST">
+        {% csrf_token %}
+        
+        <label for="day_of_week">Day of the Week:</label>
+        <select name="day_of_week" id="day_of_week" required>
+            <option value="Monday">Monday</option>
+            <option value="Tuesday">Tuesday</option>
+            <option value="Wednesday">Wednesday</option>
+            <option value="Thursday">Thursday</option>
+            <option value="Friday">Friday</option>
+            <option value="Saturday">Saturday</option>
+            <option value="Sunday">Sunday</option>
+        </select><br>
+
+        <label for="start_time">Start Time:</label>
+        <input type="time" name="start_time" id="start_time" required><br>
+
+        <label for="end_time">End Time:</label>
+        <input type="time" name="end_time" id="end_time" required><br>
+
+        <label for="available">Available:</label>
+        <input type="checkbox" name="available" id="available" checked><br>
+
+        <button type="submit">Save Schedule</button>
+    </form>
+
+    <a href="{% url 'appointment:vet_schedule' vet.id %}">Back to Schedule List</a>
+</body>
+</html>

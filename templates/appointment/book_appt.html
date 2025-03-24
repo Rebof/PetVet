@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Book Appointment</title>
+</head>
+<body>
+    <h1>Book an Appointment with Dr. {{ vet.user.full_name }}</h1>
+
+    <p>Schedule: {{ schedule.day_of_week }} - {{ schedule.start_time }} to {{ schedule.end_time }}</p>
+
+    <!-- Appointment Form -->
+    {% if error %}
+    <p style="color: red;">{{ error }}</p>
+{% else %}
+    <form method="POST">
+        {% csrf_token %}
+        <label for="reason">Reason:</label>
+        <textarea name="reason" required></textarea>
+        <button type="submit">Book Appointment</button>
+    </form>
+{% endif %}
+
+
+    <br><br>
+    <a href="{% url 'appointment:vet_schedule' vet.id %}">Back to Schedule</a>
+
+</body>
+</html>

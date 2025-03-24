@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Accepted Appointments</title>
+</head>
+<body>
+    <h1>Accepted Appointments for Dr. {{ vet.user.full_name }}</h1>
+
+    {% if accepted_appointments %}
+        <ul>
+            {% for appointment in accepted_appointments %}
+                <li>
+                    <p><strong>Pet Owner:</strong> {{ appointment.pet_owner.user.full_name }}</p>
+                    <p><strong>Reason:</strong> {{ appointment.reason }}</p>
+                    <p><strong>Scheduled Time:</strong> {{ appointment.schedule.start_time }} - {{ appointment.schedule.end_time }}</p>
+                    <p><strong>Status:</strong> {{ appointment.get_status_display }}</p>
+
+                    <!-- Checkbox Form -->
+                    <form method="POST" action="{% url 'appointment:mark_completed' appointment.id %}">
+                        {% csrf_token %}
+                        <label>
+                            <input type="checkbox" name="completed" onchange="this.form.submit()"> Mark as Completed
+                        </label>
+                    </form>
+                </li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p>No accepted appointments</p>
+    {% endif %}
+</body>
+</html>

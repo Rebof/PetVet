@@ -230,8 +230,19 @@
                 <div class="footer-links">
                     <a href="#">About</a>
                     <a href="#">Contact Us </a>
+                    {% if request.user.vetprofile %}
+        <!-- Vet related links -->
+        <a href="{% url 'appointment:vet_pending_appointments' vet_id=request.user.vetprofile.id %}">Pending Appointments</a>
+        <a href="{% url 'appointment:vet_accepted_appointments' vet_id=request.user.vetprofile.id %}">Accepted Appointments</a>
+        <a href="{% url 'appointment:vet_schedule' vet_id=request.user.vetprofile.id %}">My Schedule</a>
+        <a href="{% url 'appointment:add_schedule' %}">Add Schedule</a>
+        
+    {% elif request.user.petownerprofile %}
+        <!-- Pet owner related links -->
+        <a href="{% url 'appointment:vet_list' %}">Vets</a> <!-- Example, replace with actual data -->
+        <a href="{% url 'appointment:appointment_list' %}">My Appointment</a> <!-- Example, replace with actual data -->
+    {% endif %}
                 </div>
-
             </div>
 
             <!-- sidebar overly for mobile -->
