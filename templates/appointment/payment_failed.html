@@ -1,0 +1,16 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container">
+    <h2>Payment Failed</h2>
+    <div class="alert alert-danger">
+        <p>There was an issue processing your payment for the appointment with Dr. {{ appointment.vet.user.username }}.</p>
+    </div>
+    
+    <p>Please try again or contact support if the problem persists.</p>
+    
+    <a href="{% url 'appointment:initiate_khalti_payment' appointment.id %}" class="btn btn-primary">
+        Try Payment Again
+    </a>
+</div>
+{% endblock %}

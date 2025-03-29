@@ -1,0 +1,17 @@
+
+
+{% block content %}
+<div class="container">
+    <h2>Payment Successful</h2>
+    <div class="alert alert-success">
+        <p>Your payment for the appointment with Dr. {{ appointment.vet.user.username }} has been received.</p>
+        <p>Amount: NPR {{ appointment.amount_paid }}</p>
+    </div>
+    
+    <p>The vet will now review your appointment request. You'll be notified once they accept or reject it.</p>
+    
+    <a href="{% url 'appointment:appointment_detail' appointment.id %}" class="btn btn-primary">
+        View Appointment Details
+    </a>
+</div>
+{% endblock %}

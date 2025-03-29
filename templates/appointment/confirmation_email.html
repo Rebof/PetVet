@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+<body>
+    <h2>Appointment Confirmed</h2>
+    <p>Dear {{ appointment.pet_owner.user.username }},</p>
+    
+    <p>Your appointment with Dr. {{ appointment.vet.user.username }} has been confirmed.</p>
+    
+    <p><strong>Details:</strong></p>
+    <ul>
+        <li>Date: {{ appointment.schedule.day_of_week }}</li>
+        <li>Time: {{ appointment.schedule.start_time }}</li>
+        <li>Reason: {{ appointment.reason }}</li>
+    </ul>
+    
+    <p>Thank you for choosing our clinic!</p>
+    
+    <p>Best regards,<br>
+    Vet Clinic Team</p>
+</body>
+</html>
