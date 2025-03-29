@@ -4,6 +4,7 @@ from django.urls import path, include
 from django.conf.urls.static import static
 from django.conf import settings
 from authUser.views import complete_profile
+from coreFunctions.routing import websocket_urlpatterns
 
 
 urlpatterns = [
@@ -14,6 +15,9 @@ urlpatterns = [
     path("complete-profile/", complete_profile, name="complete-profile"),
     path("appointment/", include("appointment.urls")),
     # path('verify-otp/', VerifyOTPView, name='verify-otp'), 
+
+    path("ws/", include(websocket_urlpatterns)),
+
 
 ]
 

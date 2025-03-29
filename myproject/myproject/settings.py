@@ -30,7 +30,7 @@ ALLOWED_HOSTS = []
 
 ASGI_APPLICATION = 'myproject.asgi.application'
 
-CHANNEL_LAYER = {
+CHANNEL_LAYERS = {
     'default':{
         'BACKEND': 'channels.layers.InMemoryChannelLayer'
     }

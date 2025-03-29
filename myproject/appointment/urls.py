@@ -22,4 +22,20 @@ urlpatterns = [
 
     path("appointments/<int:appointment_id>/complete/", views.mark_completed, name="mark_completed"),
 
+    # path("appointments/testing/", views.open_test , name="open_test"),
+
+
+
+    # path('verify-payment/<int:appointment_id>/', views.verify_payment, name='verify_payment'),
+
+    # path('verify/<str:appointment_id>/', views.verify_payment, name='verify_payment'),
+
+    path('book/<int:vet_id>/schedule/<int:schedule_id>/', views.book_appointment, name='book_appointment'),
+
+
+    path('payment/khalti/<int:appointment_id>/', views.initiate_khalti_payment, name='initiate_khalti_payment'),
+    path('verify_khalti/<int:appointment_id>/', views.verify_khalti_payment, name='verify_khalti_payment'),
+    path('payment/success/<int:appointment_id>/', views.payment_success, name='payment_success'),
+    path('payment/failed/<int:appointment_id>/', views.payment_failed, name='payment_failed'),
+
 ]

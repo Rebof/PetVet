@@ -31,10 +31,20 @@ class VetSchedule(models.Model):
 
 class Appointment(models.Model):
     STATUS_CHOICES = [
-        ('pending', 'Pending'),
+        ('unpaid', 'Unpaid'),
+        ('paid_pending_approval', 'Paid - Pending Approval'),
         ('confirmed', 'Confirmed'),
         ('completed', 'Completed'),
-        ('cancelled', 'Cancelled')
+        ('cancelled', 'Cancelled'),
+        ('rejected', 'Rejected'),
+    ]
+    
+    PAYMENT_STATUS_CHOICES = [
+        ('unpaid', 'Unpaid'),
+        ('paid', 'Paid'),
+        ('refunded', 'Refunded'),
+        ('refund_failed', 'Refund Failed'),
+        ('failed', 'Failed'),
     ]
     
     pid = ShortUUIDField(length=7, max_length=25, alphabet="abcdefghijklmnopqrstuvxyz123")
@@ -42,7 +52,20 @@ class Appointment(models.Model):
     vet = models.ForeignKey(VetProfile, on_delete=models.CASCADE, related_name="appointments")
     schedule = models.ForeignKey(VetSchedule, on_delete=models.CASCADE, related_name="appointments")
     reason = models.TextField(null=True, blank=True)
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
+    status = models.CharField(max_length=50, choices=STATUS_CHOICES, default='pending')
+
+ 
+    payment_status = models.CharField(
+        max_length=50,
+        choices=PAYMENT_STATUS_CHOICES,
+        default='unpaid'
+    )
+    
+    pidx = models.CharField(max_length=100, blank=True, null=True)
+    amount_paid = models.PositiveIntegerField(default=0)  # in paisa
+    refund_id = models.CharField(max_length=100, blank=True, null=True)
+
+
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     

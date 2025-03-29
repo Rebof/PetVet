@@ -33,25 +33,25 @@ class ChatConsumer(WebsocketConsumer):
         data = json.loads(text_data)
         message = data.get('message')
         sender_username = data.get('sender')
-
-        try:
-            sender = User.objects.get(username=sender_username)
+        sender = User.objects.get(username=sender_username)
+        # try:
+        #     sender = User.objects.get(username=sender_username)
             
-            # Check if the sender is a Vet or Pet Owner and get their profile image
-            if VetProfile.objects.filter(user=sender).exists():
-                profile_image = VetProfile.objects.get(user=sender).vet_image.url
-            elif PetOwnerProfile.objects.filter(user=sender).exists():
-                profile_image = PetOwnerProfile.objects.get(user=sender).human_image.url
-            else:
-                profile_image = ''  # Default or empty if no profile found
+        #     # Check if the sender is a Vet or Pet Owner and get their profile image
+        #     if VetProfile.objects.filter(user=sender).exists():
+        #         profile_image = VetProfile.objects.get(user=sender).vet_image.url
+        #     elif PetOwnerProfile.objects.filter(user=sender).exists():
+        #         profile_image = PetOwnerProfile.objects.get(user=sender).human_image.url
+        #     else:
+        #         profile_image = ''  # Default or empty if no profile found
 
-        except User.DoesNotExist:
-            profile_image = ''
+        # except User.DoesNotExist:
+        #     profile_image = ''
 
-        reciever = User.objects.get(username=data['reciever'])
+        receiver = User.objects.get(username=data['receiver'])
         chat_message = ChatMessage(
             sender=sender,
-            reciever=reciever,
+            receiver=receiver,
             message=message,
         )
         chat_message.save()
@@ -62,8 +62,8 @@ class ChatConsumer(WebsocketConsumer):
                 'type': 'chat_message',
                 'message': message,
                 'sender': sender_username,
-                'profile_image': profile_image,
-                'reciever': reciever.username,
+                # 'profile_image': profile_image,
+                'receiver': receiver.username,
             }
         )
 
