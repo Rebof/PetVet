@@ -1,0 +1,86 @@
+{% load static %}
+
+{% block title %}PetFeed | PetCare Connect{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'assets/css/feed.css' %}">
+{% endblock %}
+
+<div class="gradient-bg"></div>
+
+<div class="pet-platform-container">
+    <!-- Top Navigation Bar -->
+    <nav class="pet-top-nav">
+        <div class="nav-left">
+            <div class="logo">
+                <i class="fas fa-paw"></i>
+                <span>PetVet</span>
+            </div>
+        </div>
+        
+        <div class="nav-center">
+            <div class="search-bar">
+                <i class="fas fa-search"></i>
+                <input type="text" placeholder="Search for pets, vets, or posts...">
+            </div>
+        </div>
+        
+        <div class="nav-right">
+            
+            <div class="user-profile" id="profile-menu-btn">
+                <img src="{{ user.profile_image.url }}" alt="{{ user.username }}">
+                <div class="profile-menu">
+                    <a href=""><i class="fas fa-user"></i> My Profile</a>
+                    <a href=""><i class="fas fa-cog"></i> Settings</a>
+                    <a href="{% url 'authUser:logoutUser' %}"><i class="fas fa-sign-out-alt"></i> Logout</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content Area -->
+    <div class="pet-main-content">
+        <!-- Sidebar -->
+        <aside class="pet-sidebar">
+            <div class="sidebar-section">
+                <h3>Menu</h3>
+                <ul>
+                    <li class="active"><a href="#"><i class="fas fa-home"></i> About Us</a></li>
+                    <li><a href="#"><i class="fas fa-users"></i> Changes</a></li>
+                </ul>
+            </div>
+            
+            <div class="sidebar-section">
+                <h3>My Pets</h3>
+                <ul>
+                    <li><a href="#"><i class="fas fa-dog"></i> Max (Golden Retriever)</a></li>
+                    <li><a href="#"><i class="fas fa-cat"></i> Whiskers (Siamese)</a></li>
+                    <li><a href="#"><i class="fas fa-plus-circle"></i> Add Pet</a></li>
+                </ul>
+            </div>
+            
+            <div class="sidebar-section">
+                <h3>Appointments</h3>
+                <ul>
+                    {% if request.user.vetprofile %}
+                        <li><a href="{% url 'appointment:vet_pending_appointments' vet_id=request.user.vetprofile.id %}"><i class="fas fa-clock"></i> Pending</a></li>
+                        <li><a href="{% url 'appointment:vet_accepted_appointments' vet_id=request.user.vetprofile.id %}"><i class="fas fa-check-circle"></i> Accepted</a></li>
+                        <li><a href="{% url 'appointment:vet_schedule' vet_id=request.user.vetprofile.id %}"><i class="fas fa-calendar-alt"></i> My Schedule</a></li>
+                        <li><a href="{% url 'appointment:add_schedule' %}"><i class="fas fa-check-circle"></i> Add Schedule</a></li>
+                    {% elif request.user.petownerprofile %}
+                        <li><a href="{% url 'appointment:vet_list' %}"><i class="fas fa-search"></i> Find Vets</a></li>
+                        <li><a href="{% url 'appointment:appointment_list' %}"><i class="fas fa-calendar-check"></i> My Appointments</a></li>
+                        <li><a href=""><i class="fas fa-plus"></i> Book New</a></li>
+                    {% endif %}
+                </ul>
+            </div>
+        </aside>
+
+        <!-- Feed Content -->
+        {% block content %}
+        {% endblock content %}
+    </div>
+</div>
+
+<!-- Include JavaScript -->
+<script src="{% static 'assets/js/feed.js' %}"></script>

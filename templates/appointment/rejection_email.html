@@ -7,7 +7,7 @@
     <p>We regret to inform you that your appointment with Dr. {{ appointment.vet.user.username }} has been rejected.</p>
     
     {% if appointment.payment_status == 'refunded' %}
-    <p>Your payment of NPR {{ appointment.amount_paid|divided_by:100 }} has been refunded to your original payment method.</p>
+    <p>Your payment of NPR {{ appointment.amount_paid }} has been refunded to your original payment method.</p>
     {% elif appointment.payment_status == 'refund_failed' %}
     <p>We encountered an issue processing your refund. Our team will contact you shortly to resolve this.</p>
     {% endif %}

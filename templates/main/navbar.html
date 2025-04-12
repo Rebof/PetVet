@@ -1,0 +1,19 @@
+<header>
+    <div class="navbar">
+        <a href="{% url 'coreFunctions:home' %}" class="logo">
+            <img src="https://via.placeholder.com/40" alt="PetCare Logo">
+            Pet<span>Vet</span>
+        </a>
+        <div class="nav-links">
+            <a href="{% url 'coreFunctions:home' %}">Home</a>
+            <a href="{% url 'coreFunctions:appointment' %}">Appointments</a>
+            <a href="{% url 'coreFunctions:community' %}">Community</a>
+            <a href="{% url 'coreFunctions:about' %}">About Us</a>
+            <a href="{% url 'coreFunctions:contact' %}">Contact</a>
+        </div>
+        <div class="auth-buttons">
+            <button class="btn btn-outline"><i class="fas fa-sign-in-alt"></i> Login</button>
+            <button class="btn btn-primary"><i class="fas fa-user-plus"></i> Sign Up</button>
+        </div>
+    </div>
+</header>

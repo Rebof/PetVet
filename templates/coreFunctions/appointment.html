@@ -1,0 +1,85 @@
+{% extends 'main/base.html' %}
+
+{% block title %}Appointment Process | PetCare Connect{% endblock %}
+
+{% block content %}
+<section class="hero" style="min-height: 60vh;">
+    <div class="hero-content">
+        <h1>Our Appointment Process</h1>
+        <p>Simple steps to get your pet the care they need from our certified veterinarians</p>
+        {% if not request.user.is_authenticated %}
+        <div class="hero-buttons">
+            <a href="{% url 'authUser:loginUser' %}" class="btn btn-primary">
+                <i class="fas fa-sign-in-alt"></i> Login to Book Appointment
+            </a>
+        </div>
+        {% endif %}
+    </div>
+</section>
+
+<section class="how-it-works">
+    <div class="features-container">
+        <div class="section-title">
+            <h2>How It Works</h2>
+            <p>Our streamlined appointment process</p>
+        </div>
+        
+        <div class="steps">
+            <div class="step">
+                <div class="step-number">1</div>
+                <h3>Register/Login</h3>
+                <p>Create an account or login to access our booking system. All appointments require verified accounts for security and record-keeping.</p>
+                {% if not request.user.is_authenticated %}
+                <a href="{% url 'authUser:register' %}" class="btn btn-outline" style="margin-top: 1rem;">
+                    <i class="fas fa-user-plus"></i> Register
+                </a>
+                {% endif %}
+            </div>
+            
+            <div class="step">
+                <div class="step-number">2</div>
+                <h3>Vet Selection</h3>
+                <p>Browse our certified veterinarians, read reviews, and select the professional that best fits your pet's needs.</p>
+
+            </div>
+            
+            <div class="step">
+                <div class="step-number">3</div>
+                <h3>Secure Payment</h3>
+                <p>Complete your booking with our secure payment system. We accept all major credit cards and pet insurance.</p>
+                
+            </div>
+            
+            <div class="step">
+                <div class="step-number">4</div>
+                <h3>Visit Confirmation</h3>
+                <p>Receive your appointment confirmation with all details. Our reminder system will notify you as the date approaches.</p>
+                <div class="confirmation-features" style="margin-top: 1rem;">
+                    
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="cta" style="background-color: var(--light); color: var(--dark);">
+    <div class="features-container">
+        <h2>Ready to Book Your Appointment?</h2>
+        <p>Login to access our easy booking system and get your pet the care they deserve.</p>
+        <div class="cta-buttons">
+            {% if request.user.is_authenticated %}
+                <a href="" class="btn btn-primary">
+                    <i class="fas fa-calendar-check"></i> Go to Booking
+                </a>
+            {% else %}
+                <a href="{% url 'authUser:loginUser' %}" class="btn btn-primary">
+                    <i class="fas fa-sign-in-alt"></i> Login Now
+                </a>
+                <a href="{% url 'authUser:register' %}" class="btn btn-outline">
+                    <i class="fas fa-user-plus"></i> Create Account
+                </a>
+            {% endif %}
+        </div>
+    </div>
+</section>
+{% endblock %}

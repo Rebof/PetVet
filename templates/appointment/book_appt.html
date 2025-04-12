@@ -4,27 +4,80 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Book Appointment</title>
+    <style>
+        .payment-options {
+            margin-top: 20px;
+            border-top: 1px solid #eee;
+            padding-top: 20px;
+        }
+        .payment-btn {
+            padding: 10px 15px;
+            margin: 5px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        .credit-btn {
+            background-color: #4CAF50;
+            color: white;
+        }
+        .khalti-btn {
+            background-color: #5C2D91;
+            color: white;
+        }
+        .disabled-btn {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        .error-message {
+            color: red;
+            margin-bottom: 15px;
+            padding: 10px;
+            background-color: #ffeeee;
+            border-left: 4px solid red;
+        }
+    </style>
 </head>
 <body>
     <h1>Book an Appointment with Dr. {{ vet.user.full_name }}</h1>
 
     <p>Schedule: {{ schedule.day_of_week }} - {{ schedule.start_time }} to {{ schedule.end_time }}</p>
+    <p>Appointment Fee: 1000 NPR</p>
 
-    <!-- Appointment Form -->
     {% if error %}
-    <p style="color: red;">{{ error }}</p>
-{% else %}
-    <form method="POST">
-        {% csrf_token %}
-        <label for="reason">Reason:</label>
-        <textarea name="reason" required></textarea>
-        <button type="submit">Book Appointment</button>
-    </form>
-{% endif %}
-
+        <div class="error-message">
+            {{ error }}
+        </div>
+    {% else %}
+        <form method="POST" id="appointmentForm">
+            {% csrf_token %}
+            <label for="reason">Reason:</label><br>
+            <textarea name="reason" required style="width: 100%; padding: 8px;"></textarea>
+            
+            <div class="payment-options">
+                <h3>Select Payment Method:</h3>
+                
+                <!-- Store Credit Option -->
+                <button type="submit" 
+                        formaction="{% url 'appointment:book_with_credit' vet.id schedule.id %}"
+                        class="payment-btn credit-btn {% if request.user.petownerprofile.credit_balance < 100000 %}disabled-btn{% endif %}"
+                        {% if request.user.petownerprofile.credit_balance < 100000 %}disabled{% endif %}>
+                    Pay with Store Credit 
+                    (Balance: NPR {{ request.user.petownerprofile.credit_balance|floatformat:2 }})
+                </button>
+                
+                <!-- Khalti Payment Option -->
+                <button type="submit" 
+                        formaction="{% url 'appointment:book_appointment' vet.id schedule.id %}"
+                        class="payment-btn khalti-btn">
+                    Pay with Khalti
+                </button>
+            </div>
+        </form>
+    {% endif %}
 
     <br><br>
     <a href="{% url 'appointment:vet_schedule' vet.id %}">Back to Schedule</a>
-
 </body>
 </html>
