@@ -12,15 +12,6 @@
         </div>
 
         <div class="vet-search-tools">
-            <div class="search-filter">
-                <i class="fas fa-filter"></i>
-                <select id="specialty-filter">
-                    <option value="">All Specialties</option>
-                    {% for specialty in specializations %}
-                        <option value="{{ specialty }}">{{ specialty }}</option>
-                    {% endfor %}
-                </select>
-            </div>
             <div class="search-sort">
                 <i class="fas fa-sort"></i>
                 <select id="experience-sort">
@@ -29,42 +20,51 @@
                     <option value="experience_low">Experience: Low to High</option>
                 </select>
             </div>
+            <div class="search-location">
+                <i class="fas fa-map-marker-alt"></i>
+                <input type="text" id="location-search" placeholder="Search by location...">
+            </div>
         </div>
 
         <div class="vet-grid">
             {% for vet in vets %}
-            <div class="vet-card" data-specialty="{{ vet.specialization|default:'' }}" data-experience="{{ vet.experience_years|default:0 }}">
+            <div class="vet-card" data-experience="{{ vet.experience_years|default:0 }}" data-location="{{ vet.city|default:'' }}">
                 <div class="vet-card-header">
                     <div class="vet-avatar">
                         <img src="" alt="{{ vet.user.full_name }}">
-                        <span class="availability-badge available"><i class="fas fa-check-circle"></i> Available</span>
+                        {% if vet.verified %}
+                        <span class="verification-badge"><i class="fas fa-check-circle"></i> Verified</span>
+                        {% endif %}
                     </div>
                     <div class="vet-info">
                         <h3>{{ vet.user.full_name }}</h3>
                         {% if vet.clinic_name %}
                         <p class="clinic">{{ vet.clinic_name }}</p>
                         {% endif %}
-                        {% if vet.specialization %}
-                        <p class="specialty">{{ vet.specialization }}</p>
+                        {% if vet.city %}
+                        <p class="location"><i class="fas fa-map-marker-alt"></i> {{ vet.city }}{% if vet.country %}, {{ vet.country }}{% endif %}</p>
                         {% endif %}
                         <div class="rating">
-                            <i class="fas fa-star"></i>
-                            <i class="fas fa-star"></i>
-                            <i class="fas fa-star"></i>
-                            <i class="fas fa-star"></i>
-                            <i class="fas fa-star-half-alt"></i>
-                            <span>(24 reviews)</span>
+                            {% with rating=vet.average_rating %}
+                                {% for i in "12345" %}
+                                    {% if forloop.counter <= rating|floatformat:0 %}
+                                        <i class="fas fa-star"></i>
+                                    {% elif rating|floatformat:1|slice:"-1:" == "5" and forloop.counter == rating|floatformat:0|add:1 %}
+                                        <i class="fas fa-star-half-alt"></i>
+                                    {% else %}
+                                        <i class="far fa-star"></i>
+                                    {% endif %}
+                                {% endfor %}
+                            {% endwith %}
+                            <span>{{ vet.average_rating }} ({{ vet.reviews.count }} reviews)</span>
                         </div>
                     </div>
                 </div>
                 
                 <div class="vet-card-body">
-                    {% if vet.license_number %}
-                    <div class="license-info">
-                        <i class="fas fa-id-card"></i>
-                        <span>License: {{ vet.license_number }}</span>
+                    <div class="vet-bio">
+                        <p>{{ vet.summary|default:"Experienced veterinarian dedicated to providing compassionate care for your pets. Specializing in comprehensive health services to ensure your pet's wellbeing." }}</p>
                     </div>
-                    {% endif %}
                     
                     <div class="vet-stats">
                         {% if vet.experience_years %}
@@ -73,10 +73,12 @@
                             <span>{{ vet.experience_years }} year{{ vet.experience_years|pluralize }} experience</span>
                         </div>
                         {% endif %}
+                        {% if vet.license_number %}
                         <div class="stat">
-                            <i class="fas fa-certificate"></i>
-                            <span>Verified Professional</span>
+                            <i class="fas fa-id-card"></i>
+                            <span>License: {{ vet.license_number }}</span>
                         </div>
+                        {% endif %}
                     </div>
                 </div>
                 
@@ -84,8 +86,8 @@
                     <a href="{% url 'appointment:vet_schedule' vet.id %}" class="btn btn-primary">
                         <i class="fas fa-calendar-alt"></i> Book Appointment
                     </a>
-                    <a href="#" class="btn btn-outline">
-                        <i class="fas fa-clipboard"></i> View Profile
+                    <a href="" class="btn btn-outline">
+                        <i class="fas fa-user"></i> View Profile
                     </a>
                 </div>
             </div>
@@ -136,7 +138,7 @@
         flex-wrap: wrap;
     }
     
-    .search-filter, .search-sort {
+    .search-sort, .search-location {
         display: flex;
         align-items: center;
         gap: 0.8rem;
@@ -146,17 +148,24 @@
         box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
     }
     
-    .search-filter i, .search-sort i {
+    .search-sort i, .search-location i {
         color: var(--primary);
     }
     
-    .search-filter select, .search-sort select {
+    .search-sort select, .search-location input {
         border: none;
         background: transparent;
         font-family: 'Poppins', sans-serif;
         font-size: 0.95rem;
         color: var(--text);
-        cursor: pointer;
+    }
+    
+    .search-location input {
+        width: 200px;
+    }
+    
+    .search-location input:focus, .search-sort select:focus {
+        outline: none;
     }
     
     .vet-grid {
@@ -199,7 +208,7 @@
         border: 3px solid var(--secondary);
     }
     
-    .availability-badge {
+    .verification-badge {
         position: absolute;
         bottom: -5px;
         right: -5px;
@@ -210,9 +219,6 @@
         display: flex;
         align-items: center;
         gap: 0.3rem;
-    }
-    
-    .available {
         background-color: rgba(78, 205, 196, 0.2);
         color: var(--secondary);
     }
@@ -234,11 +240,13 @@
         font-size: 0.95rem;
     }
     
-    .specialty {
-        color: var(--primary);
-        font-weight: 500;
-        margin-bottom: 0.8rem;
+    .location {
+        color: var(--text-light);
         font-size: 0.9rem;
+        margin-bottom: 0.8rem;
+        display: flex;
+        align-items: center;
+        gap: 0.3rem;
     }
     
     .rating {
@@ -258,17 +266,10 @@
         padding: 1.5rem;
     }
     
-    .license-info {
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-        font-size: 0.85rem;
+    .vet-bio p {
         color: var(--text-light);
-        margin-bottom: 1rem;
-    }
-    
-    .license-info i {
-        color: var(--secondary);
+        line-height: 1.6;
+        margin-bottom: 1.5rem;
     }
     
     .vet-stats {
@@ -297,6 +298,42 @@
         background-color: rgba(247, 255, 247, 0.5);
     }
     
+    .btn {
+        padding: 0.6rem 1.2rem;
+        border-radius: 50px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 0.9rem;
+        text-decoration: none;
+        border: none;
+    }
+    
+    .btn-primary {
+        background-color: var(--primary);
+        color: rgb(9, 9, 9);
+        box-shadow: 0 4px 15px rgba(255, 107, 107, 0.3);
+    }
+    
+    .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(255, 107, 107, 0.4);
+    }
+    
+    .btn-outline {
+        background-color: transparent;
+        border: 2px solid var(--primary);
+        color: var(--primary);
+    }
+    
+    .btn-outline:hover {
+        background-color: var(--primary);
+        color: rgb(173, 94, 94);
+    }
+    
     .no-results {
         grid-column: 1 / -1;
         text-align: center;
@@ -314,42 +351,6 @@
         margin-bottom: 0.5rem;
     }
     
-    /* Buttons (consistent with your existing style) */
-    .btn {
-        padding: 0.6rem 1.2rem;
-        border-radius: 50px;
-        font-weight: 600;
-        cursor: pointer;
-        border: none;
-        transition: all 0.3s ease;
-        display: inline-flex;
-        align-items: center;
-        gap: 0.5rem;
-        font-size: 0.9rem;
-    }
-    
-    .btn-primary {
-        background-color: var(--primary);
-        color: white;
-        box-shadow: 0 4px 15px rgba(255, 107, 107, 0.3);
-    }
-    
-    .btn-primary:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 6px 20px rgba(255, 107, 107, 0.4);
-    }
-    
-    .btn-outline {
-        background-color: transparent;
-        border: 2px solid var(--primary);
-        color: var(--primary);
-    }
-    
-    .btn-outline:hover {
-        background-color: var(--primary);
-        color: white;
-    }
-    
     /* Responsive */
     @media (max-width: 768px) {
         .vet-grid {
@@ -358,6 +359,10 @@
         
         .vet-search-tools {
             flex-direction: column;
+        }
+        
+        .search-location input {
+            width: 100%;
         }
         
         .vet-card-header {
@@ -395,27 +400,11 @@
             });
         }
 
-        // Filter functionality
-        const specialtyFilter = document.getElementById('specialty-filter');
+        // Sort functionality
         const experienceSort = document.getElementById('experience-sort');
         const vetCards = document.querySelectorAll('.vet-card');
 
-        specialtyFilter.addEventListener('change', filterVets);
         experienceSort.addEventListener('change', sortVets);
-
-        function filterVets() {
-            const selectedSpecialty = specialtyFilter.value.toLowerCase();
-            
-            vetCards.forEach(card => {
-                const cardSpecialty = card.dataset.specialty.toLowerCase();
-                
-                if (selectedSpecialty === '' || cardSpecialty.includes(selectedSpecialty)) {
-                    card.style.display = 'block';
-                } else {
-                    card.style.display = 'none';
-                }
-            });
-        }
 
         function sortVets() {
             const sortValue = experienceSort.value;
@@ -431,6 +420,22 @@
             // Re-append cards in sorted order
             cards.forEach(card => container.appendChild(card));
         }
+
+        // Location search functionality
+        const locationSearch = document.getElementById('location-search');
+        locationSearch.addEventListener('input', function() {
+            const searchTerm = this.value.toLowerCase();
+            
+            vetCards.forEach(card => {
+                const cardLocation = card.dataset.location.toLowerCase();
+                
+                if (searchTerm === '' || cardLocation.includes(searchTerm)) {
+                    card.style.display = 'block';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+        });
     });
 </script>
 {% endblock %}

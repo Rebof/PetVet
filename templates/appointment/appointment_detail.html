@@ -1,27 +1,334 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Appointment Details</title>
-</head>
-<body>
-    <h1>Appointment Details</h1>
+{% extends 'main/base1.html' %}
+{% load static %}
+
+{% block title %}Appointment Details | PetCare Connect{% endblock %}
+
+{% block content %}
+<div class="pet-feed-content">
+    <div class="appointment-detail-container">
+        <div class="section-header">
+            <h1><i class="fas fa-calendar-check"></i> Appointment Details</h1>
+            <p>View all details about your veterinary appointment</p>
+        </div>
+
+        <div class="appointment-detail-card">
+            <div class="appointment-header">
+                <div class="vet-avatar">
+                    <img src="{{ appointment.vet.user.profile_picture.url }}" alt="Dr. {{ appointment.vet.user.full_name }}">
+                </div>
+                <div class="appointment-info">
+                    <h3>Appointment with Dr. {{ appointment.vet.user.full_name }}</h3>
+                    <div class="appointment-meta">
+                        <span class="date-time">
+                            <i class="fas fa-calendar-day"></i> 
+                            {{ appointment.schedule.day_of_week }}, 
+                            {{ appointment.schedule.date|date:"F j, Y" }}
+                        </span>
+                        <span class="time-slot">
+                            <i class="fas fa-clock"></i> 
+                            {{ appointment.schedule.start_time|time:"g:i A" }} - {{ appointment.schedule.end_time|time:"g:i A" }}
+                        </span>
+                        {% if appointment.vet.clinic_name %}
+                        <span class="clinic">
+                            <i class="fas fa-clinic-medical"></i> 
+                            {{ appointment.vet.clinic_name }}
+                        </span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <div class="appointment-details">
+                <div class="detail-row">
+                    <div class="detail-label">
+                        <i class="fas fa-user"></i> Pet Owner:
+                    </div>
+                    <div class="detail-value">
+                        {{ appointment.pet_owner.user.full_name }}
+                    </div>
+                </div>
+
+                <div class="detail-row">
+                    <div class="detail-label">
+                        <i class="fas fa-stethoscope"></i> Veterinarian:
+                    </div>
+                    <div class="detail-value">
+                        Dr. {{ appointment.vet.user.full_name }}
+                    </div>
+                </div>
+
+                <div class="detail-row">
+                    <div class="detail-label">
+                        <i class="fas fa-paw"></i> Pet:
+                    </div>
+                    <div class="detail-value">
+                        {{ appointment.pet.name }} ({{ appointment.pet.get_species_display }})
+                    </div>
+                </div>
+
+                <div class="detail-row">
+                    <div class="detail-label">
+                        <i class="fas fa-comment-medical"></i> Reason:
+                    </div>
+                    <div class="detail-value">
+                        {{ appointment.reason }}
+                    </div>
+                </div>
+
+                <div class="detail-row">
+                    <div class="detail-label">
+                        <i class="fas fa-info-circle"></i> Additional Notes:
+                    </div>
+                    <div class="detail-value">
+                        {{ appointment.notes|default:"No additional notes" }}
+                    </div>
+                </div>
+            </div>
+
+            <div class="appointment-status">
+                <span class="status-badge {{ appointment.status|lower }}">
+                    {{ appointment.get_status_display }}
+                </span>
+                {% if appointment.payment_status != 'unpaid' %}
+                <span class="payment-badge {{ appointment.payment_status|lower }}">
+                    {{ appointment.get_payment_status_display }}
+                </span>
+                {% endif %}
+            </div>
+
+            <div class="appointment-actions">
+                <a href="{% url 'appointment:appointment_list' %}" class="btn btn-outline">
+                    <i class="fas fa-arrow-left"></i> Back to Appointments
+                </a>
+                
+                {% if appointment.status == 'pending' or appointment.status == 'confirmed' %}
+                <a href="{% url 'appointment:cancel_appointment' appointment.id %}" class="btn btn-outline cancel-btn">
+                    <i class="fas fa-times"></i> Cancel Appointment
+                </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* Appointment Detail Page Specific Styles */
+    .appointment-detail-container {
+        max-width: 900px;
+        margin: 0 auto;
+        padding: 2rem;
+    }
     
-    <p><strong>Pet Owner:</strong> {{ appointment.pet_owner.user.full_name }}</p>
-    <p><strong>Vet:</strong> Dr. {{ appointment.vet.user.full_name }}</p>
-    <p><strong>Schedule:</strong> {{ appointment.schedule.day_of_week }} - {{ appointment.schedule.start_time }} to {{ appointment.schedule.end_time }}</p>
-    <p><strong>Reason:</strong> {{ appointment.reason }}</p>
-    <p><strong>Status:</strong> {{ appointment.status }}</p>
+    .appointment-detail-card {
+        background: white;
+        border-radius: 15px;
+        overflow: hidden;
+        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.05);
+        padding: 2rem;
+        margin-top: 1.5rem;
+    }
+    
+    .appointment-header {
+        display: flex;
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+        padding-bottom: 1.5rem;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    }
+    
+    .vet-avatar img {
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 3px solid var(--secondary);
+    }
+    
+    .appointment-info h3 {
+        font-size: 1.5rem;
+        color: var(--dark);
+        margin-bottom: 0.8rem;
+    }
+    
+    .appointment-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1rem;
+        font-size: 1rem;
+        color: var(--text-light);
+    }
+    
+    .appointment-meta span {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .appointment-meta i {
+        color: var(--primary);
+    }
+    
+    .appointment-details {
+        margin: 2rem 0;
+    }
+    
+    .detail-row {
+        display: flex;
+        margin-bottom: 1.2rem;
+        padding-bottom: 1.2rem;
+        border-bottom: 1px dashed rgba(0, 0, 0, 0.05);
+    }
+    
+    .detail-label {
+        width: 180px;
+        font-weight: 600;
+        color: var(--dark);
+        display: flex;
+        align-items: center;
+        gap: 0.8rem;
+    }
+    
+    .detail-label i {
+        color: var(--primary);
+        width: 20px;
+        text-align: center;
+    }
+    
+    .detail-value {
+        flex: 1;
+        color: var(--text);
+    }
+    
+    .appointment-status {
+        margin: 2rem 0;
+        display: flex;
+        gap: 0.8rem;
+        flex-wrap: wrap;
+    }
+    
+    .appointment-actions {
+        display: flex;
+        gap: 1rem;
+        margin-top: 2rem;
+        padding-top: 1.5rem;
+        border-top: 1px solid rgba(0, 0, 0, 0.05);
+    }
+    
+    /* Status Badge Colors (same as previous) */
+    .status-badge {
+        padding: 0.5rem 1rem;
+        border-radius: 50px;
+        font-size: 0.9rem;
+        font-weight: 600;
+        display: inline-block;
+    }
+    
+    .status-badge.pending {
+        background-color: rgba(255, 193, 7, 0.2);
+        color: #ffc107;
+    }
+    
+    .status-badge.confirmed {
+        background-color: rgba(78, 205, 196, 0.2);
+        color: var(--secondary);
+    }
+    
+    .status-badge.completed {
+        background-color: rgba(40, 167, 69, 0.2);
+        color: #28a745;
+    }
+    
+    .status-badge.cancelled {
+        background-color: rgba(220, 53, 69, 0.2);
+        color: #dc3545;
+    }
+    
+    /* Buttons (consistent with previous style) */
+    .btn {
+        padding: 0.7rem 1.3rem;
+        border-radius: 50px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 0.95rem;
+        text-decoration: none;
+        border: none;
+    }
+    
+    .btn-outline {
+        background-color: transparent;
+        border: 2px solid var(--primary);
+        color: var(--primary);
+    }
+    
+    .btn-outline:hover {
+        background-color: var(--primary);
+        color: white;
+    }
+    
+    .cancel-btn {
+        border-color: #dc3545;
+        color: #dc3545;
+    }
+    
+    .cancel-btn:hover {
+        background-color: #dc3545;
+        color: white;
+    }
+    
+    /* Responsive */
+    @media (max-width: 768px) {
+        .appointment-header {
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+        }
+        
+        .appointment-meta {
+            justify-content: center;
+        }
+        
+        .detail-row {
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+        
+        .detail-label {
+            width: 100%;
+        }
+        
+        .appointment-actions {
+            flex-direction: column;
+        }
+    }
+</style>
 
-    <br><br>
-    <a href="{% url 'appointment:vet_schedule' appointment.vet.id %}">Back to Vet's Schedule</a>
-
-    {% if appointment.status == 'pending' %}
-        <!-- Optionally add a button to cancel the appointment -->
-        <a href="{% url 'appointment:cancel_appointment' appointment.id %}">
-            <button>Cancel Appointment</button>
-        </a>
-    {% endif %}
-</body>
-</html>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Cancel button functionality
+        document.querySelectorAll('.cancel-btn').forEach(button => {
+            button.addEventListener('click', function(e) {
+                e.preventDefault();
+                const cancelUrl = this.getAttribute('href');
+                
+                Swal.fire({
+                    title: 'Cancel Appointment',
+                    text: 'Are you sure you want to cancel this appointment?',
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#d33',
+                    cancelButtonColor: '#3085d6',
+                    confirmButtonText: 'Yes, cancel it!'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        window.location.href = cancelUrl;
+                    }
+                });
+            });
+        });
+    });
+</script>
+{% endblock %}
