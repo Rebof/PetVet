@@ -1,0 +1,311 @@
+{% extends 'main/base1.html' %}
+{% load static %}
+
+{% block title %}Add New Pet | PetCare Connect{% endblock %}
+
+{% block content %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+<div class="pet-feed-content">
+    <div class="pet-form-container">
+        <div class="section-header">
+            <h1><i class="fas fa-paw"></i> Add New Pet</h1>
+            <p>Complete your pet's profile to get started</p>
+        </div>
+
+        <form method="POST" enctype="multipart/form-data" class="pet-form">
+            {% csrf_token %}
+            
+            <div class="form-grid">
+                <!-- Basic Information Column -->
+                <div class="form-column">
+                    <div class="form-group">
+                        <label for="name"><i class="fas fa-tag"></i> Pet Name</label>
+                        <input type="text" id="name" name="name" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="species"><i class="fas fa-dog"></i> Species</label>
+                        <select id="species" name="species" required>
+                            <option value="">Select species</option>
+                            <option value="dog">Dog</option>
+                            <option value="cat">Cat</option>
+                            <option value="bird">Bird</option>
+                            <option value="rabbit">Rabbit</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="breed"><i class="fas fa-dna"></i> Breed</label>
+                        <input type="text" id="breed" name="breed" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="age"><i class="fas fa-birthday-cake"></i> Age (years)</label>
+                        <input type="number" id="age" name="age" min="0" max="50" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="color"><i class="fas fa-palette"></i> Color</label>
+                        <input type="text" id="color" name="color">
+                    </div>
+                </div>
+                
+                <!-- Health Information Column -->
+                <div class="form-column">
+                    <div class="form-group">
+                        <label for="weight"><i class="fas fa-weight"></i> Weight (kg)</label>
+                        <input type="number" id="weight" name="weight" min="0" step="0.1">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="vaccination_status"><i class="fas fa-syringe"></i> Vaccination Status</label>
+                        <input type="text" id="vaccination_status" name="vaccination_status" placeholder="Up to date, needs boosters, etc.">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="allergies"><i class="fas fa-allergies"></i> Allergies</label>
+                        <input type="text" id="allergies" name="allergies" placeholder="List any known allergies">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="medical_history"><i class="fas fa-file-medical"></i> Medical History</label>
+                        <textarea id="medical_history" name="medical_history" rows="3" placeholder="Any past medical conditions or treatments"></textarea>
+                    </div>
+                </div>
+                
+                <!-- Pet Image Upload -->
+                <div class="form-column image-upload-column">
+                    <div class="image-upload-container">
+                        <div class="image-preview" id="imagePreview">
+                            <i class="fas fa-camera"></i>
+                            <span>No image selected</span>
+                        </div>
+                        <div class="form-group file-input-group">
+                            <label for="pet_image"><i class="fas fa-upload"></i> Upload Pet Photo</label>
+                            <input type="file" id="pet_image" name="pet_image" accept="image/*">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-save"></i> Save Pet Profile
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<style>
+    /* Pet Form Styles */
+    .pet-form-container {
+        max-width: 1000px;
+        margin: 0 auto;
+        padding: 2rem;
+    }
+    
+    .pet-form {
+        background: white;
+        border-radius: 15px;
+        padding: 2rem;
+        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.05);
+    }
+    
+    .form-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 2rem;
+        margin-bottom: 2rem;
+    }
+    
+    .form-column {
+        display: flex;
+        flex-direction: column;
+        gap: 1.5rem;
+    }
+    
+    .image-upload-column {
+        display: flex;
+        justify-content: center;
+    }
+    
+    .form-group {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+    
+    .form-group label {
+        font-weight: 600;
+        color: var(--dark);
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .form-group i {
+        color: var(--primary);
+        width: 20px;
+    }
+    
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
+        padding: 0.8rem 1rem;
+        border-radius: 8px;
+        border: 1px solid rgba(0, 0, 0, 0.1);
+        font-family: 'Poppins', sans-serif;
+        font-size: 0.95rem;
+    }
+    
+    .form-group textarea {
+        resize: vertical;
+        min-height: 100px;
+    }
+    
+    .image-upload-container {
+        width: 100%;
+        max-width: 300px;
+    }
+    
+    .image-preview {
+        width: 100%;
+        height: 250px;
+        background: #f9f9f9;
+        border-radius: 12px;
+        border: 2px dashed rgba(0, 0, 0, 0.2);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        color: var(--text-light);
+        margin-bottom: 1rem;
+        overflow: hidden;
+        position: relative;
+    }
+    
+    .image-preview i {
+        font-size: 2.5rem;
+        color: var(--primary-light);
+        margin-bottom: 0.5rem;
+    }
+    
+    .image-preview img {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+    
+    .file-input-group {
+        text-align: center;
+    }
+    
+    .file-input-group input[type="file"] {
+        display: none;
+    }
+    
+    .file-input-group label {
+        padding: 0.8rem 1.5rem;
+        background: var(--primary-light);
+        color: var(--primary);
+        border-radius: 50px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .file-input-group label:hover {
+        background: var(--primary);
+        color: white;
+    }
+    
+    .form-actions {
+        display: flex;
+        gap: 1rem;
+        justify-content: flex-end;
+        padding-top: 1.5rem;
+        border-top: 1px solid rgba(0, 0, 0, 0.05);
+    }
+    
+    /* Buttons */
+    .btn {
+        padding: 0.8rem 1.5rem;
+        border-radius: 50px;
+        font-weight: 600;
+        font-size: 0.95rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        text-decoration: none;
+        border: none;
+    }
+    
+    .btn-primary {
+        background: var(--primary);
+        color: white;
+        box-shadow: 0 4px 15px rgba(255, 107, 107, 0.3);
+    }
+    
+    .btn-primary:hover {
+        background: var(--primary-dark);
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(255, 107, 107, 0.4);
+    }
+    
+    .btn-outline {
+        background: transparent;
+        border: 2px solid var(--primary);
+        color: var(--primary);
+    }
+    
+    .btn-outline:hover {
+        background: var(--primary);
+        color: white;
+    }
+    
+    /* Responsive */
+    @media (max-width: 768px) {
+        .form-grid {
+            grid-template-columns: 1fr;
+        }
+        
+        .form-actions {
+            justify-content: center;
+        }
+    }
+</style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Image preview functionality
+        const imageUpload = document.getElementById('pet_image');
+        const imagePreview = document.getElementById('imagePreview');
+        
+        imageUpload.addEventListener('change', function() {
+            const file = this.files[0];
+            if (file) {
+                const reader = new FileReader();
+                
+                reader.addEventListener('load', function() {
+                    imagePreview.innerHTML = '';
+                    const img = document.createElement('img');
+                    img.src = this.result;
+                    imagePreview.appendChild(img);
+                });
+                
+                reader.readAsDataURL(file);
+            } else {
+                imagePreview.innerHTML = '<i class="fas fa-camera"></i><span>No image selected</span>';
+            }
+        });
+    });
+</script>
+{% endblock %}

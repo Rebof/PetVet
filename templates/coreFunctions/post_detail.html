@@ -1,0 +1,188 @@
+{% extends 'main/base1.html' %}
+{% load static %}
+
+{% block content %}
+<link rel="stylesheet" href="{% static 'assets/css/post_detail.css' %}">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+<div class="post-detail-wrapper">
+    <div class="post-detail-container">
+        <!-- Main Post Card -->
+        <div class="post-card glass-card">
+            <!-- Like Button -->
+            <div class="like-column">
+                <button class="like-btn" aria-label="Like" data-post-id="{{ post.id }}">
+                    <i class="fas fa-heart"></i>
+                    <span class="like-count">{{ post.likes.count }}</span>
+                </button>
+            </div>
+            
+            <!-- Post Content -->
+            <div class="post-content">
+                <div class="post-header">
+                    <span class="post-category">{{ post.category.name }}</span>
+                    <div class="post-meta">
+                        <img src="{{ post.user.profile_picture.url }}" alt="{{ post.user.username }}" class="post-author-avatar">
+                        <span class="post-author">Posted by u/{{ post.user.username }}</span>
+                        <span class="post-time">{{ post.created_at|timesince }} ago</span>
+                    </div>
+                </div>
+                
+                <h1 class="post-title">{{ post.title }}</h1>
+                
+                {% if post.image %}
+                <div class="post-media">
+                    <img src="{{ post.image.url }}" alt="{{ post.title }}" class="post-image">
+                </div>
+                {% elif post.video %}
+                <div class="post-media">
+                    <video controls class="post-video">
+                        <source src="{{ post.video.url }}" type="video/mp4">
+                    </video>
+                </div>
+                {% endif %}
+                
+                <div class="post-body">
+                    <p>{{ post.body }}</p>
+                </div>
+                
+                <div class="post-actions">
+                    <button class="action-btn comment-btn">
+                        <i class="fas fa-comment"></i> 
+                        <span>{{ post.comments.count }} Comments</span>
+                    </button>
+
+                    {% if request.user == post.user %}
+                    <div class="post-owner-actions">
+                        <button class="action-btn edit-btn" onclick="">
+                            <i class="fas fa-edit"></i> Edit
+                        </button>
+                        <button class="action-btn delete-btn" onclick="confirmDeletePost({{ post.id }})">
+                            <i class="fas fa-trash"></i> Delete
+                        </button>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Comment Form -->
+        <div class="comment-form-container glass-card">
+            <form method="POST" class="comment-form">
+                {% csrf_token %}
+                <div class="form-group">
+                    <textarea name="comment" placeholder="What are your thoughts?" required></textarea>
+                    <div class="form-footer">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-paper-plane"></i> Comment
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <!-- Comments Section -->
+        <div class="comments-section glass-card">
+            <h3 class="comments-header">
+                <i class="fas fa-comments"></i> 
+                {{ post.comments.count }} Comments
+            </h3>
+            
+            {% for comment in post.comments.all %}
+            <div class="comment" id="comment-{{ comment.id }}">
+                <!-- Comment Like Button -->
+                <div class="like-column">
+                    <button class="like-btn" data-comment-id="{{ comment.id }}" aria-label="Like comment">
+                        <i class="fas fa-heart"></i>
+                        <span class="like-count">{{ comment.likes.count }}</span>
+                    </button>
+                </div>
+                
+                <!-- Comment Content -->
+                <div class="comment-content">
+                    <div class="comment-header">
+                        <img src="{{ comment.user.profile_picture.url }}" alt="{{ comment.user.username }}" class="comment-author-avatar">
+                        <span class="comment-author">u/{{ comment.user.username }}</span>
+                        <span class="comment-time">{{ comment.date|timesince }} ago</span>
+                    </div>
+                    
+                    <div class="comment-body">
+                        <p>{{ comment.comment }}</p>
+                    </div>
+                    
+                    <div class="comment-actions">
+                        <button class="action-btn reply-btn" data-comment-id="{{ comment.id }}">
+                            <i class="fas fa-reply"></i> Reply
+                        </button>
+                        <button class="action-btn share-btn">
+                            <i class="fas fa-share"></i> Share
+                        </button>
+                        {% if request.user == comment.user %}
+                        <button class="action-btn edit-btn" onclick="">
+                            <i class="fas fa-edit"></i> Edit
+                        </button>
+                        <button class="action-btn delete-btn" onclick="confirmDeleteComment({{ comment.id }})">
+                            <i class="fas fa-trash"></i> Delete
+                        </button>
+                        {% else %}
+                        <button class="action-btn report-btn">
+                            <i class="fas fa-flag"></i> Report
+                        </button>
+                        {% endif %}
+                    </div>
+                    
+                    <!-- Replies (nested comments) -->
+                    {% for reply in comment.replies.all %}
+                    <div class="comment reply" id="reply-{{ reply.id }}">
+                        <div class="comment-content">
+                            <div class="comment-header">
+                                <img src="{{ reply.user.profile_picture.url }}" alt="{{ reply.user.username }}" class="comment-author-avatar">
+                                <span class="comment-author">u/{{ reply.user.username }}</span>
+                                <span class="comment-time">{{ reply.date|timesince }} ago</span>
+                            </div>
+                            <div class="comment-body">
+                                <p>{{ reply.reply }}</p>
+                            </div>
+                            <div class="comment-actions">
+                                {% if request.user == reply.user %}
+                                <button class="action-btn edit-btn" onclick="">
+                                    <i class="fas fa-edit"></i> Edit
+                                </button>
+                                <button class="action-btn delete-btn" onclick="confirmDeleteReply({{ reply.id }})">
+                                    <i class="fas fa-trash"></i> Delete
+                                </button>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                    
+                    <!-- Reply Form (hidden by default) -->
+                    <div class="reply-form-container" id="reply-form-{{ comment.id }}" style="display: none;">
+                        <form method="POST" class="reply-form" action="">
+                            {% csrf_token %}
+                            <div class="form-group">
+                                <textarea name="reply" placeholder="Write your reply..." required></textarea>
+                                <div class="form-footer">
+                                    <button type="button" class="btn btn-outline cancel-reply" data-comment-id="{{ comment.id }}">Cancel</button>
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="fas fa-paper-plane"></i> Reply
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+            <div class="empty-comments">
+                <i class="far fa-comment-dots"></i>
+                <p>No comments yet. Be the first to share what you think!</p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<script src="{% static 'assets/js/post_detail.js' %}"></script>
+{% endblock %}

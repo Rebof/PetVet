@@ -30,7 +30,7 @@
             <div class="user-profile" id="profile-menu-btn">
                 <img src="{{ user.profile_image.url }}" alt="{{ user.username }}">
                 <div class="profile-menu">
-                    <a href=""><i class="fas fa-user"></i> My Profile</a>
+                    <a href="{% url 'authUser:user-info' %}"><i class="fas fa-user"></i> My Profile</a>
                     <a href=""><i class="fas fa-cog"></i> Settings</a>
                     <a href="{% url 'authUser:logoutUser' %}"><i class="fas fa-sign-out-alt"></i> Logout</a>
                 </div>
@@ -53,11 +53,21 @@
             <div class="sidebar-section">
                 <h3>My Pets</h3>
                 <ul>
-                    <li><a href="#"><i class="fas fa-dog"></i> Max (Golden Retriever)</a></li>
-                    <li><a href="#"><i class="fas fa-cat"></i> Whiskers (Siamese)</a></li>
-                    <li><a href="#"><i class="fas fa-plus-circle"></i> Add Pet</a></li>
+                    {% for pet in pets %}
+                        <li>
+                            <a href="{% url 'authUser:pet_profile' pet.id %}"><i class="fas fa-{{ pet.species|lower }}"></i> {{ pet.name }} ({{ pet.breed }})</a>
+                        </li>
+                    {% empty %}
+                        <li><em>No pets added yet.</em></li>
+                    {% endfor %}
+                    <li>
+                        <a href="{% url 'authUser:add_pet' %}">
+                            <i class="fas fa-plus-circle"></i> Add Pet
+                        </a>
+                    </li>
                 </ul>
             </div>
+
             
             <div class="sidebar-section">
                 <h3>Appointments</h3>
