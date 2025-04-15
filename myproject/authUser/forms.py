@@ -16,7 +16,6 @@ class PetOwnerProfileForm(forms.ModelForm):
             'bio', 
             'pets_owned', 
             'human_image', 
-            'pet_image', 
             'country', 
             'city', 
             'address', 

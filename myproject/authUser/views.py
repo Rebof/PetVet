@@ -1,10 +1,10 @@
-from django.shortcuts import render, redirect
+from django.http import Http404
+from django.shortcuts import get_object_or_404, render, redirect
 from django.contrib.auth import authenticate, login, logout
 from django.contrib import messages
 from .forms import UserRegistrationForm,VetProfileForm, PetOwnerProfileForm
-from .models import VetProfile, PetOwnerProfile
+from .models import VetProfile, PetOwnerProfile, Pet
 from django.contrib.auth.decorators import login_required
-from django.urls import reverse
 from coreFunctions.models import Post, Comment, ReplyComment
 import random
 from django.core.mail import send_mail
@@ -137,10 +137,6 @@ def user_info(request):
     return render(request, 'authUser/user_info.html', context)
 
 
-from django.shortcuts import render, redirect
-from django.contrib import messages
-from .forms import VetProfileForm, PetOwnerProfileForm
-from .models import VetProfile, PetOwnerProfile
 
 def complete_profile(request):
 
@@ -203,3 +199,97 @@ def verify_otp(request):
     
     return render(request, 'authUser/verify_otp.html')
     
+@login_required
+def add_pet(request):
+    if request.method == 'POST':
+        name = request.POST.get('name')
+        species = request.POST.get('species')
+        breed = request.POST.get('breed')
+        age = request.POST.get('age')
+        color = request.POST.get('color')
+        weight = request.POST.get('weight')
+        vaccination_status = request.POST.get('vaccination_status')
+        allergies = request.POST.get('allergies')
+        medical_history = request.POST.get('medical_history')
+        pet_image = request.FILES.get('pet_image')
+
+        # Get the PetOwnerProfile linked to the current user
+        try:
+            owner_profile = PetOwnerProfile.objects.get(user=request.user)
+        except PetOwnerProfile.DoesNotExist:
+            # Handle case where the user is not a pet owner
+            return redirect('coreFunctions:feed')  # or any fallback
+
+        # Create and save the pet instance
+        pet = Pet.objects.create(
+            owner=owner_profile,
+            name=name,
+            species=species,
+            breed=breed,
+            age=age,
+            color=color,
+            weight=weight if weight else None,
+            vaccination_status=vaccination_status,
+            allergies=allergies,
+            medical_history=medical_history,
+            pet_image=pet_image
+        )
+
+        return redirect('coreFunctions:feed')  # Replace with the correct URL name for pet list
+
+    return render(request, 'authUser/add_pet.html')
+
+@login_required
+def pet_profile(request, pet_id):
+    pet = get_object_or_404(Pet, id=pet_id, owner__user=request.user)
+    species_choices = [
+        ('dog', 'Dog'),
+        ('cat', 'Cat'),
+        ('bird', 'Bird'),
+        ('fish', 'Fish'),
+        ('rabbit', 'Rabbit'),
+        ('other', 'Other'),
+    ]
+    
+    if request.method == 'POST':
+        # Handle form submission for updating pet info
+        pet.name = request.POST.get('name')
+        pet.species = request.POST.get('species')
+        pet.breed = request.POST.get('breed')
+        pet.age = request.POST.get('age')
+        pet.color = request.POST.get('color', '')
+        
+        # Handle optional fields
+        weight = request.POST.get('weight')
+        pet.weight = float(weight) if weight else None
+        
+        pet.vaccination_status = request.POST.get('vaccination_status', '')
+        pet.allergies = request.POST.get('allergies', '')
+        pet.medical_history = request.POST.get('medical_history', '')
+        
+        # Handle image upload
+        if 'pet_image' in request.FILES:
+            pet.pet_image = request.FILES['pet_image']
+        
+        try:
+            pet.save()
+            messages.success(request, f"{pet.name}'s profile has been updated successfully!")
+            return redirect('pet_profile', pet_id=pet.id)
+        except Exception as e:
+            messages.error(request, f"Error updating pet profile: {str(e)}")
+    
+    context = {
+        'pet': pet,
+        'species_choices': species_choices,
+    }
+    return render(request, 'authUser/pet_profile.html', context)
+
+@login_required
+def delete_pet(request, pk):
+    pet = get_object_or_404(Pet, id=pk, owner__user=request.user)
+    if request.method == 'POST':
+        pet_name = pet.name
+        pet.delete()
+        messages.success(request, f"{pet_name} has been removed from your profile.")
+        return redirect('coreFunctions:feed')  # Make sure this is your correct redirect target
+    raise Http404("Invalid request method")

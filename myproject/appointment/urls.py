@@ -38,4 +38,8 @@ urlpatterns = [
     path('payment/success/<int:appointment_id>/', views.payment_success, name='payment_success'),
     path('payment/failed/<int:appointment_id>/', views.payment_failed, name='payment_failed'),
 
+
+    path('book/credit/<int:vet_id>/<int:schedule_id>/', 
+         views.book_with_credit, 
+         name='book_with_credit'),
 ]

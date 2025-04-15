@@ -54,6 +54,7 @@ class VetProfile(models.Model):
     pid = ShortUUIDField(length=7, max_length=25, alphabet="abcdefghijklmnopqrstuvxyz123")
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     clinic_name = models.CharField(max_length=1000, null=True, blank=True)
+    summary = models.CharField(max_length=1000, null=True, blank=True)
     specialization = models.CharField(max_length=500, null=True, blank=True)
     experience_years = models.IntegerField(null=True, blank=True)
     license_number = models.CharField(max_length=100, null=True, blank=True)
@@ -68,6 +69,12 @@ class VetProfile(models.Model):
 
     date = models.DateTimeField(auto_now_add=True, null=True, blank=True)
 
+    def average_rating(self):
+        reviews = self.reviews.all()
+        if reviews.exists():
+            return round(sum(r.rating for r in reviews) / reviews.count(), 2)
+        return 0
+    
     def save(self, *args, **kwargs):
         if self.slug == "" or self.slug is None: 
             uuid_key = shortuuid.uuid()  # Generate a short UUID
@@ -79,6 +86,16 @@ class VetProfile(models.Model):
     def __str__(self):
         return str(self.user.full_name if self.user.full_name else self.user.username)
 
+class Review(models.Model):
+    vet = models.ForeignKey(VetProfile, on_delete=models.CASCADE, related_name='reviews')
+    reviewer = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)  # Or PetOwnerProfile if you prefer
+    rating = models.PositiveIntegerField(default=5)
+    comment = models.TextField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Review by {self.reviewer} for {self.vet.user.username}"
+
 
 # Profile for Pet Owners
 class PetOwnerProfile(models.Model):
@@ -87,7 +104,6 @@ class PetOwnerProfile(models.Model):
     bio = models.CharField(max_length=100, null=True, blank=True)
     pets_owned = models.IntegerField(null=True, blank=True)  
     human_image = models.ImageField(upload_to=user_directory_path, default="default.jpg", null=True, blank=True)
-    pet_image = models.ImageField(upload_to=user_directory_path, default="default.jpg", null=True, blank=True)
     country = models.CharField(max_length=100, null=True, blank=True)
     city = models.CharField(max_length=100, null=True, blank=True)
     address = models.CharField(max_length=1000, null=True, blank=True)
@@ -95,6 +111,7 @@ class PetOwnerProfile(models.Model):
     date = models.DateTimeField(auto_now_add=True, null=True, blank=True)
     verified = models.BooleanField(default=False)
     slug = models.SlugField(max_length=200, unique=True, blank=True)
+    credit_balance = models.PositiveIntegerField(default=0)
 
 
     def save(self, *args, **kwargs):
@@ -106,6 +123,26 @@ class PetOwnerProfile(models.Model):
 
     def __str__(self):
         return str(self.user.username)
+
+class Pet(models.Model):
+    owner = models.ForeignKey(PetOwnerProfile, on_delete=models.CASCADE, related_name='pets')
+    name = models.CharField(max_length=100)
+    breed = models.CharField(max_length=100)
+    species = models.CharField(max_length=100)
+    age = models.PositiveIntegerField()
+    pet_image = models.ImageField(upload_to='pet_images/', null=True, blank=True)
+
+    # Optional fields
+    medical_history = models.TextField(null=True, blank=True)
+    vaccination_status = models.CharField(max_length=200, null=True, blank=True)
+    allergies = models.CharField(max_length=200, null=True, blank=True)
+    weight = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True)  
+    color = models.CharField(max_length=100, null=True, blank=True)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.name} ({self.owner.user.username})"
 
 
 # Signal to create appropriate profile based on user_type

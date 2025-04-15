@@ -135,33 +135,6 @@ def verify_khalti_payment(request, appointment_id):
             'appointment': appointment
         })
 
-@login_required
-def process_refund(appointment):
-    try:
-        response = requests.post(
-            f"{KHALTI_BASE_URL}/refund/",
-            json={
-                "pidx": appointment.pidx,
-                "amount": appointment.amount_paid,
-                "remarks": "Appointment rejected by vet"
-            },
-            headers={
-                "Authorization": KHALTI_SECRET_KEY,
-                "Content-Type": "application/json"
-            }
-        )
-        response.raise_for_status()
-        data = response.json()
-        
-        appointment.refund_id = data.get('refund_id')
-        appointment.payment_status = 'refunded'
-        return True
-        
-    except requests.exceptions.RequestException as e:
-        print(f"Refund failed: {str(e)}")
-        appointment.payment_status = 'refund_failed'
-        return False
-
 # Appointment Views
 @login_required
 def vet_list(request):
@@ -230,6 +203,66 @@ def book_appointment(request, vet_id, schedule_id):
     return render(request, "appointment/book_appt.html", {"vet": vet, "schedule": schedule})
 
 @login_required
+def book_with_credit(request, vet_id, schedule_id):
+    vet = get_object_or_404(VetProfile, id=vet_id)
+    schedule = get_object_or_404(VetSchedule, id=schedule_id)
+    pet_owner = get_object_or_404(PetOwnerProfile, user=request.user)
+
+    if request.method == "POST":
+        reason = request.POST.get("reason", "No reason provided")
+
+        # Check if slot is already booked
+        if Appointment.objects.filter(schedule=schedule, status="confirmed").exists():
+            messages.error(request, "This slot is already booked.")
+            return redirect('appointment:book_appointment', vet_id=vet_id, schedule_id=schedule_id)
+
+        # Check if user has sufficient credit (1000 NPR in paisa)
+        if pet_owner.credit_balance < 1000 * 100:
+            messages.error(request, "Insufficient credit balance")
+            return redirect('appointment:book_appointment', vet_id=vet_id, schedule_id=schedule_id)
+
+        try:
+            # Deduct from credit balance
+            pet_owner.credit_balance -= 1000 * 100  # Deduct 1000 NPR
+            pet_owner.save()
+
+            # Create appointment
+            appointment = Appointment.objects.create(
+                pet_owner=pet_owner,
+                vet=vet,
+                schedule=schedule,
+                reason=reason,
+                status="unpaid",
+                payment_status='unpaid',
+                amount_paid=1000 * 100
+            )
+
+            # Payment successful - store details and await vet approval
+            appointment.status = 'paid_pending_approval'
+            appointment.payment_status = 'paid'
+            appointment.save()
+
+            # Send notification to vet
+            send_appointment_notification(
+                appointment,
+                "New Appointment Booking",
+                "appointment/new_appointment_email.html"
+            )
+
+            messages.success(request, "Appointment booked successfully using your credit balance!")
+            return redirect('appointment:appointment_detail', appointment_id=appointment.id)
+
+        except Exception as e:
+            # Revert credit deduction if error occurs
+            pet_owner.credit_balance += 1000 * 100
+            pet_owner.save()
+            messages.error(request, f"Error booking appointment: {str(e)}")
+            return redirect('appointment:book_appointment', vet_id=vet_id, schedule_id=schedule_id)
+
+    return redirect('appointment:book_appointment', vet_id=vet_id, schedule_id=schedule_id)
+
+
+@login_required
 def appointment_list(request):
     appointments = Appointment.objects.filter(pet_owner__user=request.user)
     return render(request, "appointment/appointment_list.html", {"appointments": appointments})
@@ -242,9 +275,33 @@ def appointment_detail(request, appointment_id):
 @login_required
 def cancel_appointment(request, appointment_id):
     appointment = get_object_or_404(Appointment, id=appointment_id)
-    appointment.status = 'cancelled'
-    appointment.save()
-    return redirect('appointment:vet_list')
+    
+    try:
+        # Only process credit for paid appointments
+        if appointment.payment_status == 'paid' and appointment.status in ['confirmed', 'paid_pending_approval']:
+            # Calculate 80% refund (in paisa)
+            refund_amount = int(appointment.amount_paid * 0.8)
+            
+            # Add credit to owner's account
+            appointment.pet_owner.credit_balance += refund_amount
+            appointment.pet_owner.save()
+            
+            # Update appointment
+            appointment.status = 'cancelled'
+            appointment.save()
+            
+            messages.success(request, f"Appointment cancelled. {refund_amount/100:.2f} NPR (80%) credited to your account.")
+        else:
+            # For unpaid appointments or invalid statuses
+            appointment.status = 'cancelled'
+            appointment.save()
+            messages.warning(request, "Appointment cancelled (no refund applicable).")
+    
+    except Exception as e:
+        messages.error(request, f"Error cancelling appointment: {str(e)}")
+        return redirect('appointment:appointment_detail', appointment_id=appointment.id)
+    
+    return redirect('appointment:appointment_list')
 
 @login_required
 def vet_pending_appointments(request, vet_id):
@@ -290,67 +347,17 @@ def reject_appointment(request, appointment_id):
         return HttpResponseRedirect(reverse('appointment:vet_pending_appointments', args=[appointment.vet.id]))
 
     try:
-        # Process refund if payment was made
-        if appointment.payment_status == 'paid' and appointment.pidx:
-            try:
-                # Step 1: Verify payment and get transaction details
-                verify_response = requests.post(
-                    f"{KHALTI_BASE_URL}/lookup/",
-                    json={"pidx": appointment.pidx},
-                    headers={
-                        "Authorization": KHALTI_SECRET_KEY,
-                        "Content-Type": "application/json",
-                    },
-                    timeout=10
-                )
-                verify_response.raise_for_status()
-                verify_data = verify_response.json()
-                
-                if verify_data.get('status') != 'Completed' or not verify_data.get('transaction_id'):
-                    raise Exception("Payment verification failed or missing transaction ID")
-
-                transaction_id = verify_data['transaction_id']
-                
-                # Step 2: Process refund using Merchant API with proper authentication
-                refund_url = f"https://dev.khalti.com/api/v2/merchant-transaction/{transaction_id}/refund/"
-                
-                # Merchant API requires different authentication
-                merchant_secret = KHALTI_SECRET_KEY # Get this from Khalti Merchant Dashboard
-                
-                refund_response = requests.post(
-                    refund_url,
-                    json={
-                        "mobile": KHALTI_TEST_ID,  # Customer's registered mobile
-                        "amount": appointment.amount_paid  # Full refund amount in paisa
-                    },
-                    headers={
-                        "Authorization": f"Key {merchant_secret}",
-                        "Content-Type": "application/json",
-                    },
-                    timeout=15
-                )
-                
-                refund_response.raise_for_status()
-                refund_data = refund_response.json()
-
-                if refund_data.get('status') == 'success' or refund_data.get('detail') == 'Transaction refund successful.':
-                    appointment.payment_status = 'refunded'
-                    appointment.refund_id = refund_data.get('refund_id', '')
-                    messages.success(request, "Appointment rejected and payment refunded successfully.")
-                else:
-                    raise Exception(f"Refund failed: {refund_data.get('message', 'Unknown error')}")
-            
-            except requests.exceptions.RequestException as e:
-                error_msg = str(e)
-                if hasattr(e, 'response') and e.response:
-                    error_msg = f"{e.response.status_code}: {e.response.text}"
-                raise Exception(f"Refund API error: {error_msg}")
+        # Add credit to pet owner's account if payment was made
+        if appointment.status == "paid_pending_approval" and appointment.payment_status == 'paid':
+            appointment.pet_owner.credit_balance += appointment.amount_paid
+            appointment.pet_owner.save()
+            messages.success(request, "Appointment rejected. Amount credited to user's account.")
 
         # Update appointment status
         appointment.status = "rejected"
         appointment.save()
 
-        # Send rejection notification
+        # Send rejection notification (unchanged)
         send_appointment_notification(
             appointment,
             "Appointment Rejected",
@@ -359,9 +366,6 @@ def reject_appointment(request, appointment_id):
         )
 
     except Exception as e:
-        if appointment.payment_status == 'paid':
-            appointment.payment_status = 'refund_failed'
-            appointment.save()
         messages.error(request, f"Error rejecting appointment: {str(e)}")
         return HttpResponseRedirect(reverse('appointment:vet_pending_appointments', args=[appointment.vet.id]))
 

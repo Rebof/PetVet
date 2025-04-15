@@ -3,11 +3,11 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.contrib.auth.decorators import login_required
 from .models import Post, Category, Comment, ReplyComment, ChatMessage
 from django.utils.text import slugify
-import shortuuid
 from django.utils.timesince import timesince
-from django.db.models import OuterRef, Subquery
-from django.db.models import Q, Count, Sum, F, FloatField
-from authUser.models import User
+from django.db.models import Q
+from authUser.models import User, PetOwnerProfile
+from django.db import models  # Add this import
+
 
 
 # Create your views here.
@@ -22,13 +22,53 @@ def index(request):
     # Normal feed logic (if the profile is verified)
     posts = Post.objects.all()
     categories = Category.objects.all()
+    user_profile = PetOwnerProfile.objects.get(user=request.user)
+    pets = user_profile.pets.all()  # Related name from your Pet model
     context = {
         'posts': posts,
-        'categories': categories
+        'categories': categories,
+        'pets': pets
     }
     
     return render(request, 'coreFunctions/index.html', context)
 
+
+from django.shortcuts import render, get_object_or_404
+from .models import Post, Comment, ReplyComment
+
+def post_detail(request, slug):
+    # Get active post or 404
+    post = get_object_or_404(Post, slug=slug, active=True)
+    
+    # Get active comments with their active replies
+    comments = post.comments.filter(active=True).prefetch_related(
+        models.Prefetch('replies', 
+                       queryset=ReplyComment.objects.filter(active=True),
+                       to_attr='active_replies')
+    )
+    
+    context = {
+        'post': post,
+        'comments': comments,
+    }
+    return render(request, 'coreFunctions/post_detail.html', context)
+
+
+
+def home(request):
+    return render(request, 'coreFunctions/landing.html')
+
+def about(request):
+    return render(request, 'coreFunctions/about.html')
+
+def community(request):
+    return render(request, 'coreFunctions/community.html')
+
+def contact(request):
+    return render(request, 'coreFunctions/contact.html')
+
+def appointment(request):
+    return render(request, 'coreFunctions/appointment.html')
 
 
 def create_post(request):
@@ -54,28 +94,6 @@ def create_post(request):
             )
             post.save()
             return redirect("coreFunctions:feed")
-            # Determine the profile image based on user type
-            # if hasattr(request.user, 'VetProfile'):  # Check if the user has a vet profile
-            #     profile_image = request.user.VetProfile.vet_image.url  # Get vet image
-            # elif hasattr(request.user, 'PetOwnerProfile'):  # Check if the user has a pet profile
-            #     profile_image = request.user.PetOwnerProfile.human_image.url  # Get human image
-            # else:
-            #     profile_image = None  # Fallback if neither profile exists
-
-        #     return JsonResponse({
-        #         "post": {
-        #             "title": post.title,
-        #             "category": post.category,
-        #             "body": post.body,
-        #             # "image": post.image.url,
-        #             "username": post.user.username,
-        #             # "profile_image": profile_image,
-        #             "date": timesince(post.date),
-        #             "id": post.id,
-        #         },
-        #     })
-        # else:
-        #     return JsonResponse({"error": "Image or title does not exist"})
 
     return JsonResponse({"data": "sent"})
 
@@ -177,70 +195,6 @@ def comment_reply(request):
 
     return JsonResponse({"data": data})
 
-    
-# @login_required
-# def inbox_details(request, username):
-#     sender = request.user
-#     receiver = get_object_or_404(User, username=username)
-
-#     # Fetch the conversation between sender and receiver, ordered by date (latest at the bottom)
-#     messages_detail = ChatMessage.objects.filter(
-#         Q(sender=sender, receiver=receiver) | Q(sender=receiver, receiver=sender)
-#     ).order_by("date")
-
-#     # Mark messages as read (only messages received by the user)
-#     messages_detail.filter(receiver=sender).update(is_read=True)
-
-#     # Get a list of recent unique conversations involving the sender
-#     message_list = ChatMessage.objects.filter(
-#         Q(sender=sender) | Q(receiver=sender)
-#     ).order_by("-date")
-
-#     # Ensure unique conversations by grouping by sender-receiver pairs
-#     conversation_partners = {}
-#     for message in message_list:
-#         if message.sender == sender:
-#             partner = message.receiver
-#         else:
-#             partner = message.sender
-
-#         if partner not in conversation_partners:
-#             conversation_partners[partner] = message
-
-#     context = {
-#         "message_detail": messages_detail,  # Messages between sender & receiver
-#         "receiver": receiver,
-#         "sender": sender,
-#         "message_list": conversation_partners.values(),  # Unique recent conversations
-#     }
-#     return render(request, 'chat/inbox_detail.html', context)
-
-
-# @login_required
-# def inbox_detail(request):
-#     user_id = request.user
-#     message_list = ChatMessage.objects.filter(
-#         id__in =  Subquery(
-#             User.objects.filter(
-#                 Q(sender__receiver=user_id) |
-#                 Q(receiver__sender=user_id)
-#             ).distinct().annotate(
-#                 last_msg=Subquery(
-#                     ChatMessage.objects.filter(
-#                         Q(sender=OuterRef('id'),receiver=user_id) |
-#                         Q(receiver=OuterRef('id'),sender=user_id)
-#                     ).order_by('-id')[:1].values_list('id',flat=True) 
-#                 )
-#             ).values_list('last_msg', flat=True).order_by("-id")
-#         )
-#     ).order_by("-id")
-
-
-#     context = {
-
-#         "message_list":message_list,
-#     }
-#     return render(request, 'chat/inbox_detail.html', context)
 
 @login_required
 def inbox_details(request, username=None):
