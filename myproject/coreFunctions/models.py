@@ -10,15 +10,22 @@ import shortuuid
 
 class Category(models.Model):
     name = models.CharField(max_length=100, unique=True)
+    slug = models.SlugField(null=True, blank=True)
     description = models.TextField(blank=True, null=True)
 
     class Meta:
         verbose_name = 'Category'
         verbose_name_plural = 'Categories'
 
-
     def __str__(self):
         return self.name
+
+    def save(self, *args, **kwargs):
+        if not self.slug:  # Check if slug is empty or None
+            uuid_key = shortuuid.uuid()  # Generate a short UUID
+            uniqueid = uuid_key[:2]  # Use the first 2 characters
+            self.slug = slugify(self.name) + '-' + str(uniqueid.lower())  # Create unique slug
+        super(Category, self).save(*args, **kwargs)
     
 
 
