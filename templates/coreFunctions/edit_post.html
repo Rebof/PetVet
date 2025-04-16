@@ -1,0 +1,135 @@
+{% extends 'main/base1.html' %}
+{% load static %}
+
+{% block content %}
+<link rel="stylesheet" href="{% static 'assets/css/post_detail.css' %}">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+<div class="pet-feed-content">
+    <div class="post-detail-wrapper">
+        <div class="post-detail-container">
+            <!-- Main Content Column -->
+            <div class="main-content">
+                <!-- Edit Post Form -->
+                <div class="post-card glass-card">
+                    <div class="post-content">
+                        <div class="post-header">
+                            <h2 class="post-title">
+                                <i class="fas fa-edit"></i> Edit Post
+                            </h2>
+                        </div>
+                        
+                        <form method="POST" enctype="multipart/form-data" class="edit-post-form">
+                            {% csrf_token %}
+                            
+                            <div class="form-group">
+                                <label for="title">Title</label>
+                                <input type="text" id="title" name="title" value="{{ post.title }}" required>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="category">Category</label>
+                                <select id="category" name="category" class="form-control">
+                                    {% for category in categories %}
+                                    <option value="{{ category.id }}" {% if post.category.id == category.id %}selected{% endif %}>
+                                        {{ category.name }}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="body">Content</label>
+                                <textarea id="body" name="body">{{ post.body }}</textarea>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label>Current Media</label>
+                                <div class="current-media">
+                                    {% if post.image %}
+                                        <img src="{{ post.image.url }}" alt="Current post image" class="current-image">
+                                        <div class="media-actions">
+                                            <label class="replace-media-btn">
+                                                <i class="fas fa-sync-alt"></i> Replace Image
+                                                <input type="file" name="image" accept="image/*" class="hidden-input">
+                                            </label>
+                                            <button type="button" class="remove-media-btn" data-media-type="image">
+                                                <i class="fas fa-trash"></i> Remove
+                                            </button>
+                                        </div>
+                                    {% elif post.video %}
+                                        <video controls class="current-video">
+                                            <source src="{{ post.video.url }}" type="video/mp4">
+                                        </video>
+                                        <div class="media-actions">
+                                            <label class="replace-media-btn">
+                                                <i class="fas fa-sync-alt"></i> Replace Video
+                                                <input type="file" name="video" accept="video/*" class="hidden-input">
+                                            </label>
+                                            <button type="button" class="remove-media-btn" data-media-type="video">
+                                                <i class="fas fa-trash"></i> Remove
+                                            </button>
+                                        </div>
+                                    {% else %}
+                                        <div class="no-media">
+                                            <i class="fas fa-image"></i>
+                                            <p>No media attached</p>
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label>Add New Media</label>
+                                <div class="media-options">
+                                    <label class="media-option-btn">
+                                        <i class="fas fa-image"></i> Add Image
+                                        <input type="file" name="new_image" accept="image/*" class="hidden-input">
+                                    </label>
+                                    <label class="media-option-btn">
+                                        <i class="fas fa-video"></i> Add Video
+                                        <input type="file" name="new_video" accept="video/*" class="hidden-input">
+                                    </label>
+                                </div>
+                            </div>
+                            
+                            <div class="form-actions">
+                                <button type="button" class="btn btn-outline cancel-btn" onclick="window.history.back()">
+                                    <i class="fas fa-times"></i> Cancel
+                                </button>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-save"></i> Save Changes
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Category Sidebar (same as post_detail.html) -->
+            <div class="category-sidebar">
+                <div class="category-card glass-card">
+                    <h3 class="category-header">
+                        <i class="fas fa-folder"></i> Categories
+                    </h3>
+                    <ul class="category-list">
+                        {% for category in categories %}
+                        <li class="category-item">
+                            <a href="" class="category-link {% if post.category == category %}active{% endif %}">
+                                <i class="fas fa-hashtag"></i>
+                                <span>{{ category.name }}</span>
+                                <span class="category-count">{{ category.post_count }}</span>
+                            </a>
+                        </li>
+                        {% empty %}
+                        <li class="category-item">No categories available</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="{% static 'assets/js/edit_post.js' %}"></script>
+{% endblock %}

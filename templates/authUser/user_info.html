@@ -259,11 +259,8 @@
                             <a href="{% url 'coreFunctions:post-detail' post.slug %}" class="btn btn-view">
                                 <i class="fas fa-eye"></i> View
                             </a>
-                            <button class="btn btn-edit" onclick="">
+                            <button class="btn btn-edit" onclick="window.location.href='{% url 'coreFunctions:edit_post' post.slug %}'">
                                 <i class="fas fa-edit"></i> Edit
-                            </button>
-                            <button class="btn btn-delete" onclick="">
-                                <i class="fas fa-trash"></i> Delete
                             </button>
                         </div>
                     </div>
@@ -288,7 +285,7 @@
                     <div class="content-card">
                         <div class="comment-header">
                             <h3 class="content-title">
-                                <a href="" class="post-link">
+                                <a href="{% url 'coreFunctions:post-detail' comment.post.slug %}#comment-{{ comment.id }}" class="post-link">
                                     On Post: {{ comment.post.title }}
                                 </a>
                             </h3>
@@ -298,12 +295,7 @@
                                     <i class="fas fa-heart"></i>
                                     <span class="like-count">{{ comment.likes.count }}</span>
                                 </button>
-                                <button class="btn-edit" onclick="">
-                                    <i class="fas fa-edit">E</i>
-                                </button>
-                                <button class="btn-delete" onclick="">
-                                    <i class="fas fa-trash">D</i>
-                                </button>
+
                             </div>
                         </div>
                         

@@ -1,0 +1,38 @@
+<div class="comment" id="comment-{{ comment.id }}">
+    <div class="like-column">
+        <button class="like-btn {% if request.user in comment.likes.all %}active{% endif %}" 
+                data-comment-id="{{ comment.id }}" aria-label="Like comment">
+            <i class="fas fa-heart"></i>
+            <span class="like-count">{{ comment.likes.count }}</span>
+        </button>
+    </div>
+    
+    <div class="comment-content">
+        <div class="comment-header">
+            <img src="{{ comment.user.profile_picture.url }}" 
+                 alt="{{ comment.user.username }}" 
+                 class="comment-author-avatar">
+            <span class="comment-author">u/{{ comment.user.username }}</span>
+            <span class="comment-time">{{ comment.date|timesince }} ago</span>
+        </div>
+        
+        <div class="comment-body">
+            <p>{{ comment.comment }}</p>
+        </div>
+        
+        <div class="comment-actions">
+            <button class="action-btn reply-btn" data-comment-id="{{ comment.id }}">
+                <i class="fas fa-reply"></i> Reply
+            </button>
+            <button class="action-btn share-btn">
+                <i class="fas fa-share"></i> Share
+            </button>
+            {% if request.user == comment.user %}
+            <button class="action-btn delete-btn" onclick="confirmDeleteComment({{ comment.id }})">
+                <i class="fas fa-trash"></i> Delete
+            </button>
+            
+            {% endif %}
+        </div>
+    </div>
+</div>
