@@ -17,4 +17,14 @@ urlpatterns = [
     path('pet/<int:pet_id>/', views.pet_profile, name='pet_profile'),
     # path('pet/<int:pk>/update/', views.update_pet, name='update_pet'),
     path('pet/<int:pk>/delete/', views.delete_pet, name='delete_pet'),
+
+    
+
+    path('settings/', views.account_settings, name='account_settings'),
+    path('change-password/', views.change_password, name='change_password'),
+    path('forgot-password/', views.forgot_password, name='forgot_password'),
+    path('reset-password/<str:token>/', views.reset_password, name='reset_password'),
+    
+    # Account Deletion
+    path('delete-account/', views.delete_account, name='delete_account'),
 ]

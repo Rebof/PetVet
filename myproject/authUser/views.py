@@ -1,6 +1,6 @@
 from django.http import Http404
 from django.shortcuts import get_object_or_404, render, redirect
-from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth import authenticate, login, logout, get_user_model, update_session_auth_hash
 from django.contrib import messages
 from .forms import UserRegistrationForm,VetProfileForm, PetOwnerProfileForm
 from .models import VetProfile, PetOwnerProfile, Pet
@@ -8,12 +8,124 @@ from django.contrib.auth.decorators import login_required
 from coreFunctions.models import Post, Comment, ReplyComment
 import random
 from django.core.mail import send_mail
+from django.conf import settings
+from django.contrib.auth.forms import PasswordChangeForm
+from django.utils.crypto import get_random_string
+from django.urls import reverse
+
+
+User = get_user_model()
+
+@login_required
+def account_settings(request):
+    """View for displaying and handling account settings."""
+    return render(request, 'authUser/settings.html')
+
+@login_required
+def change_password(request):
+    """View for changing user password."""
+    if request.method == 'POST':
+        form = PasswordChangeForm(request.user, request.POST)
+        if form.is_valid():
+            user = form.save()
+            # Keep the user logged in after password change
+            update_session_auth_hash(request, user)
+            messages.success(request, 'Your password was successfully updated!')
+            return redirect('authUser:account_settings')
+        else:
+            for error in form.errors.values():
+                messages.error(request, error)
+    return redirect('authUser:account_settings')
+
+@login_required
+def delete_account(request):
+    """View for deleting user account."""
+    if request.method == 'POST':
+        email = request.POST.get('confirm_email')
+        password = request.POST.get('confirm_password')
+        
+        # Verify user credentials
+        if email == request.user.email:
+            user = request.user
+            if user.check_password(password):
+                # Log the user out first
+                logout(request)
+                # Delete the user account
+                user.delete()
+                messages.success(request, 'Your account has been permanently deleted.')
+                return redirect('authUser:login')
+            else:
+                messages.error(request, 'Incorrect password. Account deletion failed.')
+        else:
+            messages.error(request, 'Email does not match your account. Deletion failed.')
+    
+    return redirect('authUser:account_settings')
+
+def forgot_password(request):
+    """View for initiating password reset process."""
+    if request.method == 'POST':
+        email = request.POST.get('email')
+        try:
+            user = User.objects.get(email=email)
+            # Generate token
+            token = get_random_string(64)
+            # Save token to user profile or a dedicated password reset model
+            user.otp = token
+            user.save()
+            
+            # Create reset link
+            reset_link = request.build_absolute_uri(
+                reverse('authUser:reset_password', kwargs={'token': token})
+            )
+            
+            # Send email
+            send_mail(
+                'PetCare Connect - Password Reset',
+                f'Click the following link to reset your password: {reset_link}',
+                settings.DEFAULT_FROM_EMAIL,
+                [email],
+                fail_silently=False,
+            )
+            
+            messages.success(request, 'Password reset link has been sent to your email.')
+        except User.DoesNotExist:
+            # Don't reveal that the user doesn't exist for security reasons
+            messages.success(request, 'If your email exists in our system, you will receive a password reset link.')
+    
+    return render(request, 'authUser/forgot_password.html')
+
+def reset_password(request, token):
+    """View for resetting password using token."""
+    try:
+        user = User.objects.get(otp=token)
+        
+        if request.method == 'POST':
+            password1 = request.POST.get('new_password1')
+            password2 = request.POST.get('new_password2')
+            
+            if password1 == password2:
+                # Set new password
+                user.set_password(password1)
+                # Clear the token
+                user.otp = None
+                user.save()
+                
+                messages.success(request, 'Your password has been reset successfully. You can now log in with your new password.')
+                return redirect('authUser:login')
+            else:
+                messages.error(request, 'Passwords do not match.')
+        
+        return render(request, 'authUser/reset_password.html')
+    
+    except User.DoesNotExist:
+        messages.error(request, 'Invalid or expired password reset link.')
+        return redirect('authUser:loginUser')
 
 
 def RegisterView(request):
     if request.user.is_authenticated:
         messages.warning(request, "You are already registered!")
-        return redirect("coreFunctions:feed")
+        return redirect("coreFunctions:index")
 
     form = UserRegistrationForm(request.POST or None)
 
@@ -62,7 +174,7 @@ def RegisterView(request):
             if not user.profile_completed:  
                 return redirect("complete-profile")
 
-            return redirect("coreFunctions:feed")
+            return redirect("coreFunctions:index")
         else:
             messages.error(request, "There was an issue with your login. Please try again.")
 
@@ -73,7 +185,7 @@ def RegisterView(request):
 def LoginView(request):
     if request.user.is_authenticated:
         messages.warning(request, "You are already logged in!")
-        return redirect("coreFunctions:feed")
+        return redirect("coreFunctions:index")
 
     if request.method == "POST":
         email = request.POST.get("email")
@@ -91,7 +203,7 @@ def LoginView(request):
                 print("redirect bhayo")
                 return redirect("complete-profile")
             
-            return redirect("coreFunctions:feed")
+            return redirect("coreFunctions:index")
         else:
             # If authentication fails
             messages.error(request, "Invalid username or password")
@@ -176,10 +288,10 @@ def profile_verification_in_progress(request):
         return render(request, 'authUser/verify_otp.html')
     # If the profile is verified, redirect to the feed page
     elif request.user.user_type == 'vet' and request.user.status_verification:
-        return redirect("coreFunctions:feed")
+        return redirect("coreFunctions:index")
     else:
         # If the user is not a vet or verification is not needed
-        return redirect("coreFunctions:feed")
+        return redirect("coreFunctions:index")
     
 
 def verify_otp(request):
@@ -218,7 +330,7 @@ def add_pet(request):
             owner_profile = PetOwnerProfile.objects.get(user=request.user)
         except PetOwnerProfile.DoesNotExist:
             # Handle case where the user is not a pet owner
-            return redirect('coreFunctions:feed')  # or any fallback
+            return redirect('coreFunctions:indeex')  # or any fallback
 
         # Create and save the pet instance
         pet = Pet.objects.create(
@@ -235,7 +347,7 @@ def add_pet(request):
             pet_image=pet_image
         )
 
-        return redirect('coreFunctions:feed')  # Replace with the correct URL name for pet list
+        return redirect('coreFunctions:index')  # Replace with the correct URL name for pet list
 
     return render(request, 'authUser/add_pet.html')
 
@@ -291,5 +403,5 @@ def delete_pet(request, pk):
         pet_name = pet.name
         pet.delete()
         messages.success(request, f"{pet_name} has been removed from your profile.")
-        return redirect('coreFunctions:feed')  # Make sure this is your correct redirect target
+        return redirect('coreFunctions:index')  # Make sure this is your correct redirect target
     raise Http404("Invalid request method")

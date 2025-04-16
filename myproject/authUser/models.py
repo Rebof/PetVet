@@ -41,6 +41,7 @@ class User(AbstractUser):
     user_type = models.CharField(max_length=20, choices=USER_TYPE_CHOICES, default='pet_owner')
     
     otp = models.CharField(max_length=100, null=True, blank=True)
+    
 
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['username']
