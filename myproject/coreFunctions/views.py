@@ -15,33 +15,6 @@ from django.template.loader import render_to_string
 from datetime import datetime
 
 
-
-
-
-
-# Create your views here.
-
-# @login_required(login_url='authUser:register')
-# def index(request, category_slug=None):
-#     posts = Post.objects.all().order_by('-date')
-#     categories = Category.objects.annotate(post_count=Count('post'))
-#     trending_posts = Post.objects.annotate(like_count=Count('likes')).order_by('-like_count')[:5]
-
-#     selected_category = None
-
-#     if category_slug:
-#         selected_category = get_object_or_404(Category, slug=category_slug)
-#         posts = posts.filter(category=selected_category)
-
-#     context = {
-#         'posts': posts,
-#         'categories': categories,
-#         'trending_posts': trending_posts,
-#         'selected_category': selected_category,
-#     }
-
-#     return render(request, 'coreFunctions/index.html', context)
-
 @login_required(login_url='authUser:register')
 def index(request, category_slug=None):
     # Get sort parameter (default to 'newest')
@@ -51,22 +24,14 @@ def index(request, category_slug=None):
     date_filter = request.GET.get('date')
     
     # Start with all posts
-    posts_query = Post.objects.all()
+    posts_query = Post.objects.filter(active=True)
     
     # Apply category filter if provided
     selected_category = None
     if category_slug:
         selected_category = get_object_or_404(Category, slug=category_slug)
         posts_query = posts_query.filter(category=selected_category)
-    
-    # Apply date filter if provided
-    if date_filter:
-        try:
-            filter_date = datetime.strptime(date_filter, '%Y-%m-%d').date()
-            posts_query = posts_query.filter(date__date=filter_date)
-        except ValueError:
-            # Invalid date format, ignore filter
-            pass
+
     
      # Apply sorting
     if sort_by == 'likes':
@@ -99,7 +64,6 @@ def index(request, category_slug=None):
         'trending_posts': trending_posts,
         'selected_category': selected_category,
         'sort_by': sort_by,
-        'date_filter': date_filter,
     }
     
     return render(request, 'coreFunctions/index.html', context)
@@ -130,10 +94,6 @@ def like_post(request, post_id):
     
     return JsonResponse({'status': 'error', 'message': 'Invalid request'}, status=400)
 
-# Add a feed URL that points to the index view
-def feed(request):
-    """Alias for index view to match the URL in JavaScript"""
-    return index(request)
 
 @login_required
 def create_post(request):
@@ -180,7 +140,7 @@ def create_post(request):
         return redirect('coreFunctions:post-detail', slug=post.slug)
 
     # If not POST, redirect to feed
-    return redirect('coreFunctions:feed')
+    return redirect('coreFunctions:index')
 
 # Add a feed URL that points to the index view
 def feed(request):
@@ -188,56 +148,55 @@ def feed(request):
     return index(request)
 
 
-@login_required
-def create_post(request):
-    if request.method == 'POST':
-        title = request.POST.get('title')
-        body = request.POST.get('body')
-        category_id = request.POST.get('category')
-        image = request.FILES.get('image')
+# @login_required
+# def create_post(request):
+#     if request.method == 'POST':
+#         title = request.POST.get('title')
+#         body = request.POST.get('body')
+#         category_id = request.POST.get('category')
+#         image = request.FILES.get('image')
         
-        # Validate required fields
-        if not title or not body or not category_id:
-            messages.error(request, 'Please fill in all required fields')
-            return redirect('coreFunctions:feed')
+#         # Validate required fields
+#         if not title or not body or not category_id:
+#             messages.error(request, 'Please fill in all required fields')
+#             return redirect('coreFunctions:feed')
         
-        # Get category
-        try:
-            category = Category.objects.get(id=category_id)
-        except Category.DoesNotExist:
-            messages.error(request, 'Invalid category')
-            return redirect('coreFunctions:feed')
+#         # Get category
+#         try:
+#             category = Category.objects.get(id=category_id)
+#         except Category.DoesNotExist:
+#             messages.error(request, 'Invalid category')
+#             return redirect('coreFunctions:feed')
         
-        # Create slug from title
-        slug = slugify(title)
+#         # Create slug from title
+#         slug = slugify(title)
         
-        # Check if slug already exists, if so, add a unique identifier
-        if Post.objects.filter(slug=slug).exists():
-            slug = f"{slug}-{shortuuid.ShortUUID().random(length=6)}"
+#         # Check if slug already exists, if so, add a unique identifier
+#         if Post.objects.filter(slug=slug).exists():
+#             slug = f"{slug}-{shortuuid.ShortUUID().random(length=6)}"
         
-        # Create post
-        post = Post.objects.create(
-            title=title,
-            body=body,
-            category=category,
-            user=request.user,
-            slug=slug
-        )
+#         # Create post
+#         post = Post.objects.create(
+#             title=title,
+#             body=body,
+#             category=category,
+#             user=request.user,
+#             slug=slug
+#         )
         
-        # Add image if provided
-        if image:
-            post.image = image
-            post.save()
+#         # Add image if provided
+#         if image:
+#             post.image = image
+#             post.save()
         
-        messages.success(request, 'Post created successfully')
-        return redirect('coreFunctions:post-detail', slug=post.slug)
+#         messages.success(request, 'Post created successfully')
+#         return redirect('coreFunctions:post-detail', slug=post.slug)
     
-    # If not POST, redirect to feed
-    return redirect('coreFunctions:feed')
+#     # If not POST, redirect to feed
+#     return redirect('coreFunctions:index')
 
 
-from django.shortcuts import render, get_object_or_404
-from .models import Post, Comment, ReplyComment
+
 
 def post_detail(request, slug):
     # Get active post by slug

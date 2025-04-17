@@ -12,7 +12,7 @@ from django.core.mail import send_mail
 from django.template.loader import render_to_string
 from django.utils.html import strip_tags
 from .models import VetProfile, VetSchedule, Appointment
-from authUser.models import VetProfile, PetOwnerProfile
+from authUser.models import VetProfile, PetOwnerProfile, Pet
 
 # Khalti Configuration
 KHALTI_SECRET_KEY = 'key 669c9d57a23f42edbd586629b54b0a25'
@@ -178,21 +178,35 @@ def book_appointment(request, vet_id, schedule_id):
     vet = get_object_or_404(VetProfile, id=vet_id)
     schedule = get_object_or_404(VetSchedule, id=schedule_id)
     pet_owner = get_object_or_404(PetOwnerProfile, user=request.user)
+    pets = pet_owner.pets.all()  # Fetch all pets for the dropdown
 
     if Appointment.objects.filter(schedule=schedule, status="confirmed").exists():
         return render(request, "appointment/book_appt.html", {
             "vet": vet,
             "schedule": schedule,
+            "pets": pets,
             "error": "This slot is already booked."
         })
 
     if request.method == "POST":
+        pet_id = request.POST.get("pet")
         reason = request.POST.get("reason", "No reason provided")
+        
+        try:
+            selected_pet = Pet.objects.get(id=pet_id, owner=pet_owner)
+        except Pet.DoesNotExist:
+            return render(request, "appointment/book_appt.html", {
+                "vet": vet,
+                "schedule": schedule,
+                "pets": pets,
+                "error": "Invalid pet selection."
+            })
 
         appointment = Appointment.objects.create(
             pet_owner=pet_owner,
             vet=vet,
             schedule=schedule,
+            pet=selected_pet,
             reason=reason,
             status="unpaid",
             payment_status='unpaid'
@@ -200,16 +214,22 @@ def book_appointment(request, vet_id, schedule_id):
 
         return redirect('appointment:initiate_khalti_payment', appointment_id=appointment.id)
 
-    return render(request, "appointment/book_appt.html", {"vet": vet, "schedule": schedule})
+    return render(request, "appointment/book_appt.html", {
+        "vet": vet,
+        "schedule": schedule,
+        "pets": pets
+    })
 
 @login_required
 def book_with_credit(request, vet_id, schedule_id):
     vet = get_object_or_404(VetProfile, id=vet_id)
     schedule = get_object_or_404(VetSchedule, id=schedule_id)
     pet_owner = get_object_or_404(PetOwnerProfile, user=request.user)
+    pets = pet_owner.pets.all()  # Fetch all pets for the dropdown
 
     if request.method == "POST":
         reason = request.POST.get("reason", "No reason provided")
+        pet_id = request.POST.get("pet")
 
         # Check if slot is already booked
         if Appointment.objects.filter(schedule=schedule, status="confirmed").exists():
@@ -222,6 +242,9 @@ def book_with_credit(request, vet_id, schedule_id):
             return redirect('appointment:book_appointment', vet_id=vet_id, schedule_id=schedule_id)
 
         try:
+            # Check if valid pet is selected
+            selected_pet = Pet.objects.get(id=pet_id, owner=pet_owner)
+
             # Deduct from credit balance
             pet_owner.credit_balance -= 1000 * 100  # Deduct 1000 NPR
             pet_owner.save()
@@ -231,10 +254,11 @@ def book_with_credit(request, vet_id, schedule_id):
                 pet_owner=pet_owner,
                 vet=vet,
                 schedule=schedule,
+                pet=selected_pet,  # Assign the selected pet
                 reason=reason,
                 status="unpaid",
                 payment_status='unpaid',
-                amount_paid=1000 * 100
+                amount_paid=1000 * 100  # 1000 NPR in paisa
             )
 
             # Payment successful - store details and await vet approval
@@ -252,6 +276,9 @@ def book_with_credit(request, vet_id, schedule_id):
             messages.success(request, "Appointment booked successfully using your credit balance!")
             return redirect('appointment:appointment_detail', appointment_id=appointment.id)
 
+        except Pet.DoesNotExist:
+            messages.error(request, "Invalid pet selection.")
+            return redirect('appointment:book_appointment', vet_id=vet_id, schedule_id=schedule_id)
         except Exception as e:
             # Revert credit deduction if error occurs
             pet_owner.credit_balance += 1000 * 100
@@ -259,7 +286,13 @@ def book_with_credit(request, vet_id, schedule_id):
             messages.error(request, f"Error booking appointment: {str(e)}")
             return redirect('appointment:book_appointment', vet_id=vet_id, schedule_id=schedule_id)
 
-    return redirect('appointment:book_appointment', vet_id=vet_id, schedule_id=schedule_id)
+    # Render the page with the pet selection dropdown
+    return render(request, "appointment/book_appt.html", {
+        "vet": vet,
+        "schedule": schedule,
+        "pets": pets
+    })
+
 
 
 @login_required

@@ -220,31 +220,69 @@ def LogoutView(request):
 
 
 
+
 @login_required
-def user_info(request):
-    user = request.user
+def user_info(request, user_id=None):
+    # If no user_id is provided, show the current user's profile
+    if user_id is None:
+        user = request.user
+    else:
+        user = get_object_or_404(User, id=user_id)
+    
+    # Get the profile based on user type
+    if user.user_type == 'vet':
+        profile = VetProfile.objects.get(user=user)
+        profile_picture_field = 'vet_image'
+    else:
+        profile = PetOwnerProfile.objects.get(user=user)
+        profile_picture_field = 'human_image'
+
+    if request.method == 'POST' and request.user == user:
+        # Handle profile update
+        user.full_name = request.POST.get('full_name', user.full_name)
+        user.phone = request.POST.get('phone', user.phone)
+        user.gender = request.POST.get('gender', user.gender)
+        
+        if user.user_type == 'vet':
+            profile.clinic_name = request.POST.get('clinic_name', profile.clinic_name)
+            profile.specialization = request.POST.get('specialization', profile.specialization)
+            profile.experience_years = request.POST.get('experience_years', profile.experience_years)
+            profile.license_number = request.POST.get('license_number', profile.license_number)
+            profile.summary = request.POST.get('summary', profile.summary)
+        else:
+            profile.bio = request.POST.get('bio', profile.bio)
+            profile.pets_owned = request.POST.get('pets_owned', profile.pets_owned)
+        
+        profile.country = request.POST.get('country', profile.country)
+        profile.city = request.POST.get('city', profile.city)
+        profile.address = request.POST.get('address', profile.address)
+        
+        # Handle profile picture upload
+        if 'profile_picture' in request.FILES:
+            current_picture = getattr(profile, profile_picture_field)
+            if current_picture:
+                current_picture.delete()
+            setattr(profile, profile_picture_field, request.FILES['profile_picture'])
+        
+        user.save()
+        profile.save()
+        messages.success(request, 'Profile updated successfully!')
+        return redirect('authUser:user-info')
 
     # Fetch posts created by the user
     posts = Post.objects.filter(user=user)
-
     comments = Comment.objects.filter(user=user)
-
     reply_comments = ReplyComment.objects.filter(user=user)
 
     context = {
         'user': user,
-        'profile': None,
-        'posts': posts,  
-        'comments': comments,  
-        'reply_comments': reply_comments,  
+        'profile': profile,
+        'profile_picture_field': profile_picture_field,
+        'posts': posts,
+        'comments': comments,
+        'reply_comments': reply_comments,
+        'is_own_profile': (request.user == user),
     }
-
-    if user.user_type == 'vet':
-        profile = VetProfile.objects.get(user=user)
-        context['profile'] = profile
-    elif user.user_type == 'pet_owner':
-        profile = PetOwnerProfile.objects.get(user=user)
-        context['profile'] = profile
 
     return render(request, 'authUser/user_info.html', context)
 

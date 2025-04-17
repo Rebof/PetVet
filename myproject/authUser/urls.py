@@ -8,7 +8,8 @@ urlpatterns = [
     path("register", views.RegisterView ,name="register"),
     path('login/', views.LoginView, name='loginUser'),  
     path('logout/', views.LogoutView, name='logoutUser'),
-    path('user-info/', views.user_info, name='user-info'),
+    path('profile-page/', views.user_info, name='user-info'),
+    path('profile/<int:user_id>/', views.user_info, name='user_profile'),  # For other users
 
     path('profile-verification-in-progress/', views.profile_verification_in_progress, name='profile_verification_in_progress'),
     path('verify-otp/', views.verify_otp, name='verify_otp'),

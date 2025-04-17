@@ -36,7 +36,6 @@ class User(AbstractUser):
     gender = models.CharField(max_length=100, choices=GENDER, null=True, blank=True)
     status_verification = models.BooleanField(default=False)
     profile_completed = models.BooleanField(default=False)  
-
     
     user_type = models.CharField(max_length=20, choices=USER_TYPE_CHOICES, default='pet_owner')
     

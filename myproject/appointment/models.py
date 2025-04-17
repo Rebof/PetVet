@@ -53,6 +53,7 @@ class Appointment(models.Model):
     schedule = models.ForeignKey(VetSchedule, on_delete=models.CASCADE, related_name="appointments")
     reason = models.TextField(null=True, blank=True)
     status = models.CharField(max_length=50, choices=STATUS_CHOICES, default='pending')
+    pet = models.ForeignKey('authUser.Pet', on_delete=models.CASCADE, related_name='appointments', blank=True, null=True)
 
  
     payment_status = models.CharField(
