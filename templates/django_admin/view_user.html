@@ -1,0 +1,379 @@
+{% extends 'main/base3.html' %}
+{% load static %}
+
+{% block title %}User Details - PetVet Admin{% endblock %}
+
+{% block page_title %}User Details{% endblock %}
+
+{% block content %}
+<div class="user-profile-container">
+    <div class="user-profile-header">
+        <div class="user-profile-avatar">
+            {% if user_obj.user_type == 'vet' and profile.vet_image %}
+                <img src="{{ profile.vet_image.url }}" alt="{{ user_obj.username }}">
+            {% elif user_obj.user_type == 'pet_owner' and profile.human_image %}
+                <img src="{{ profile.human_image.url }}" alt="{{ user_obj.username }}">
+            {% else %}
+                <div class="avatar-placeholder">{{ user_obj.username|first|upper }}</div>
+            {% endif %}
+        </div>
+        <div class="user-profile-info">
+            <h2>{{ user_obj.full_name|default:user_obj.username }}</h2>
+            <div class="user-profile-meta">
+                <span class="user-badge user-badge-{{ user_obj.user_type }}">{{ user_obj.get_user_type_display }}</span>
+                {% if user_obj.status_verification %}
+                    <span class="user-badge user-badge-verified">Verified</span>
+                {% else %}
+                    <span class="user-badge user-badge-unverified">Unverified</span>
+                {% endif %}
+            </div>
+        </div>
+        <div class="user-profile-actions">
+            <button type="button" class="btn btn-danger" onclick="confirmDelete('{{ user_obj.id }}', '{{ user_obj.username }}')">Delete User</button>
+        </div>
+    </div>
+
+    <div class="user-profile-details">
+        <div class="form-container">
+            <h3>Account Information</h3>
+            <div class="detail-grid">
+                <div class="detail-item">
+                    <div class="detail-label">Username</div>
+                    <div class="detail-value">{{ user_obj.username }}</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Email</div>
+                    <div class="detail-value">{{ user_obj.email }}</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Full Name</div>
+                    <div class="detail-value">{{ user_obj.full_name|default:"-" }}</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Phone</div>
+                    <div class="detail-value">{{ user_obj.phone|default:"-" }}</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Gender</div>
+                    <div class="detail-value">{{ user_obj.get_gender_display|default:"-" }}</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Joined</div>
+                    <div class="detail-value">{{ user_obj.date_joined|date:"F d, Y" }}</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Last Login</div>
+                    <div class="detail-value">{{ user_obj.last_login|date:"F d, Y H:i"|default:"-" }}</div>
+                </div>
+            </div>
+        </div>
+
+        {% if profile %}
+        <div class="form-container">
+            <h3>Profile Information</h3>
+            <div class="detail-grid">
+                {% if user_obj.user_type == 'vet' %}
+                    <div class="detail-item">
+                        <div class="detail-label">Clinic Name</div>
+                        <div class="detail-value">{{ profile.clinic_name|default:"-" }}</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">License Number</div>
+                        <div class="detail-value">{{ profile.license_number|default:"-" }}</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Specialization</div>
+                        <div class="detail-value">{{ profile.specialization|default:"-" }}</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Experience</div>
+                        <div class="detail-value">{{ profile.experience_years|default:"-" }} years</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Average Rating</div>
+                        <div class="detail-value">{{ profile.average_rating }} / 5</div>
+                    </div>
+                {% elif user_obj.user_type == 'pet_owner' %}
+                    <div class="detail-item">
+                        <div class="detail-label">Bio</div>
+                        <div class="detail-value">{{ profile.bio|default:"-" }}</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Pets Owned</div>
+                        <div class="detail-value">{{ profile.pets_owned|default:"-" }}</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Credit Balance</div>
+                        <div class="detail-value">{{ profile.credit_balance }}</div>
+                    </div>
+                {% endif %}
+                <div class="detail-item">
+                    <div class="detail-label">Country</div>
+                    <div class="detail-value">{{ profile.country|default:"-" }}</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">City</div>
+                    <div class="detail-value">{{ profile.city|default:"-" }}</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Address</div>
+                    <div class="detail-value">{{ profile.address|default:"-" }}</div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <div class="form-container">
+            <h3>User Posts ({{ posts.count }})</h3>
+            {% if posts %}
+            <div class="table-container" style="margin-bottom: 0;">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Title</th>
+                            <th>Category</th>
+                            <th>Date</th>
+                            <th>Views</th>
+                            <th>Likes</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for post in posts %}
+                        <tr>
+                            <td>{{ post.title }}</td>
+                            <td>{{ post.category.name|default:"Uncategorized" }}</td>
+                            <td>{{ post.date|date:"M d, Y" }}</td>
+                            <td>{{ post.views }}</td>
+                            <td>{{ post.likes.count }}</td>
+                            <td>
+                                {% if post.active %}
+                                <span class="badge badge-success">Active</span>
+                                {% else %}
+                                <span class="badge badge-danger">Inactive</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="table-actions">
+                                    <a href="{% url 'django_admin:view_post' post.id %}" class="btn btn-primary btn-sm">View</a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <p>This user has not created any posts yet.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div id="deleteModal" class="modal" style="display: none;">
+    <div class="modal-content">
+        <h3>Confirm Deletion</h3>
+        <p>Are you sure you want to delete user <span id="deleteUserName"></span>?</p>
+        <p>This action cannot be undone and will delete all associated data including posts, comments, and profile information.</p>
+        <div class="modal-actions">
+            <button type="button" class="btn btn-primary" onclick="closeModal()">Cancel</button>
+            <form id="deleteForm" method="post" action="">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-danger">Delete</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<style>
+.user-profile-container {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.user-profile-header {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    background-color: var(--background);
+    border: 1px solid var(--border);
+    border-radius: 0.5rem;
+    padding: 1.5rem;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.user-profile-avatar {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    overflow: hidden;
+    flex-shrink: 0;
+}
+
+.user-profile-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.avatar-placeholder {
+    width: 100%;
+    height: 100%;
+    background-color: var(--primary);
+    color: var(--primary-foreground);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+    font-weight: 600;
+}
+
+.user-profile-info {
+    flex: 1;
+}
+
+.user-profile-meta {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+}
+
+.user-badge {
+    display: inline-block;
+    padding: 0.25rem 0.5rem;
+    border-radius: 0.25rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.user-badge-vet {
+    background-color: rgba(79, 70, 229, 0.1);
+    color: var(--primary);
+}
+
+.user-badge-pet_owner {
+    background-color: rgba(16, 185, 129, 0.1);
+    color: var(--success);
+}
+
+.user-badge-verified {
+    background-color: rgba(16, 185, 129, 0.1);
+    color: var(--success);
+}
+
+.user-badge-unverified {
+    background-color: rgba(245, 158, 11, 0.1);
+    color: var(--warning);
+}
+
+.user-profile-actions {
+    display: flex;
+    gap: 1rem;
+}
+
+.detail-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 1rem;
+}
+
+.detail-item {
+    padding: 0.5rem 0;
+}
+
+.detail-label {
+    font-size: 0.875rem;
+    color: var(--muted-foreground);
+    margin-bottom: 0.25rem;
+}
+
+.detail-value {
+    font-weight: 500;
+}
+
+.modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+}
+
+.modal-content {
+    background-color: white;
+    padding: 2rem;
+    border-radius: 0.5rem;
+    max-width: 500px;
+    width: 100%;
+}
+
+.modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
+    margin-top: 1.5rem;
+}
+
+.badge {
+    display: inline-block;
+    padding: 0.25rem 0.5rem;
+    border-radius: 0.25rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.badge-success {
+    background-color: rgba(16, 185, 129, 0.1);
+    color: var(--success);
+}
+
+.badge-danger {
+    background-color: rgba(239, 68, 68, 0.1);
+    color: var(--danger);
+}
+
+@media (max-width: 768px) {
+    .user-profile-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .user-profile-actions {
+        margin-top: 1rem;
+        width: 100%;
+    }
+    
+    .user-profile-actions .btn {
+        width: 100%;
+    }
+}
+</style>
+
+<script>
+function confirmDelete(userId, username) {
+    document.getElementById('deleteUserName').textContent = username;
+    document.getElementById('deleteForm').action = "{% url 'django_admin:delete_user' 0 %}".replace('0', userId);
+    document.getElementById('deleteModal').style.display = 'flex';
+}
+
+function closeModal() {
+    document.getElementById('deleteModal').style.display = 'none';
+}
+
+// Close modal when clicking outside
+window.onclick = function(event) {
+    const modal = document.getElementById('deleteModal');
+    if (event.target === modal) {
+        closeModal();
+    }
+}
+</script>
+{% endblock %}

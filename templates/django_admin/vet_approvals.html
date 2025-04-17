@@ -1,0 +1,126 @@
+{% extends 'main/base3.html' %}
+{% load static %}
+
+{% block title %}Vet Approvals - PetVet Admin{% endblock %}
+
+{% block page_title %}Vet Approvals{% endblock %}
+
+{% block content %}
+<div class="stats-grid">
+    <div class="stat-card">
+        <div class="stat-title">Pending Approvals</div>
+        <div class="stat-value">{{ pending_vets.count }}</div>
+        <div class="stat-description">Vets waiting for approval</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-title">Recently Approved</div>
+        <div class="stat-value">{{ recently_approved_vets.count }}</div>
+        <div class="stat-description">Vets approved in the last 7 days</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-title">Recently Declined</div>
+        <div class="stat-value">{{ recently_declined_vets.count }}</div>
+        <div class="stat-description">Vets declined in the last 7 days</div>
+    </div>
+</div>
+
+<div class="table-container">
+    <h3 class="chart-title" style="padding: 1rem 1rem 0 1rem;">Pending Vet Approvals</h3>
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Clinic Name</th>
+                <th>License Number</th>
+                <th>Experience</th>
+                <th>Requested At</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for vet in pending_vets %}
+            <tr>
+                <td>{{ vet.user.full_name }}</td>
+                <td>{{ vet.user.email }}</td>
+                <td>{{ vet.clinic_name }}</td>
+                <td>{{ vet.license_number }}</td>
+                <td>{{ vet.experience_years }} years</td>
+                <td>{{ vet.date|date:"M d, Y" }}</td>
+                <td>
+                    <div class="table-actions">
+                        <a href="{% url 'django_admin:view_vet' vet.id %}" class="btn btn-primary btn-sm">View</a>
+                        <a href="{% url 'django_admin:approve_vet' vet.id %}" class="btn btn-success btn-sm">Approve</a>
+                        <a href="{% url 'django_admin:decline_vet' vet.id %}" class="btn btn-danger btn-sm">Decline</a>
+                    </div>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="7" class="text-center">No pending vet approvals.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<div class="table-container">
+    <h3 class="chart-title" style="padding: 1rem 1rem 0 1rem;">Recently Approved Vets</h3>
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Clinic Name</th>
+                <th>License Number</th>
+                <th>Approved At</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for vet in recently_approved_vets %}
+            <tr>
+                <td>{{ vet.user.full_name }}</td>
+                <td>{{ vet.user.email }}</td>
+                <td>{{ vet.clinic_name }}</td>
+                <td>{{ vet.license_number }}</td>
+                <td>{{ vet.status_change|date:"M d, Y" }}</td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="5" class="text-center">No recently approved vets.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<div class="table-container">
+    <h3 class="chart-title" style="padding: 1rem 1rem 0 1rem;">Recently Declined Vets</h3>
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Clinic Name</th>
+                <th>License Number</th>
+                <th>Declined At</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for vet in recently_declined_vets %}
+            <tr>
+                <td>{{ vet.user.full_name }}</td>
+                <td>{{ vet.user.email }}</td>
+                <td>{{ vet.clinic_name }}</td>
+                <td>{{ vet.license_number }}</td>
+                <td>{{ vet.status_change|date:"M d, Y" }}</td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="5" class="text-center">No recently declined vets.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

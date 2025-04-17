@@ -1,0 +1,214 @@
+{% extends 'main/base3.html' %}
+{% load static %}
+
+{% block title %}Post Management - PetVet Admin{% endblock %}
+
+{% block page_title %}Post Management{% endblock %}
+
+{% block content %}
+<div class="form-container">
+    <form method="get" action="{% url 'django_admin:post_management' %}" class="search-form">
+        <div class="form-group" style="display: flex; gap: 1rem;">
+            <div style="flex: 1;">
+                <label for="search" class="form-label">Search Posts</label>
+                <input type="text" id="search" name="search" class="form-input" placeholder="Search by title or content" value="{{ request.GET.search }}">
+            </div>
+            <div style="width: 200px;">
+                <label for="category" class="form-label">Category</label>
+                <select id="category" name="category" class="form-select">
+                    <option value="">All Categories</option>
+                    {% for category in categories %}
+                    <option value="{{ category.id }}" {% if request.GET.category == category.id|stringformat:"i" %}selected{% endif %}>{{ category.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div style="align-self: flex-end;">
+                <button type="submit" class="btn btn-primary">Search</button>
+            </div>
+        </div>
+    </form>
+</div>
+
+<div class="table-container">
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Title</th>
+                <th>Author</th>
+                <th>Category</th>
+                <th>Date</th>
+                <th>Views</th>
+                <th>Likes</th>
+                <th>Status</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for post in posts %}
+            <tr>
+                <td>{{ post.title }}</td>
+                <td>{{ post.user.username }}</td>
+                <td>{{ post.category.name|default:"Uncategorized" }}</td>
+                <td>{{ post.date|date:"M d, Y" }}</td>
+                <td>{{ post.views }}</td>
+                <td>{{ post.likes.count }}</td>
+                <td>
+                    {% if post.active %}
+                    <span class="badge badge-success">Active</span>
+                    {% else %}
+                    <span class="badge badge-danger">Inactive</span>
+                    {% endif %}
+                </td>
+                <td>
+                    <div class="table-actions">
+                        <a href="{% url 'django_admin:view_post' post.id %}" class="btn btn-primary btn-sm">View</a>
+                        <button type="button" class="btn btn-danger btn-sm" onclick="confirmDelete('{{ post.id }}', '{{ post.title|escapejs }}')">Delete</button>
+                    </div>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="8" class="text-center">No posts found.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+{% if posts.has_other_pages %}
+<div class="pagination">
+    {% if posts.has_previous %}
+    <div class="pagination-item">
+        <a href="?page=1{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.category %}&category={{ request.GET.category }}{% endif %}" class="pagination-link">
+            &laquo;
+        </a>
+    </div>
+    <div class="pagination-item">
+        <a href="?page={{ posts.previous_page_number }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.category %}&category={{ request.GET.category }}{% endif %}" class="pagination-link">
+            &lsaquo;
+        </a>
+    </div>
+    {% endif %}
+
+    {% for num in posts.paginator.page_range %}
+        {% if posts.number == num %}
+        <div class="pagination-item">
+            <a class="pagination-link active">{{ num }}</a>
+        </div>
+        {% elif num > posts.number|add:'-3' and num < posts.number|add:'3' %}
+        <div class="pagination-item">
+            <a href="?page={{ num }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.category %}&category={{ request.GET.category }}{% endif %}" class="pagination-link">{{ num }}</a>
+        </div>
+        {% endif %}
+    {% endfor %}
+
+    {% if posts.has_next %}
+    <div class="pagination-item">
+        <a href="?page={{ posts.next_page_number }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.category %}&category={{ request.GET.category }}{% endif %}" class="pagination-link">
+            &rsaquo;
+        </a>
+    </div>
+    <div class="pagination-item">
+        <a href="?page={{ posts.paginator.num_pages }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.category %}&category={{ request.GET.category }}{% endif %}" class="pagination-link">
+            &raquo;
+        </a>
+    </div>
+    {% endif %}
+</div>
+{% endif %}
+
+<!-- Delete Confirmation Modal -->
+<div id="deleteModal" class="modal" style="display: none;">
+    <div class="modal-content">
+        <h3>Confirm Deletion</h3>
+        <p>Are you sure you want to delete post "<span id="deletePostTitle"></span>"?</p>
+        <p>This action cannot be undone and will delete all associated comments.</p>
+        <div class="form-group">
+            <label for="notifyUser" class="form-label">
+                <input type="checkbox" id="notifyUser" checked> Send notification email to the user
+            </label>
+        </div>
+        <div class="modal-actions">
+            <button type="button" class="btn btn-primary" onclick="closeModal()">Cancel</button>
+            <form id="deleteForm" method="post" action="">
+                {% csrf_token %}
+                <input type="hidden" name="notify_user" id="notifyUserInput" value="true">
+                <button type="submit" class="btn btn-danger">Delete</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<style>
+.modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+}
+
+.modal-content {
+    background-color: white;
+    padding: 2rem;
+    border-radius: 0.5rem;
+    max-width: 500px;
+    width: 100%;
+}
+
+.modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
+    margin-top: 1.5rem;
+}
+
+.badge {
+    display: inline-block;
+    padding: 0.25rem 0.5rem;
+    border-radius: 0.25rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.badge-success {
+    background-color: rgba(16, 185, 129, 0.1);
+    color: var(--success);
+}
+
+.badge-danger {
+    background-color: rgba(239, 68, 68, 0.1);
+    color: var(--danger);
+}
+</style>
+
+<script>
+function confirmDelete(postId, postTitle) {
+    document.getElementById('deletePostTitle').textContent = postTitle;
+    document.getElementById('deleteForm').action = "{% url 'django_admin:delete_post' 0 %}".replace('0', postId);
+    document.getElementById('deleteModal').style.display = 'flex';
+}
+
+function closeModal() {
+    document.getElementById('deleteModal').style.display = 'none';
+}
+
+// Update hidden input when checkbox changes
+document.getElementById('notifyUser').addEventListener('change', function() {
+    document.getElementById('notifyUserInput').value = this.checked ? 'true' : 'false';
+});
+
+// Close modal when clicking outside
+window.onclick = function(event) {
+    const modal = document.getElementById('deleteModal');
+    if (event.target === modal) {
+        closeModal();
+    }
+}
+</script>
+{% endblock %}

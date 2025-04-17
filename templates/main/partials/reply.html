@@ -1,8 +1,14 @@
-<div class="comment reply" id="reply-{{ reply.id }}">
+<div class="comment reply {% if request.user == reply.user %}current-user-comment{% endif %}" id="reply-{{ reply.id }}">
     <div class="comment-content">
         <div class="comment-header">
-            <img src="{{ reply.user.profile_picture.url }}" alt="{{ reply.user.username }}" class="comment-author-avatar">
-            <span class="comment-author">u/{{ reply.user.username }}</span>
+            {% if reply.user.petownerprofile %}
+            <img src="{{ reply.user.petownerprofile.human_image.url }}" alt="{{ reply.user.username }}" class="comment-author-avatar">
+        {% elif reply.user.vetprofile %}
+            <img src="{{ reply.user.vetprofile.vet_image.url }}" alt="{{ reply.user.username }}" class="comment-author-avatar">
+        {% else %}
+            <i class="fas fa-user-circle comment-author-avatar" style="font-size: 32px;"></i>  {# fallback icon #}
+        {% endif %}
+                    <span class="comment-author">u/{{ reply.user.username }}</span>
             <span class="comment-time">{{ reply.date|timesince }} ago</span>
         </div>
         <div class="comment-body">

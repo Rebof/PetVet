@@ -1,4 +1,4 @@
-<div class="comment" id="comment-{{ comment.id }}">
+<div class="comment {% if request.user == comment.user %}current-user-comment{% endif %}" id="comment-{{ comment.id }}">
     <div class="like-column">
         <button class="like-btn {% if request.user in comment.likes.all %}active{% endif %}" 
                 data-comment-id="{{ comment.id }}" aria-label="Like comment">
@@ -9,12 +9,21 @@
     
     <div class="comment-content">
         <div class="comment-header">
-            <img src="{{ comment.user.profile_picture.url }}" 
-                 alt="{{ comment.user.username }}" 
-                 class="comment-author-avatar">
+            {% if comment.user.petownerprofile %}
+    <img src="{{ comment.user.petownerprofile.human_image.url }}" 
+         alt="{{ comment.user.username }}" 
+         class="comment-author-avatar">
+{% elif comment.user.vetprofile %}
+    <img src="{{ comment.user.vetprofile.vet_image.url }}" 
+         alt="{{ comment.user.username }}" 
+         class="comment-author-avatar">
+{% else %}
+    <i class="fas fa-user-circle comment-author-avatar" style="font-size: 32px;"></i>
+{% endif %}
             <span class="comment-author">u/{{ comment.user.username }}</span>
             <span class="comment-time">{{ comment.date|timesince }} ago</span>
         </div>
+        
         
         <div class="comment-body">
             <p>{{ comment.comment }}</p>
@@ -31,7 +40,6 @@
             <button class="action-btn delete-btn" onclick="confirmDeleteComment({{ comment.id }})">
                 <i class="fas fa-trash"></i> Delete
             </button>
-            
             {% endif %}
         </div>
     </div>

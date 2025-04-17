@@ -8,44 +8,60 @@
 
 <div class="pet-feed-content">
     <div class="vet-list-container">
+        <!-- Header Section - Now matches appointments page -->
         <div class="section-header">
-            <h1><i class="fas fa-search"></i> Find Veterinarians</h1>
-            <p>Browse our network of trusted veterinary professionals</p>
+            <div class="header-content">
+                <h1><i class="fas fa-search"></i> Find Veterinarians</h1>
+                <p>Browse our network of trusted veterinary professionals</p>
+            </div>
+            
+            <div class="vet-filters">
+                <div class="filter-group">
+                    <label for="experience-sort"><i class="fas fa-sort"></i> Sort by:</label>
+                    <select id="experience-sort" class="filter-select">
+                        <option value="">All Vets</option>
+                        <option value="experience_high">Experience: High to Low</option>
+                        <option value="experience_low">Experience: Low to High</option>
+                    </select>
+                </div>
+                
+                <div class="filter-group">
+                    <label for="location-search"><i class="fas fa-map-marker-alt"></i> Location:</label>
+                    <input type="text" id="location-search" class="filter-select" placeholder="City or area...">
+                </div>
+            </div>
         </div>
 
-        <div class="vet-search-tools">
-            <div class="search-sort">
-                <i class="fas fa-sort"></i>
-                <select id="experience-sort">
-                    <option value="">Sort by</option>
-                    <option value="experience_high">Experience: High to Low</option>
-                    <option value="experience_low">Experience: Low to High</option>
-                </select>
-            </div>
-            <div class="search-location">
-                <i class="fas fa-map-marker-alt"></i>
-                <input type="text" id="location-search" placeholder="Search by location...">
-            </div>
-        </div>
-
+        <!-- Vet Cards Grid - Updated styling -->
         <div class="vet-grid">
             {% for vet in vets %}
-            <div class="vet-card" data-experience="{{ vet.experience_years|default:0 }}" data-location="{{ vet.city|default:'' }}">
+            <div class="vet-card" data-experience="{{ vet.experience_years|default:0 }}" data-location="{{ vet.city|default:''|lower }}">
                 <div class="vet-card-header">
                     <div class="vet-avatar">
-                        <img src="" alt="{{ vet.user.full_name }}">
+                        {% if vet.user.profile_picture %}
+                        <img src="{{ vet.user.profile_picture.url }}" alt="{{ vet.user.full_name }}">
+                        {% else %}
+                        <img src="{% static 'assets/images/default-avatar.png' %}" alt="{{ vet.user.full_name }}">
+                        {% endif %}
                         {% if vet.verified %}
                         <span class="verification-badge"><i class="fas fa-check-circle"></i> Verified</span>
                         {% endif %}
                     </div>
                     <div class="vet-info">
-                        <h3>{{ vet.user.full_name }}</h3>
-                        {% if vet.clinic_name %}
-                        <p class="clinic">{{ vet.clinic_name }}</p>
-                        {% endif %}
-                        {% if vet.city %}
-                        <p class="location"><i class="fas fa-map-marker-alt"></i> {{ vet.city }}{% if vet.country %}, {{ vet.country }}{% endif %}</p>
-                        {% endif %}
+                        <h3>Dr. {{ vet.user.full_name }}</h3>
+                        <div class="vet-meta">
+                            {% if vet.clinic_name %}
+                            <span class="clinic">
+                                <i class="fas fa-clinic-medical"></i> {{ vet.clinic_name }}
+                            </span>
+                            {% endif %}
+                            
+                            {% if vet.city %}
+                            <span class="location">
+                                <i class="fas fa-map-marker-alt"></i> {{ vet.city }}{% if vet.country %}, {{ vet.country }}{% endif %}
+                            </span>
+                            {% endif %}
+                        </div>
                         <div class="rating">
                             {% with rating=vet.average_rating %}
                                 {% for i in "12345" %}
@@ -57,15 +73,15 @@
                                         <i class="far fa-star"></i>
                                     {% endif %}
                                 {% endfor %}
+                                <span>{{ vet.average_rating|default:"0.0" }} ({{ vet.reviews.count }} reviews)</span>
                             {% endwith %}
-                            <span>{{ vet.average_rating }} ({{ vet.reviews.count }} reviews)</span>
                         </div>
                     </div>
                 </div>
                 
                 <div class="vet-card-body">
                     <div class="vet-bio">
-                        <p>{{ vet.summary|default:"Experienced veterinarian dedicated to providing compassionate care for your pets. Specializing in comprehensive health services to ensure your pet's wellbeing." }}</p>
+                        <p>{{ vet.summary|default:"Experienced veterinarian dedicated to providing compassionate care for your pets."|truncatechars:150 }}</p>
                     </div>
                     
                     <div class="vet-stats">
@@ -75,10 +91,11 @@
                             <span>{{ vet.experience_years }} year{{ vet.experience_years|pluralize }} experience</span>
                         </div>
                         {% endif %}
-                        {% if vet.license_number %}
+                        
+                        {% if vet.specialization %}
                         <div class="stat">
-                            <i class="fas fa-id-card"></i>
-                            <span>License: {{ vet.license_number }}</span>
+                            <i class="fas fa-stethoscope"></i>
+                            <span>Specializes in {{ vet.specialization }}</span>
                         </div>
                         {% endif %}
                     </div>
@@ -94,10 +111,13 @@
                 </div>
             </div>
             {% empty %}
-            <div class="no-results">
-                <i class="fas fa-search fa-2x"></i>
-                <h3>No veterinarians found</h3>
-                <p>Try adjusting your search filters or check back later</p>
+            <div class="no-results empty-state">
+                <i class="fas fa-search fa-3x"></i>
+                <h3>No Veterinarians Found</h3>
+                <p>We couldn't find any vets matching your criteria</p>
+                <button id="reset-filters" class="btn btn-outline">
+                    <i class="fas fa-undo"></i> Reset Filters
+                </button>
             </div>
             {% endfor %}
         </div>
@@ -105,112 +125,138 @@
 </div>
 
 <style>
-    /* Vet List Specific Styles */
-    .vet-list-container {
+    /* Base Container - matches appointments page */
+    .pet-feed-content .vet-list-container {
         max-width: 1200px;
         margin: 0 auto;
         padding: 2rem;
     }
     
-    .section-header {
-        margin-bottom: 2.5rem;
-        text-align: center;
+    /* Header Section - consistent with appointments */
+    .pet-feed-content .section-header {
+        margin-bottom: 2rem;
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-between;
+        align-items: flex-end;
+        gap: 1.5rem;
     }
     
-    .section-header h1 {
-        font-size: 2.2rem;
-        color: var(--dark);
+    .pet-feed-content .header-content h1 {
+        font-size: 2rem;
+        color: #2D3142;
         margin-bottom: 0.5rem;
         display: flex;
         align-items: center;
-        justify-content: center;
         gap: 0.8rem;
     }
     
-    .section-header p {
-        color: var(--text-light);
-        font-size: 1.1rem;
+    .pet-feed-content .header-content h1 i {
+        color: #4ECDC4;
     }
     
-    .vet-search-tools {
+    .pet-feed-content .header-content p {
+        color: #7C8798;
+        font-size: 1rem;
+    }
+    
+    /* Filter Styles - matching appointments page */
+    .pet-feed-content .vet-filters {
         display: flex;
-        justify-content: space-between;
-        margin-bottom: 2rem;
-        gap: 1rem;
+        gap: 1.5rem;
         flex-wrap: wrap;
+        margin-bottom: 0.5rem;
     }
     
-    .search-sort, .search-location {
+    .pet-feed-content .filter-group {
         display: flex;
         align-items: center;
-        gap: 0.8rem;
+        gap: 1rem;
         background: white;
         padding: 0.8rem 1.2rem;
         border-radius: 50px;
         box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
     }
     
-    .search-sort i, .search-location i {
-        color: var(--primary);
+    .pet-feed-content .filter-group label {
+        font-weight: 500;
+        color: #2D3142;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        white-space: nowrap;
     }
     
-    .search-sort select, .search-location input {
-        border: none;
-        background: transparent;
+    .pet-feed-content .filter-group label i {
+        color: #4ECDC4;
+    }
+    
+    .pet-feed-content .filter-select {
+        padding: 0.6rem 1rem;
+        border-radius: 8px;
+        border: 1px solid rgba(0, 0, 0, 0.1);
+        background-color: #F8F9FA;
         font-family: 'Poppins', sans-serif;
-        font-size: 0.95rem;
-        color: var(--text);
+        color: #4F5D75;
+        cursor: pointer;
+        min-width: 200px;
+        transition: all 0.3s ease;
     }
     
-    .search-location input {
-        width: 200px;
-    }
-    
-    .search-location input:focus, .search-sort select:focus {
+    .pet-feed-content .filter-select:focus {
         outline: none;
+        border-color: #4ECDC4;
+        box-shadow: 0 0 0 3px rgba(78, 205, 196, 0.2);
     }
     
-    .vet-grid {
+    /* Vet Grid Layout */
+    .pet-feed-content .vet-grid {
         display: grid;
         grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
-        gap: 2rem;
+        gap: 1.5rem;
     }
     
-    .vet-card {
+    /* Vet Card - matching appointments card style */
+    .pet-feed-content .vet-card {
         background: white;
         border-radius: 15px;
         overflow: hidden;
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
         transition: all 0.3s ease;
         border: 1px solid rgba(0, 0, 0, 0.05);
+        display: flex;
+        flex-direction: column;
     }
     
-    .vet-card:hover {
-        transform: translateY(-5px);
+    .pet-feed-content .vet-card:hover {
+        transform: translateY(-3px);
         box-shadow: 0 15px 40px rgba(0, 0, 0, 0.1);
     }
     
-    .vet-card-header {
+    /* Card Header */
+    .pet-feed-content .vet-card-header {
         display: flex;
-        padding: 1.5rem;
         gap: 1.5rem;
+        padding: 1.5rem;
         border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+        background-color: #F8F9FA;
     }
     
-    .vet-avatar {
+    .pet-feed-content .vet-avatar {
         position: relative;
         flex-shrink: 0;
     }
     
-    .vet-avatar img {
-        width: 80px;
-        height: 80px;
+    .pet-feed-content .vet-avatar img {
+        width: 70px;
+        height: 70px;
         border-radius: 50%;
         object-fit: cover;
-        border: 3px solid var(--secondary);
+        border: 3px solid #4ECDC4;
+        background-color: white;
     }
     
-    .verification-badge {
+    .pet-feed-content .verification-badge {
         position: absolute;
         bottom: -5px;
         right: -5px;
@@ -222,222 +268,313 @@
         align-items: center;
         gap: 0.3rem;
         background-color: rgba(78, 205, 196, 0.2);
-        color: var(--secondary);
+        color: #4ECDC4;
     }
     
-    .vet-info {
+    .pet-feed-content .vet-info {
         flex: 1;
     }
     
-    .vet-info h3 {
-        font-size: 1.3rem;
-        margin-bottom: 0.3rem;
-        color: var(--dark);
+    .pet-feed-content .vet-info h3 {
+        font-size: 1.2rem;
+        color: #2D3142;
+        margin-bottom: 0.5rem;
+        font-weight: 600;
     }
     
-    .clinic {
-        font-weight: 500;
-        color: var(--dark);
-        margin-bottom: 0.3rem;
-        font-size: 0.95rem;
-    }
-    
-    .location {
-        color: var(--text-light);
-        font-size: 0.9rem;
-        margin-bottom: 0.8rem;
+    .pet-feed-content .vet-meta {
         display: flex;
-        align-items: center;
-        gap: 0.3rem;
-    }
-    
-    .rating {
-        display: flex;
-        align-items: center;
-        gap: 0.3rem;
-        color: var(--accent);
-        font-size: 0.9rem;
         flex-wrap: wrap;
+        gap: 0.8rem;
+        margin-bottom: 0.8rem;
+        font-size: 0.9rem;
     }
     
-    .rating i {
+    .pet-feed-content .vet-meta span {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        color: #4F5D75;
+    }
+    
+    .pet-feed-content .vet-meta i {
+        color: #FF6B6B;
         font-size: 0.8rem;
     }
     
-    .vet-card-body {
-        padding: 1.5rem;
+    .pet-feed-content .rating {
+        display: flex;
+        align-items: center;
+        gap: 0.3rem;
+        color: #FFD166;
+        font-size: 0.9rem;
     }
     
-    .vet-bio p {
-        color: var(--text-light);
+    .pet-feed-content .rating span {
+        color: #7C8798;
+        margin-left: 0.5rem;
+    }
+    
+    /* Card Body */
+    .pet-feed-content .vet-card-body {
+        padding: 1.5rem;
+        flex-grow: 1;
+    }
+    
+    .pet-feed-content .vet-bio p {
+        color: #4F5D75;
+        font-size: 0.9rem;
         line-height: 1.6;
         margin-bottom: 1.5rem;
     }
     
-    .vet-stats {
+    .pet-feed-content .vet-stats {
         display: grid;
         grid-template-columns: 1fr 1fr;
         gap: 1rem;
     }
     
-    .stat {
+    .pet-feed-content .stat {
         display: flex;
         align-items: center;
         gap: 0.5rem;
+        font-size: 0.85rem;
+        color: #4F5D75;
+    }
+    
+    .pet-feed-content .stat i {
+        color: #4ECDC4;
         font-size: 0.9rem;
-        color: var(--text-light);
     }
     
-    .stat i {
-        color: var(--secondary);
-    }
-    
-    .vet-card-footer {
-        padding: 1rem 1.5rem;
+    /* Card Footer */
+    .pet-feed-content .vet-card-footer {
+        padding: 1.2rem 1.5rem;
         display: flex;
         gap: 1rem;
         border-top: 1px solid rgba(0, 0, 0, 0.05);
-        background-color: rgba(247, 255, 247, 0.5);
+        background-color: #F8F9FA;
     }
     
-    .btn {
-        padding: 0.6rem 1.2rem;
+    /* Buttons - matching appointments page */
+    .pet-feed-content .btn {
+        padding: 0.7rem 1.2rem;
         border-radius: 50px;
         font-weight: 600;
         cursor: pointer;
         transition: all 0.3s ease;
         display: inline-flex;
         align-items: center;
+        justify-content: center;
         gap: 0.5rem;
         font-size: 0.9rem;
         text-decoration: none;
         border: none;
+        flex: 1;
     }
     
-    .btn-primary {
-        background-color: var(--primary);
-        color: rgb(9, 9, 9);
+    .pet-feed-content .btn-primary {
+        background-color: #FF6B6B;
+        color: white;
         box-shadow: 0 4px 15px rgba(255, 107, 107, 0.3);
     }
     
-    .btn-primary:hover {
+    .pet-feed-content .btn-primary:hover {
         transform: translateY(-2px);
         box-shadow: 0 6px 20px rgba(255, 107, 107, 0.4);
     }
     
-    .btn-outline {
+    .pet-feed-content .btn-outline {
         background-color: transparent;
-        border: 2px solid var(--primary);
-        color: var(--primary);
+        border: 2px solid #FF6B6B;
+        color: #FF6B6B;
     }
     
-    .btn-outline:hover {
-        background-color: var(--primary);
-        color: rgb(173, 94, 94);
+    .pet-feed-content .btn-outline:hover {
+        background-color: #FF6B6B;
+        color: white;
     }
     
-    .no-results {
+    /* Empty States - matching appointments page */
+    .pet-feed-content .empty-state {
         grid-column: 1 / -1;
         text-align: center;
         padding: 3rem;
-        color: var(--text-light);
+        background: white;
+        border-radius: 15px;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 1rem;
     }
     
-    .no-results i {
-        margin-bottom: 1rem;
-        color: var(--primary);
-    }
-    
-    .no-results h3 {
-        color: var(--dark);
+    .pet-feed-content .empty-state i {
+        color: #7C8798;
         margin-bottom: 0.5rem;
     }
     
-    /* Responsive */
-    @media (max-width: 768px) {
-        .vet-grid {
-            grid-template-columns: 1fr;
+    .pet-feed-content .empty-state h3 {
+        color: #2D3142;
+        margin-bottom: 0.5rem;
+        font-size: 1.3rem;
+    }
+    
+    .pet-feed-content .empty-state p {
+        color: #7C8798;
+        margin-bottom: 1.5rem;
+    }
+    
+    .pet-feed-content .empty-state .btn {
+        min-width: 180px;
+    }
+    
+    /* Responsive Styles */
+    @media (max-width: 992px) {
+        .pet-feed-content .vet-list-container {
+            padding: 1.5rem 1rem;
         }
         
-        .vet-search-tools {
+        .pet-feed-content .section-header {
             flex-direction: column;
+            align-items: flex-start;
         }
         
-        .search-location input {
+        .pet-feed-content .vet-filters {
             width: 100%;
         }
         
-        .vet-card-header {
+        .pet-feed-content .vet-grid {
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        }
+    }
+    
+    @media (max-width: 768px) {
+        .pet-feed-content .vet-card-header {
             flex-direction: column;
             align-items: center;
             text-align: center;
         }
         
-        .vet-stats {
+        .pet-feed-content .vet-meta {
+            justify-content: center;
+        }
+        
+        .pet-feed-content .vet-stats {
             grid-template-columns: 1fr;
         }
         
-        .vet-card-footer {
+        .pet-feed-content .vet-card-footer {
             flex-direction: column;
+        }
+    }
+    
+    @media (max-width: 480px) {
+        .pet-feed-content .filter-group {
+            width: 100%;
+        }
+        
+        .pet-feed-content .filter-select {
+            min-width: unset;
+            width: 100%;
+        }
+        
+        .pet-feed-content .vet-grid {
+            grid-template-columns: 1fr;
         }
     }
 </style>
 
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        // Profile menu toggle
-        const profileMenuBtn = document.getElementById('profile-menu-btn');
-        const profileMenu = document.querySelector('.profile-menu');
+        // Cache DOM elements
+        const experienceSort = document.getElementById('experience-sort');
+        const locationSearch = document.getElementById('location-search');
+        const vetCards = document.querySelectorAll('.vet-card');
+        const vetGrid = document.querySelector('.vet-grid');
+        const resetFiltersBtn = document.getElementById('reset-filters');
         
-        if (profileMenuBtn) {
-            profileMenuBtn.addEventListener('click', function() {
-                profileMenu.classList.toggle('show');
-            });
-            
-            // Close when clicking outside
-            document.addEventListener('click', function(e) {
-                if (!profileMenuBtn.contains(e.target) && !profileMenu.contains(e.target)) {
-                    profileMenu.classList.remove('show');
+        // Sort functionality
+        if (experienceSort) {
+            experienceSort.addEventListener('change', function() {
+                const sortValue = this.value;
+                const cards = Array.from(vetCards);
+                
+                if (sortValue === 'experience_high') {
+                    cards.sort((a, b) => parseInt(b.dataset.experience) - parseInt(a.dataset.experience));
+                } else if (sortValue === 'experience_low') {
+                    cards.sort((a, b) => parseInt(a.dataset.experience) - parseInt(b.dataset.experience));
+                }
+                
+                // Re-append cards in sorted order
+                cards.forEach(card => vetGrid.appendChild(card));
+                
+                // Apply any active location filter
+                if (locationSearch.value) {
+                    filterByLocation();
                 }
             });
         }
-
-        // Sort functionality
-        const experienceSort = document.getElementById('experience-sort');
-        const vetCards = document.querySelectorAll('.vet-card');
-
-        experienceSort.addEventListener('change', sortVets);
-
-        function sortVets() {
-            const sortValue = experienceSort.value;
-            const container = document.querySelector('.vet-grid');
-            const cards = Array.from(vetCards);
-
-            if (sortValue === 'experience_high') {
-                cards.sort((a, b) => parseInt(b.dataset.experience) - parseInt(a.dataset.experience));
-            } else if (sortValue === 'experience_low') {
-                cards.sort((a, b) => parseInt(a.dataset.experience) - parseInt(b.dataset.experience));
-            }
-
-            // Re-append cards in sorted order
-            cards.forEach(card => container.appendChild(card));
-        }
-
+        
         // Location search functionality
-        const locationSearch = document.getElementById('location-search');
-        locationSearch.addEventListener('input', function() {
-            const searchTerm = this.value.toLowerCase();
+        if (locationSearch) {
+            locationSearch.addEventListener('input', filterByLocation);
+            
+            // Clear search on ESC key
+            locationSearch.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape') {
+                    this.value = '';
+                    filterByLocation();
+                }
+            });
+        }
+        
+        // Reset filters button
+        if (resetFiltersBtn) {
+            resetFiltersBtn.addEventListener('click', function() {
+                if (experienceSort) experienceSort.value = '';
+                if (locationSearch) locationSearch.value = '';
+                filterByLocation();
+            });
+        }
+        
+        function filterByLocation() {
+            const searchTerm = locationSearch ? locationSearch.value.toLowerCase().trim() : '';
+            let visibleCount = 0;
             
             vetCards.forEach(card => {
                 const cardLocation = card.dataset.location.toLowerCase();
+                const shouldShow = searchTerm === '' || cardLocation.includes(searchTerm);
                 
-                if (searchTerm === '' || cardLocation.includes(searchTerm)) {
-                    card.style.display = 'block';
-                } else {
-                    card.style.display = 'none';
-                }
+                card.style.display = shouldShow ? 'flex' : 'none';
+                if (shouldShow) visibleCount++;
             });
-        });
+            
+            // Show/hide no results message
+            const noResultsEl = document.querySelector('.no-results');
+            if (visibleCount === 0 && vetCards.length > 0) {
+                if (!noResultsEl) {
+                    const emptyState = document.createElement('div');
+                    emptyState.className = 'no-results empty-state';
+                    emptyState.innerHTML = `
+                        <i class="fas fa-search fa-3x"></i>
+                        <h3>No Matching Vets Found</h3>
+                        <p>Try adjusting your search filters</p>
+                        <button id="reset-filters" class="btn btn-outline">
+                            <i class="fas fa-undo"></i> Reset Filters
+                        </button>
+                    `;
+                    vetGrid.appendChild(emptyState);
+                    emptyState.querySelector('#reset-filters').addEventListener('click', function() {
+                        if (experienceSort) experienceSort.value = '';
+                        if (locationSearch) locationSearch.value = '';
+                        filterByLocation();
+                    });
+                }
+            } else if (noResultsEl) {
+                noResultsEl.remove();
+            }
+        }
     });
 </script>
 {% endblock %}

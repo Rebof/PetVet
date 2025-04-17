@@ -22,8 +22,21 @@
                     <div class="post-header">
                         <span class="post-category">{{ post.category.name }}</span>
                         <div class="post-meta">
-                            <img src="{{ post.user.profile_picture.url }}" alt="{{ post.user.username }}" class="post-author-avatar">
-                            <span class="post-author">Posted by u/{{ post.user.username }}</span>
+                            <a href="{% url 'authUser:user_profile' post.user.id %}" class="username-link">
+                                {% if post.user.petownerprofile %}
+                                    <img src="{{ post.user.petownerprofile.human_image.url }}" alt="{{ post.user.username }}" class="post-author-avatar">
+                                {% elif post.user.vetprofile %}
+                                    <img src="{{ post.user.vetprofile.vet_image.url }}" alt="{{ post.user.username }}" class="post-author-avatar">
+                                {% else %}
+                                    <img src="{% static 'default-avatar.png' %}" alt="Default Avatar" class="post-author-avatar">
+                                {% endif %}
+                            </a>
+                            <span class="post-author">
+                                Posted by 
+                                <a href="{% url 'authUser:user_profile' post.user.id %}" class="username-link">
+                                    u/{{ post.user.username }}
+                                </a>
+                            </span>
                             <span class="post-time">{{ post.date|timesince }} ago</span>
                         </div>
                     </div>
@@ -47,13 +60,13 @@
                     </div>
                     
                     <div class="post-actions">
-                        <button class="action-btn like-btn {% if user in post.likes.all %}active{% endif %}" aria-label="Like" data-post-id="{{ post.id }}">
+                        <button class="action-btn like-btn {% if request.user in post.likes.all %}active{% endif %}" aria-label="Like" data-post-id="{{ post.id }}">
                             <i class="fas fa-heart"></i> 
                             <span class="like-count">{{ post.likes.count }}</span>
                         </button>
                         <button class="action-btn comment-btn">
                             <i class="fas fa-comment"></i> 
-                            <span>{{ post.comments.count }} Comments</span>
+                            <span class="comment-count">{{ post.comments.count }}</span>
                         </button>
 
                         {% if request.user == post.user %}
@@ -86,17 +99,17 @@
             </div>
 
             <!-- Comments Section -->
-            <div class="comments-section glass-card">
+            <div class="comments-section glass-card" id="comments-section">
                 <h3 class="comments-header">
                     <i class="fas fa-comments"></i> 
-                    {{ post.comments.count }} Comments
+                    <span class="comment-count">{{ post.comments.count }}</span> Comments
                 </h3>
                 
                 {% for comment in post.comments.all %}
-                <div class="comment" id="comment-{{ comment.id }}">
+                <div class="comment {% if request.user == comment.user %}current-user-comment{% endif %}" id="comment-{{ comment.id }}">
                     <!-- Comment Like Button -->
                     <div class="like-column">
-                        <button class="like-btn {% if user in comment.likes.all %}active{% endif %}" data-comment-id="{{ comment.id }}" aria-label="Like comment">
+                        <button class="like-btn {% if request.user in comment.likes.all %}active{% endif %}" data-comment-id="{{ comment.id }}" aria-label="Like comment">
                             <i class="fas fa-heart"></i>
                             <span class="like-count">{{ comment.likes.count }}</span>
                         </button>
@@ -105,11 +118,22 @@
                     <!-- Comment Content -->
                     <div class="comment-content">
                         <div class="comment-header">
-                            <img src="{{ comment.user.profile_picture.url }}" alt="{{ comment.user.username }}" class="comment-author-avatar">
-                            <span class="comment-author">u/{{ comment.user.username }}</span>
+                            <a href="{% url 'authUser:user_profile' comment.user.id %}" class="username-link">
+                                {% if comment.user.petownerprofile %}
+                                    <img src="{{ comment.user.petownerprofile.human_image.url }}" alt="{{ comment.user.username }}" class="comment-author-avatar">
+                                {% elif comment.user.vetprofile %}
+                                    <img src="{{ comment.user.vetprofile.vet_image.url }}" alt="{{ comment.user.username }}" class="comment-author-avatar">
+                                {% else %}
+                                    <img src="{% static 'default-avatar.png' %}" alt="Default Avatar" class="comment-author-avatar">
+                                {% endif %}
+                            </a>
+                            <span class="comment-author">
+                                <a href="{% url 'authUser:user_profile' comment.user.id %}" class="username-link">
+                                    u/{{ comment.user.username }}
+                                </a>
+                            </span>
                             <span class="comment-time">{{ comment.date|timesince }} ago</span>
                         </div>
-                        
                         <div class="comment-body">
                             <p>{{ comment.comment }}</p>
                         </div>
@@ -125,36 +149,50 @@
                             <button class="action-btn delete-btn" onclick="confirmDeleteComment({{ comment.id }})">
                                 <i class="fas fa-trash"></i> Delete
                             </button>
-                            
                             {% endif %}
                         </div>
                         
-                        <!-- Replies (nested comments) -->
-                        {% for reply in comment.replies.all %}
-                        <div class="comment reply" id="reply-{{ reply.id }}">
-                            <div class="comment-content">
-                                <div class="comment-header">
-                                    <img src="{{ reply.user.profile_picture.url }}" alt="{{ reply.user.username }}" class="comment-author-avatar">
-                                    <span class="comment-author">u/{{ reply.user.username }}</span>
-                                    <span class="comment-time">{{ reply.date|timesince }} ago</span>
-                                </div>
-                                <div class="comment-body">
-                                    <p>{{ reply.reply }}</p>
-                                </div>
-                                <div class="comment-actions">
-                                    {% if request.user == reply.user %}
-                                    <button class="action-btn delete-btn" onclick="confirmDeleteReply({{ reply.id }})">
-                                        <i class="fas fa-trash"></i> Delete
-                                    </button>
-                                    {% endif %}
+                        <!-- Replies container -->
+                        <div class="replies-container" id="replies-container-{{ comment.id }}">
+                            <!-- Replies (nested comments) -->
+                            {% for reply in comment.replies.all %}
+                            <div class="comment reply {% if request.user == reply.user %}current-user-comment{% endif %}" id="reply-{{ reply.id }}">
+                                <div class="comment-content">
+                                    <div class="comment-header">
+                                        <a href="{% url 'authUser:user_profile' reply.user.id %}" class="username-link">
+                                            {% if reply.user.petownerprofile %}
+                                                <img src="{{ reply.user.petownerprofile.human_image.url }}" alt="{{ reply.user.username }}" class="comment-author-avatar">
+                                            {% elif reply.user.vetprofile %}
+                                                <img src="{{ reply.user.vetprofile.vet_image.url }}" alt="{{ reply.user.username }}" class="comment-author-avatar">
+                                            {% else %}
+                                                <img src="{% static 'default-avatar.png' %}" alt="Default Avatar" class="comment-author-avatar">
+                                            {% endif %}
+                                        </a>
+                                        <span class="comment-author">
+                                            <a href="{% url 'authUser:user_profile' reply.user.id %}" class="username-link">
+                                                u/{{ reply.user.username }}
+                                            </a>
+                                        </span>
+                                        <span class="comment-time">{{ reply.date|timesince }} ago</span>
+                                    </div>
+                                    <div class="comment-body">
+                                        <p>{{ reply.reply }}</p>
+                                    </div>
+                                    <div class="comment-actions">
+                                        {% if request.user == reply.user %}
+                                        <button class="action-btn delete-btn" onclick="confirmDeleteReply({{ reply.id }})">
+                                            <i class="fas fa-trash"></i> Delete
+                                        </button>
+                                        {% endif %}
+                                    </div>
                                 </div>
                             </div>
+                            {% endfor %}
                         </div>
-                        {% endfor %}
                         
                         <!-- Reply Form (hidden by default) -->
                         <div class="reply-form-container" id="reply-form-{{ comment.id }}" style="display: none;">
-                            <form method="POST" class="reply-form" action="{% url 'coreFunctions:add_reply' comment.id %}">
+                            <form method="POST" class="reply-form" action="{% url 'coreFunctions:add_reply' comment.id %}" data-comment-id="{{ comment.id }}">
                                 {% csrf_token %}
                                 <div class="form-group">
                                     <textarea name="reply" placeholder="Write your reply..." required></textarea>
@@ -200,8 +238,6 @@
                     {% endfor %}
                 </ul>
             </div>
-            
-
             
             <!-- Trending Posts -->
             <div class="category-card glass-card">

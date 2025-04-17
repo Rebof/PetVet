@@ -1,0 +1,341 @@
+{% extends 'main/base3.html' %}
+{% load static %}
+
+{% block title %}View Post - PetVet Admin{% endblock %}
+
+{% block page_title %}View Post{% endblock %}
+
+{% block content %}
+<div class="form-container">
+    <div class="post-header">
+        <h2>{{ post.title }}</h2>
+        <div class="post-meta">
+            <span>Posted by <strong>{{ post.user.username }}</strong> on {{ post.date|date:"F d, Y" }}</span>
+            <span>Category: {{ post.category.name|default:"Uncategorized" }}</span>
+            <span>Views: {{ post.views }}</span>
+            <span>Likes: {{ post.likes.count }}</span>
+        </div>
+    </div>
+    
+    <div class="post-content">
+        {% if post.image %}
+        <div class="post-image">
+            <img src="{{ post.image.url }}" alt="{{ post.title }}">
+        </div>
+        {% endif %}
+        
+        {% if post.video %}
+        <div class="post-video">
+            <video controls>
+                <source src="{{ post.video.url }}" type="video/mp4">
+                Your browser does not support the video tag.
+            </video>
+        </div>
+        {% endif %}
+        
+        <div class="post-body">
+            {{ post.body|linebreaks }}
+        </div>
+    </div>
+    
+    <div class="post-actions">
+        <button type="button" class="btn btn-danger" onclick="confirmDelete('{{ post.id }}', '{{ post.title|escapejs }}')">Delete Post</button>
+        {% if post.active %}
+        <form method="post" action="{% url 'django_admin:toggle_post_status' post.id %}" style="display: inline;">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-warning">Deactivate Post</button>
+        </form>
+        {% else %}
+        <form method="post" action="{% url 'django_admin:toggle_post_status' post.id %}" style="display: inline;">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-success">Activate Post</button>
+        </form>
+        {% endif %}
+    </div>
+</div>
+
+<div class="form-container">
+    <h3>Comments ({{ post.comments.count }})</h3>
+    
+    {% for comment in comments %}
+    <div class="comment">
+        <div class="comment-header">
+            <div class="comment-meta">
+                <span class="comment-author">{{ comment.user.username }}</span>
+                <span class="comment-date">{{ comment.date|date:"F d, Y" }}</span>
+            </div>
+            <div class="comment-actions">
+                <button type="button" class="btn btn-danger btn-sm" onclick="confirmDeleteComment('{{ comment.id }}', '{{ comment.user.username }}')">Delete</button>
+            </div>
+        </div>
+        <div class="comment-body">
+            {{ comment.comment }}
+        </div>
+        
+        {% if comment.comment_replies.exists %}
+        <div class="comment-replies">
+            {% for reply in comment.comment_replies.all %}
+            <div class="comment-reply">
+                <div class="comment-header">
+                    <div class="comment-meta">
+                        <span class="comment-author">{{ reply.user.username }}</span>
+                        <span class="comment-date">{{ reply.date|date:"F d, Y" }}</span>
+                    </div>
+                    <div class="comment-actions">
+                        <button type="button" class="btn btn-danger btn-sm" onclick="confirmDeleteReply('{{ reply.id }}', '{{ reply.user.username }}')">Delete</button>
+                    </div>
+                </div>
+                <div class="comment-body">
+                    {{ reply.reply }}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+    </div>
+    {% empty %}
+    <p>No comments yet.</p>
+    {% endfor %}
+</div>
+
+<!-- Delete Post Confirmation Modal -->
+<div id="deletePostModal" class="modal" style="display: none;">
+    <div class="modal-content">
+        <h3>Confirm Deletion</h3>
+        <p>Are you sure you want to delete post "<span id="deletePostTitle"></span>"?</p>
+        <p>This action cannot be undone and will delete all associated comments.</p>
+        <div class="form-group">
+            <label for="notifyUser" class="form-label">
+                <input type="checkbox" id="notifyUser" checked> Send notification email to the user
+            </label>
+        </div>
+        <div class="modal-actions">
+            <button type="button" class="btn btn-primary" onclick="closePostModal()">Cancel</button>
+            <form id="deletePostForm" method="post" action="">
+                {% csrf_token %}
+                <input type="hidden" name="notify_user" id="notifyUserInput" value="true">
+                <button type="submit" class="btn btn-danger">Delete</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Comment Confirmation Modal -->
+<div id="deleteCommentModal" class="modal" style="display: none;">
+    <div class="modal-content">
+        <h3>Confirm Deletion</h3>
+        <p>Are you sure you want to delete this comment by <span id="deleteCommentAuthor"></span>?</p>
+        <p>This action cannot be undone and will delete all associated replies.</p>
+        <div class="modal-actions">
+            <button type="button" class="btn btn-primary" onclick="closeCommentModal()">Cancel</button>
+            <form id="deleteCommentForm" method="post" action="">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-danger">Delete</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Reply Confirmation Modal -->
+<div id="deleteReplyModal" class="modal" style="display: none;">
+    <div class="modal-content">
+        <h3>Confirm Deletion</h3>
+        <p>Are you sure you want to delete this reply by <span id="deleteReplyAuthor"></span>?</p>
+        <p>This action cannot be undone.</p>
+        <div class="modal-actions">
+            <button type="button" class="btn btn-primary" onclick="closeReplyModal()">Cancel</button>
+            <form id="deleteReplyForm" method="post" action="">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-danger">Delete</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<style>
+.modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+}
+
+.modal-content {
+    background-color: white;
+    padding: 2rem;
+    border-radius: 0.5rem;
+    max-width: 500px;
+    width: 100%;
+}
+
+.modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
+    margin-top: 1.5rem;
+}
+
+.post-header {
+    margin-bottom: 1.5rem;
+}
+
+.post-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    margin-top: 0.5rem;
+    color: var(--muted-foreground);
+    font-size: 0.875rem;
+}
+
+.post-content {
+    margin-bottom: 1.5rem;
+}
+
+.post-image {
+    margin-bottom: 1rem;
+}
+
+.post-image img {
+    max-width: 100%;
+    border-radius: 0.5rem;
+}
+
+.post-video {
+    margin-bottom: 1rem;
+}
+
+.post-video video {
+    max-width: 100%;
+    border-radius: 0.5rem;
+}
+
+.post-body {
+    line-height: 1.6;
+}
+
+.post-actions {
+    display: flex;
+    gap: 1rem;
+    margin-top: 1.5rem;
+}
+
+.comment {
+    border: 1px solid var(--border);
+    border-radius: 0.5rem;
+    padding: 1rem;
+    margin-bottom: 1rem;
+}
+
+.comment-header {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 0.5rem;
+}
+
+.comment-meta {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+}
+
+.comment-author {
+    font-weight: 600;
+}
+
+.comment-date {
+    color: var(--muted-foreground);
+    font-size: 0.875rem;
+}
+
+.comment-body {
+    margin-bottom: 0.5rem;
+}
+
+.comment-replies {
+    margin-top: 1rem;
+    margin-left: 1.5rem;
+    padding-left: 1rem;
+    border-left: 2px solid var(--border);
+}
+
+.comment-reply {
+    margin-bottom: 0.5rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--border);
+}
+
+.comment-reply:last-child {
+    margin-bottom: 0;
+    padding-bottom: 0;
+    border-bottom: none;
+}
+
+.btn-warning {
+    background-color: var(--warning);
+    color: white;
+}
+
+.btn-warning:hover {
+    background-color: #d97706;
+}
+</style>
+
+<script>
+function confirmDelete(postId, postTitle) {
+    document.getElementById('deletePostTitle').textContent = postTitle;
+    document.getElementById('deletePostForm').action = "{% url 'django_admin:delete_post' 0 %}".replace('0', postId);
+    document.getElementById('deletePostModal').style.display = 'flex';
+}
+
+function closePostModal() {
+    document.getElementById('deletePostModal').style.display = 'none';
+}
+
+function confirmDeleteComment(commentId, authorName) {
+    document.getElementById('deleteCommentAuthor').textContent = authorName;
+    document.getElementById('deleteCommentForm').action = "{% url 'django_admin:delete_comment' 0 %}".replace('0', commentId);
+    document.getElementById('deleteCommentModal').style.display = 'flex';
+}
+
+function closeCommentModal() {
+    document.getElementById('deleteCommentModal').style.display = 'none';
+}
+
+function confirmDeleteReply(replyId, authorName) {
+    document.getElementById('deleteReplyAuthor').textContent = authorName;
+    document.getElementById('deleteReplyForm').action = "{% url 'django_admin:delete_reply' 0 %}".replace('0', replyId);
+    document.getElementById('deleteReplyModal').style.display = 'flex';
+}
+
+function closeReplyModal() {
+    document.getElementById('deleteReplyModal').style.display = 'none';
+}
+
+// Update hidden input when checkbox changes
+document.getElementById('notifyUser').addEventListener('change', function() {
+    document.getElementById('notifyUserInput').value = this.checked ? 'true' : 'false';
+});
+
+// Close modals when clicking outside
+window.onclick = function(event) {
+    const postModal = document.getElementById('deletePostModal');
+    const commentModal = document.getElementById('deleteCommentModal');
+    const replyModal = document.getElementById('deleteReplyModal');
+    
+    if (event.target === postModal) {
+        closePostModal();
+    } else if (event.target === commentModal) {
+        closeCommentModal();
+    } else if (event.target === replyModal) {
+        closeReplyModal();
+    }
+}
+</script>
+{% endblock %}

@@ -1,83 +1,598 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Book Appointment</title>
-    <style>
-        .payment-options {
-            margin-top: 20px;
-            border-top: 1px solid #eee;
-            padding-top: 20px;
-        }
-        .payment-btn {
-            padding: 10px 15px;
-            margin: 5px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-weight: bold;
-        }
-        .credit-btn {
-            background-color: #4CAF50;
-            color: white;
-        }
-        .khalti-btn {
-            background-color: #5C2D91;
-            color: white;
-        }
-        .disabled-btn {
-            background-color: #cccccc;
-            cursor: not-allowed;
-        }
-        .error-message {
-            color: red;
-            margin-bottom: 15px;
-            padding: 10px;
-            background-color: #ffeeee;
-            border-left: 4px solid red;
-        }
-    </style>
-</head>
-<body>
-    <h1>Book an Appointment with Dr. {{ vet.user.full_name }}</h1>
+{% extends 'main/base1.html' %}
+{% load static %}
 
-    <p>Schedule: {{ schedule.day_of_week }} - {{ schedule.start_time }} to {{ schedule.end_time }}</p>
-    <p>Appointment Fee: 1000 NPR</p>
+{% block title %}Book Appointment | PetCare Connect{% endblock %}
 
-    {% if error %}
-        <div class="error-message">
-            {{ error }}
-        </div>
-    {% else %}
-        <form method="POST" id="appointmentForm">
-            {% csrf_token %}
-            <label for="reason">Reason:</label><br>
-            <textarea name="reason" required style="width: 100%; padding: 8px;"></textarea>
-            
-            <div class="payment-options">
-                <h3>Select Payment Method:</h3>
-                
-                <!-- Store Credit Option -->
-                <button type="submit" 
-                        formaction="{% url 'appointment:book_with_credit' vet.id schedule.id %}"
-                        class="payment-btn credit-btn {% if request.user.petownerprofile.credit_balance < 100000 %}disabled-btn{% endif %}"
-                        {% if request.user.petownerprofile.credit_balance < 100000 %}disabled{% endif %}>
-                    Pay with Store Credit 
-                    (Balance: NPR {{ request.user.petownerprofile.credit_balance|floatformat:2 }})
-                </button>
-                
-                <!-- Khalti Payment Option -->
-                <button type="submit" 
-                        formaction="{% url 'appointment:book_appointment' vet.id schedule.id %}"
-                        class="payment-btn khalti-btn">
-                    Pay with Khalti
-                </button>
+{% block content %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+<div class="pet-feed-content">
+    <div class="appointment-container">
+        <div class="appointment-header">
+            <h1><i class="fas fa-calendar-check"></i> Book an Appointment</h1>
+            <div class="vet-info">
+                <div class="vet-avatar">
+                    {% if vet.user.profile_picture %}
+                    <img src="{{ vet.user.profile_picture.url }}" alt="{{ vet.user.full_name }}">
+                    {% else %}
+                    <img src="{% static 'assets/images/default-avatar.png' %}" alt="{{ vet.user.full_name }}">
+                    {% endif %}
+                </div>
+                <div class="vet-details">
+                    <h2>Dr. {{ vet.user.full_name }}</h2>
+                    {% if vet.clinic_name %}
+                    <p class="clinic-name"><i class="fas fa-clinic-medical"></i> {{ vet.clinic_name }}</p>
+                    {% endif %}
+                    {% if vet.specialization %}
+                    <p class="specialization"><i class="fas fa-stethoscope"></i> {{ vet.specialization }}</p>
+                    {% endif %}
+                </div>
             </div>
-        </form>
-    {% endif %}
+        </div>
 
-    <br><br>
-    <a href="{% url 'appointment:vet_schedule' vet.id %}">Back to Schedule</a>
-</body>
-</html>
+        <div class="appointment-details">
+            <div class="detail-card">
+                <div class="detail-item">
+                    <i class="fas fa-calendar-day"></i>
+                    <div>
+                        <span class="label">Day</span>
+                        <span class="value">{{ schedule.day_of_week }}</span>
+                    </div>
+                </div>
+                <div class="detail-item">
+                    <i class="fas fa-clock"></i>
+                    <div>
+                        <span class="label">Time</span>
+                        <span class="value">{{ schedule.start_time }} to {{ schedule.end_time }}</span>
+                    </div>
+                </div>
+                <div class="detail-item">
+                    <i class="fas fa-money-bill-wave"></i>
+                    <div>
+                        <span class="label">Fee</span>
+                        <span class="value">NPR 1,000</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {% if error %}
+        <div class="error-message">
+            <i class="fas fa-exclamation-circle"></i>
+            <span>{{ error }}</span>
+        </div>
+        {% endif %}
+
+        {% if messages %}
+        <div class="messages">
+            {% for message in messages %}
+            <div class="message {% if message.tags %}{{ message.tags }}{% endif %}">
+                {% if message.tags == 'success' %}<i class="fas fa-check-circle"></i>{% endif %}
+                {% if message.tags == 'error' %}<i class="fas fa-exclamation-circle"></i>{% endif %}
+                <span>{{ message }}</span>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        {% if not error %}
+        <div class="appointment-form-container">
+            <form method="POST" id="appointmentForm">
+                {% csrf_token %}
+                
+                <div class="form-group">
+                    <label for="pet"><i class="fas fa-paw"></i> Select Your Pet:</label>
+                    <select name="pet" id="pet" required>
+                        <option value="">-- Choose a pet --</option>
+                        {% for pet in pets %}
+                        <option value="{{ pet.id }}">{{ pet.name }} ({{ pet.species }})</option>
+                        {% endfor %}
+                    </select>
+                    {% if not pets %}
+                    <div class="no-pets-warning">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <span>You don't have any pets registered. <a href="{% url 'authUser:add_pet' %}">Add a pet</a> first.</span>
+                    </div>
+                    {% endif %}
+                </div>
+                
+                <div class="form-group">
+                    <label for="reason"><i class="fas fa-comment-medical"></i> Reason for Visit:</label>
+                    <textarea name="reason" id="reason" required placeholder="Please describe your pet's symptoms or reason for the appointment..."></textarea>
+                </div>
+                
+                <div class="payment-options">
+                    <h3><i class="fas fa-credit-card"></i> Select Payment Method</h3>
+                    
+                    <div class="payment-buttons">
+                        <!-- Store Credit Option -->
+                        <button type="submit" 
+                                formaction="{% url 'appointment:book_with_credit' vet.id schedule.id %}"
+                                class="payment-btn credit-btn {% if request.user.petownerprofile.credit_balance < 100000 %}disabled-btn{% endif %}"
+                                {% if request.user.petownerprofile.credit_balance < 100000 %}disabled{% endif %}>
+                            <i class="fas fa-wallet"></i>
+                            <span>Pay with Store Credit</span>
+                            {% with balance=request.user.petownerprofile.credit_balance %}
+                            <span class="balance-info">
+                                Balance: NPR {% widthratio balance 100 1 %}.00
+                            </span>
+                        {% endwith %}                        </button>
+                        
+                        <!-- Khalti Payment Option -->
+                        <button type="submit" 
+                                formaction="{% url 'appointment:book_appointment' vet.id schedule.id %}"
+                                class="payment-btn khalti-btn">
+                            <i class="fas fa-mobile-alt"></i>
+                            <span>Pay with Khalti</span>
+                        </button>
+                    </div>
+                    
+                    {% if request.user.petownerprofile.credit_balance < 100000 %}
+                    <div class="credit-warning">
+                        <i class="fas fa-info-circle"></i>
+                        <span>You need at least NPR 1,000 in store credit to use this payment method.</span>
+                    </div>
+                    {% endif %}
+                </div>
+            </form>
+        </div>
+        {% endif %}
+
+        <div class="back-link">
+            <a href="{% url 'appointment:vet_schedule' vet.id %}">
+                <i class="fas fa-arrow-left"></i> Back to Schedule
+            </a>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* Container Styles */
+    .appointment-container {
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 2rem;
+        background: white;
+        border-radius: 15px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+    }
+    
+    /* Header Styles */
+    .appointment-header {
+        margin-bottom: 2rem;
+    }
+    
+    .appointment-header h1 {
+        font-size: 1.8rem;
+        color: #2D3142;
+        margin-bottom: 1.5rem;
+        display: flex;
+        align-items: center;
+        gap: 0.8rem;
+    }
+    
+    .appointment-header i {
+        color: #4ECDC4;
+    }
+    
+    .vet-info {
+        display: flex;
+        align-items: center;
+        gap: 1.5rem;
+        padding: 1.5rem;
+        background: #f9f9f9;
+        border-radius: 10px;
+        border-left: 4px solid #4ECDC4;
+    }
+    
+    .vet-avatar {
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        overflow: hidden;
+        border: 3px solid #4ECDC4;
+        flex-shrink: 0;
+    }
+    
+    .vet-avatar img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+    
+    .vet-details h2 {
+        font-size: 1.4rem;
+        color: #2D3142;
+        margin-bottom: 0.5rem;
+    }
+    
+    .clinic-name, .specialization {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        color: #4F5D75;
+        margin-bottom: 0.3rem;
+        font-size: 0.95rem;
+    }
+    
+    /* Appointment Details */
+    .appointment-details {
+        margin-bottom: 2rem;
+    }
+    
+    .detail-card {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1rem;
+        background: #f9f9f9;
+        padding: 1.5rem;
+        border-radius: 10px;
+    }
+    
+    .detail-item {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        padding: 0.8rem 1.2rem;
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        flex: 1;
+        min-width: 180px;
+    }
+    
+    .detail-item i {
+        font-size: 1.5rem;
+        color: #4ECDC4;
+    }
+    
+    .detail-item .label {
+        display: block;
+        font-size: 0.8rem;
+        color: #7C8798;
+        margin-bottom: 0.2rem;
+    }
+    
+    .detail-item .value {
+        font-weight: 600;
+        color: #2D3142;
+        font-size: 1.1rem;
+    }
+    
+    /* Form Styles */
+    .appointment-form-container {
+        margin-bottom: 2rem;
+    }
+    
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+    
+    .form-group label {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-weight: 600;
+        color: #2D3142;
+        margin-bottom: 0.5rem;
+    }
+    
+    .form-group label i {
+        color: #4ECDC4;
+    }
+    
+    .form-group select, 
+    .form-group textarea {
+        width: 100%;
+        padding: 0.9rem 1.2rem;
+        border-radius: 8px;
+        border: 1px solid #e0e0e0;
+        font-family: 'Poppins', sans-serif;
+        font-size: 0.95rem;
+        background: #f8f9fa;
+        transition: all 0.3s ease;
+    }
+    
+    .form-group select:focus, 
+    .form-group textarea:focus {
+        outline: none;
+        border-color: #4ECDC4;
+        box-shadow: 0 0 0 3px rgba(78, 205, 196, 0.2);
+        background: white;
+    }
+    
+    .form-group textarea {
+        min-height: 120px;
+        resize: vertical;
+    }
+    
+    .no-pets-warning {
+        margin-top: 0.8rem;
+        padding: 0.8rem;
+        background: #fff3cd;
+        border-left: 4px solid #ffc107;
+        color: #856404;
+        border-radius: 4px;
+        display: flex;
+        align-items: center;
+        gap: 0.8rem;
+        font-size: 0.9rem;
+    }
+    
+    .no-pets-warning a {
+        color: #856404;
+        font-weight: 600;
+        text-decoration: underline;
+    }
+    
+    /* Payment Options */
+    .payment-options {
+        margin-top: 2rem;
+        padding: 1.5rem;
+        background: #f9f9f9;
+        border-radius: 10px;
+    }
+    
+    .payment-options h3 {
+        font-size: 1.2rem;
+        color: #2D3142;
+        margin-bottom: 1.2rem;
+        display: flex;
+        align-items: center;
+        gap: 0.8rem;
+    }
+    
+    .payment-buttons {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+    
+    .payment-btn {
+        flex: 1;
+        min-width: 200px;
+        padding: 1rem 1.5rem;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        font-weight: 600;
+        font-size: 1rem;
+        transition: all 0.3s ease;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .payment-btn i {
+        font-size: 1.5rem;
+        margin-bottom: 0.3rem;
+    }
+    
+    .credit-btn {
+        background-color: #4CAF50;
+        color: white;
+    }
+    
+    .credit-btn:hover:not(.disabled-btn) {
+        background-color: #3e9142;
+        transform: translateY(-2px);
+        box-shadow: 0 6px 15px rgba(76, 175, 80, 0.3);
+    }
+    
+    .khalti-btn {
+        background-color: #5C2D91;
+        color: white;
+    }
+    
+    .khalti-btn:hover {
+        background-color: #4a2475;
+        transform: translateY(-2px);
+        box-shadow: 0 6px 15px rgba(92, 45, 145, 0.3);
+    }
+    
+    .disabled-btn {
+        background-color: #cccccc;
+        cursor: not-allowed;
+        opacity: 0.7;
+    }
+    
+    .balance-info {
+        font-size: 0.8rem;
+        opacity: 0.9;
+    }
+    
+    .credit-warning {
+        margin-top: 1rem;
+        padding: 0.8rem;
+        background: #f8d7da;
+        border-left: 4px solid #dc3545;
+        color: #721c24;
+        border-radius: 4px;
+        display: flex;
+        align-items: center;
+        gap: 0.8rem;
+        font-size: 0.9rem;
+    }
+    
+    /* Error Message */
+    .error-message {
+        margin-bottom: 1.5rem;
+        padding: 1rem;
+        background-color: #f8d7da;
+        border-left: 4px solid #dc3545;
+        color: #721c24;
+        border-radius: 4px;
+        display: flex;
+        align-items: center;
+        gap: 0.8rem;
+    }
+    
+    /* Messages */
+    .messages {
+        margin-bottom: 1.5rem;
+    }
+    
+    .message {
+        padding: 1rem;
+        margin-bottom: 0.8rem;
+        border-radius: 4px;
+        display: flex;
+        align-items: center;
+        gap: 0.8rem;
+    }
+    
+    .message.success {
+        background-color: #d4edda;
+        border-left: 4px solid #28a745;
+        color: #155724;
+    }
+    
+    .message.error {
+        background-color: #f8d7da;
+        border-left: 4px solid #dc3545;
+        color: #721c24;
+    }
+    
+    /* Back Link */
+    .back-link {
+        margin-top: 2rem;
+        text-align: center;
+    }
+    
+    .back-link a {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        color: #4F5D75;
+        text-decoration: none;
+        font-weight: 500;
+        transition: all 0.3s ease;
+    }
+    
+    .back-link a:hover {
+        color: #4ECDC4;
+    }
+    
+    /* Responsive Styles */
+    @media (max-width: 768px) {
+        .appointment-container {
+            padding: 1.5rem 1rem;
+        }
+        
+        .vet-info {
+            flex-direction: column;
+            text-align: center;
+            padding: 1rem;
+        }
+        
+        .vet-avatar {
+            margin: 0 auto;
+        }
+        
+        .detail-card {
+            flex-direction: column;
+        }
+        
+        .detail-item {
+            width: 100%;
+        }
+        
+        .payment-buttons {
+            flex-direction: column;
+        }
+        
+        .payment-btn {
+            width: 100%;
+        }
+    }
+</style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Form validation
+        const appointmentForm = document.getElementById('appointmentForm');
+        const petSelect = document.getElementById('pet');
+        const reasonTextarea = document.getElementById('reason');
+        
+        if (appointmentForm) {
+            appointmentForm.addEventListener('submit', function(e) {
+                let isValid = true;
+                
+                // Validate pet selection
+                if (petSelect.value === '') {
+                    isValid = false;
+                    petSelect.style.borderColor = '#dc3545';
+                    
+                    // Create error message if it doesn't exist
+                    let errorMsg = petSelect.nextElementSibling;
+                    if (!errorMsg || !errorMsg.classList.contains('field-error')) {
+                        errorMsg = document.createElement('div');
+                        errorMsg.className = 'field-error';
+                        errorMsg.style.color = '#dc3545';
+                        errorMsg.style.fontSize = '0.85rem';
+                        errorMsg.style.marginTop = '0.3rem';
+                        errorMsg.textContent = 'Please select a pet';
+                        petSelect.parentNode.insertBefore(errorMsg, petSelect.nextSibling);
+                    }
+                } else {
+                    petSelect.style.borderColor = '#e0e0e0';
+                    
+                    // Remove error message if it exists
+                    const errorMsg = petSelect.nextElementSibling;
+                    if (errorMsg && errorMsg.classList.contains('field-error')) {
+                        errorMsg.remove();
+                    }
+                }
+                
+                // Validate reason
+                if (reasonTextarea.value.trim() === '') {
+                    isValid = false;
+                    reasonTextarea.style.borderColor = '#dc3545';
+                    
+                    // Create error message if it doesn't exist
+                    let errorMsg = reasonTextarea.nextElementSibling;
+                    if (!errorMsg || !errorMsg.classList.contains('field-error')) {
+                        errorMsg = document.createElement('div');
+                        errorMsg.className = 'field-error';
+                        errorMsg.style.color = '#dc3545';
+                        errorMsg.style.fontSize = '0.85rem';
+                        errorMsg.style.marginTop = '0.3rem';
+                        errorMsg.textContent = 'Please provide a reason for the appointment';
+                        reasonTextarea.parentNode.insertBefore(errorMsg, reasonTextarea.nextSibling);
+                    }
+                } else {
+                    reasonTextarea.style.borderColor = '#e0e0e0';
+                    
+                    // Remove error message if it exists
+                    const errorMsg = reasonTextarea.nextElementSibling;
+                    if (errorMsg && errorMsg.classList.contains('field-error')) {
+                        errorMsg.remove();
+                    }
+                }
+                
+                if (!isValid) {
+                    e.preventDefault();
+                }
+            });
+            
+            // Reset validation styling on input
+            petSelect.addEventListener('change', function() {
+                this.style.borderColor = '#e0e0e0';
+                const errorMsg = this.nextElementSibling;
+                if (errorMsg && errorMsg.classList.contains('field-error')) {
+                    errorMsg.remove();
+                }
+            });
+            
+            reasonTextarea.addEventListener('input', function() {
+                this.style.borderColor = '#e0e0e0';
+                const errorMsg = this.nextElementSibling;
+                if (errorMsg && errorMsg.classList.contains('field-error')) {
+                    errorMsg.remove();
+                }
+            });
+        }
+    });
+</script>
+{% endblock %}

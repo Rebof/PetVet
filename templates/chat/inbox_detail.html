@@ -2,495 +2,1108 @@
 {% load static %}
 
 {% block content %}
-<div class="pet-feed-content">
-<div class="main_content">
-    <style>
-        /* Base Styles */
-        :root {
-             --primary-color: #007bff;
-             --secondary-color: #6c757d;
-             --success-color: #28a745;
-             --background-light: #f8f9fa;
-             --border-color: #e9ecef;
-             --text-dark: #212529;
-             --text-light: #ffffff;
-         }
- 
-         .chat-container {
-             display: flex;
-             height: calc(100vh - 120px);
-             background: var(--background-light);
-             border-radius: 12px;
-             box-shadow: 0 8px 30px rgba(0,0,0,0.12);
-             overflow: hidden;
-             max-width: 1200px;
-             margin: 20px auto;
-         }
- 
-         /* Chat List */
-         .chat-list {
-             width: 320px;
-             background: var(--text-light);
-             border-right: 1px solid var(--border-color);
-         }
- 
-         .chat-list-header {
-             padding: 20px;
-             border-bottom: 1px solid var(--border-color);
-             background: var(--background-light);
-         }
- 
-         .chat-list-header h2 {
-             margin: 0;
-             font-size: 1.5rem;
-             color: var(--text-dark);
-         }
- 
-         .chat-list-items {
-             height: calc(100% - 61px);
-             overflow-y: auto;
-         }
- 
-         .chat-item {
-             display: flex;
-             align-items: center;
-             padding: 16px;
-             transition: all 0.2s ease;
-             position: relative;
-             background: var(--text-light);
-         }
- 
-         .chat-item:hover {
-             background: var(--background-light);
-             transform: translateX(4px);
-             box-shadow: 4px 0 0 var(--primary-color) inset;
-         }
- 
-         .chat-item.active {
-             background: var(--background-light);
-             box-shadow: 4px 0 0 var(--primary-color) inset;
-         }
- 
-         .chat-avatar {
-             width: 48px;
-             height: 48px;
-             border-radius: 50%;
-             margin-right: 16px;
-             border: 2px solid var(--border-color);
-             object-fit: cover;
-         }
- 
-         .chat-item h4 {
-    margin: 0 0 4px 0;
-    font-size: 1.1rem;  /* Increased from 1rem */
-    color: #111 !important;  /* Pure black instead of variable */
-    font-weight: 700 !important;  /* Bold instead of regular bold */
-    letter-spacing: 0.3px;
-    text-shadow: 0 1px 1px rgba(0,0,0,0.1);  /* Added subtle shadow */
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<style>
+    /* Color Variables */
+:root {
+    --primary-color: #2ecc71;
+    --primary-dark: #27ae60;
+    --primary-light: #a8e6cf;
+    --secondary-color: #3498db;
+    --accent-color: #f39c12;
+    --danger-color: #e74c3c;
+    --warning-color: #f1c40f;
+    --text-dark: #2c3e50;
+    --text-medium: #34495e;
+    --text-light: #7f8c8d;
+    --background-light: #f5f7fa;
+    --background-white: #ffffff;
+    --border-color: #e0e6ed;
+    --shadow-color: rgba(0, 0, 0, 0.1);
 }
- 
-         .chat-item p {
-             margin: 0;
-             font-size: 0.875rem;
-             color: var(--secondary-color);
-             display: -webkit-box;
-             
-             -webkit-box-orient: vertical;
-             overflow: hidden;
-             font-size: 0.9rem;
-     color: #333; /* Darker color */
-         }
- 
-         /* Chat Window */
-         .chat-window {
-             flex: 1;
-             display: flex;
-             flex-direction: column;
-             background: var(--text-light);
-         }
- 
-         .chat-header {
-             padding: 20px;
-             border-bottom: 1px solid var(--border-color);
-             background: var(--background-light);
-         }
- 
-         .chat-header h3 {
+
+/* Base Styles */
+.pet-feed-content {
+    font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+    color: var(--text-dark);
+    line-height: 1.5;
+    overflow: visible; /* Ensure pet-feed-content is not scrollable */
+}
+
+.main_content {
+    padding: 20px;
+}
+
+/* Chat Container */
+.chat-container {
+    display: flex;
+    height: 80vh; /* Fixed height */
+    background: var(--background-white);
+    border-radius: 16px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+    overflow: hidden;
+    max-width: 1200px;
+    margin: 0 auto;
+    border: 1px solid var(--border-color);
+    position: relative; /* Ensure it stays fixed in position */
+}
+
+/* Chat List */
+.chat-list {
+    width: 350px;
+    background: var(--background-light);
+    border-right: 1px solid var(--border-color);
+    display: flex;
+    flex-direction: column;
+}
+
+.chat-list-header {
+    padding: 20px;
+    border-bottom: 1px solid var(--border-color);
+    background: var(--background-white);
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.chat-list-header h2 {
     margin: 0;
-    font-size: 1.3rem;  /* Increased size */
-    color: #111 !important;  /* Pure black */
-    font-weight: 700 !important;
-    padding-bottom: 5px;
+    font-size: 1.5rem;
+    color: var(--text-dark);
+    display: flex;
+    align-items: center;
+    gap: 10px;
 }
- 
-         /* Messages */
-         .chat-messages {
-             flex: 1;
-             padding: 24px;
-             overflow-y: auto;
-             display: flex;
-             flex-direction: column;
-             gap: 16px;
-         }
- 
-         .message {
-             max-width: 75%;
-             padding: 12px 16px;
-             border-radius: 16px;
-             position: relative;
-             line-height: 1.5;
-             font-size: 0.9375rem;
-             animation: messageAppear 0.3s ease-out;
-             font-size: 1rem; /* Slightly increased size */
-     color: #333; /* Darker text for better readability */
- }
- 
-         @keyframes messageAppear {
-             from { opacity: 0; transform: translateY(10px); }
-             to { opacity: 1; transform: translateY(0); }
-         }
- 
-         .received {
-             background: var(--text-light);
-     border: none !important; /* Remove any remaining borders */
-     align-self: flex-start;
-     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05); /* Softer shadow */
-         }
- 
-         .sent {
-             background: var(--primary-color);
-             color: var(--text-light);
-             align-self: flex-end;
-             border-bottom-right-radius: 4px;
-         }
- 
-         .message span {
-             display: block;
-             font-size: 0.75rem;
-             color: inherit;
-             opacity: 0.7;
-             margin-top: 8px;
-             text-align: right;
-         }
- 
-         /* Input Area */
-         .chat-input {
-             padding: 20px;
-             border-top: 1px solid var(--border-color);
-             background: var(--background-light);
-         }
- 
-         .chat-input form {
-             display: flex;
-             gap: 12px;
-             align-items: flex-end;
-             display: flex;
-     gap: 12px;
-     align-items: center;
 
-            
-         }
- 
-         .chat-input textarea {
-             flex: 1;
-             padding: 12px 16px;
-             border: 1px solid var(--border-color);
-             border-radius: 8px;
-             resize: none;
-             min-height: 48px;
-             max-height: 120px;
-             font-family: inherit;
-             font-size: 0.9375rem;
-             transition: all 0.2s ease;
-             margin: 0;
-         }
- 
-         .chat-input textarea:focus {
-             outline: none;
-             border-color: var(--primary-color);
-             box-shadow: 0 0 0 3px rgba(0,120,255,0.1);
-         }
- 
-         .chat-input button {
-             padding: 10px 20px;
-             background: var(--primary-color);
-             color: var(--text-light);
-             border: none;
-             border-radius: 8px;
-             cursor: pointer;
-             transition: all 0.2s ease;
-             height: 48px;
-             flex-shrink: 0;
-     margin: 0;
-         }
- 
-         .chat-input button:hover {
-             background: #0069d9;
-             transform: translateY(-1px);
-         }
- 
-         /* Unread Badge */
-         .unread-badge {
-             position: absolute;
-             top: 50%;
-             right: 16px;
-             transform: translateY(-50%);
-             width: 8px;
-             height: 8px;
-             background: var(--primary-color);
-             border-radius: 50%;
-             box-shadow: 0 0 0 2px var(--text-light);
-         }
- 
-         /* Empty States */
-         .empty-state {
-             text-align: center;
-             padding: 40px 20px;
-             color: var(--secondary-color);
-         }
- 
-         @media (max-width: 768px) {
-             .chat-list {
-                 width: 280px;
-             }
-             
-             .chat-container {
-                 height: calc(100vh - 80px);
-                 margin: 0;
-                 border-radius: 0;
-             }
-         }
-         </style>
-    <div class="chat-container">
-        <!-- Chat List -->
-        <!-- Chat List Items -->
-<div class="chat-list-items">
-    {% for chat in message_list %}
-        {# Determine conversation partner #}
-        {% if chat.sender == request.user %}
-            {% with partner=chat.receiver %}
-                <a href="{% url 'coreFunctions:inbox_details' partner.username %}">
-                    <div class="chat-item {% if receiver == partner %}active{% endif %}">
-                        <img src="{% static 'assets/images/avatars/avatar-2.jpg' %}" class="chat-avatar">
-                        <div>
-                            <h4>{{ partner.get_full_name|default:partner.username }}</h4>
-                            <p>{{ chat.message|truncatechars:20 }}</p>
-                            {% if chat.receiver == request.user and not chat.is_read %}
-                                <span class="unread-badge"></span>
-                            {% endif %}
-                        </div>
-                    </div>
-                </a>
-            {% endwith %}
-        {% else %}
-            {% with partner=chat.sender %}
-                <a href="{% url 'coreFunctions:inbox_details' partner.username %}">
-                    <div class="chat-item {% if receiver == partner %}active{% endif %}">
-                        <img src="{% static 'assets/images/avatars/avatar-2.jpg' %}" class="chat-avatar">
-                        <div>
-                            <h4>{{ partner.get_full_name|default:partner.username }}</h4>
-                            <p>{{ chat.message|truncatechars:20 }}</p>
-                            {% if chat.receiver == request.user and not chat.is_read %}
-                                <span class="unread-badge"></span>
-                            {% endif %}
-                        </div>
-                    </div>
-                </a>
-            {% endwith %}
-        {% endif %}
-    {% empty %}
-        <div class="p-4 text-gray-500">No conversations yet</div>
-    {% endfor %}
-</div>
+.chat-list-header h2 i {
+    color: var(--primary-color);
+}
 
-        <!-- Chat Window -->
-        <div class="chat-window">
-            <div class="chat-header">
-                <h3>
-                    {% if receiver %}
-                        Chat with {{ receiver.get_full_name|default:receiver.username }}
-                    {% else %}
-                        Select a conversation
-                    {% endif %}
-                </h3>
-            </div>
-            
-            <div class="chat-messages">
-                {% if receiver %}
-                    {% for message in message_detail %}
-                        <div class="message {% if message.sender == request.user %}sent{% else %}received{% endif %}">
-                            <p>{{ message.message }}</p>
-                            <span>{{ message.date|time:"H:i" }}</span>
-                        </div>
+.search-box {
+    position: relative;
+}
+
+.search-box input {
+    width: 100%;
+    padding: 10px 15px 10px 40px;
+    border: 1px solid var(--border-color);
+    border-radius: 50px;
+    background: var(--background-white);
+    font-size: 0.9rem;
+    transition: all 0.3s ease;
+}
+
+.search-box input:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(46, 204, 113, 0.2);
+}
+
+.search-box i {
+    position: absolute;
+    left: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-light);
+}
+
+.chat-list-items {
+    flex: 1;
+    overflow-y: auto;
+    padding: 10px 0;
+}
+
+.chat-link {
+    text-decoration: none;
+    color: inherit;
+    display: block;
+}
+
+.chat-item {
+    display: flex;
+    align-items: center;
+    padding: 15px 20px;
+    transition: all 0.2s ease;
+    position: relative;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.03);
+}
+
+.chat-item:hover {
+    background: rgba(46, 204, 113, 0.05);
+}
+
+.chat-item.active {
+    background: rgba(46, 204, 113, 0.1);
+    border-left: 4px solid var(--primary-color);
+}
+
+.chat-avatar {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    margin-right: 15px;
+    border: 2px solid var(--primary-light);
+    object-fit: cover;
+    background-color: var(--background-light);
+}
+
+.chat-item-content {
+    flex: 1;
+    min-width: 0; /* Ensures text truncation works */
+}
+
+.chat-item-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 5px;
+}
+
+.chat-item h4 {
+    margin: 0;
+    font-size: 1rem;
+    color: var(--text-dark);
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 150px;
+}
+
+.chat-time {
+    font-size: 0.75rem;
+    color: var(--text-light);
+}
+
+.chat-item p {
+    margin: 0;
+    font-size: 0.875rem;
+    color: var(--text-medium);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.unread-badge {
+    position: absolute;
+    top: 50%;
+    right: 20px;
+    transform: translateY(-50%);
+    width: 10px;
+    height: 10px;
+    background: var(--primary-color);
+    border-radius: 50%;
+    box-shadow: 0 0 0 2px var(--background-white);
+}
+
+/* Chat Window */
+.chat-window {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    background: var(--background-white);
+}
+
+.chat-header {
+    padding: 15px 20px;
+    border-bottom: 1px solid var(--border-color);
+    background: var(--background-white);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.chat-header-user {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.chat-header h3 {
+    margin: 0;
+    font-size: 1.2rem;
+    color: var(--text-dark);
+}
+
+.status-indicator {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    margin-right: 5px;
+}
+
+.status-indicator.online {
+    background-color: var(--primary-color);
+}
+
+.status-text {
+    font-size: 0.8rem;
+    color: var(--text-light);
+}
+
+.chat-header-actions {
+    display: flex;
+    gap: 10px;
+}
+
+.action-btn {
+    background: none;
+    border: none;
+    color: var(--text-medium);
+    font-size: 1.1rem;
+    cursor: pointer;
+    padding: 8px;
+    border-radius: 50%;
+    transition: all 0.2s ease;
+}
+
+.action-btn:hover {
+    background: rgba(0, 0, 0, 0.05);
+    color: var(--danger-color);
+}
+
+/* Messages */
+.chat-messages {
+    flex: 1;
+    padding: 20px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    background-color: var(--background-light);
+}
+
+.message {
+    max-width: 75%;
+    padding: 12px 16px;
+    border-radius: 18px;
+    position: relative;
+    animation: messageAppear 0.3s ease-out;
+}
+
+@keyframes messageAppear {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.message-content {
+    font-size: 0.95rem;
+    line-height: 1.5;
+    word-wrap: break-word;
+}
+
+.message-meta {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    margin-top: 5px;
+    gap: 5px;
+    font-size: 0.75rem;
+}
+
+.received {
+    align-self: flex-start;
+    background: var(--background-white);
+    color: var(--text-dark);
+    border-bottom-left-radius: 4px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+}
+
+.sent {
+    align-self: flex-end;
+    background: var(--primary-color);
+    color: white;
+    border-bottom-right-radius: 4px;
+}
+
+.sent .message-time {
+    color: rgba(255, 255, 255, 0.8);
+}
+
+.message-status i {
+    font-size: 0.7rem;
+}
+
+/* Input Area */
+.chat-input {
+    padding: 15px 20px;
+    border-top: 1px solid var(--border-color);
+    background: var(--background-white);
+}
+
+.chat-input form {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.input-wrapper {
+    flex: 1;
+    position: relative;
+    background: var(--background-light);
+    border-radius: 24px;
+    padding: 5px 15px;
+    display: flex;
+    align-items: center;
+    border: 1px solid var(--border-color);
+}
+
+.chat-input textarea {
+    flex: 1;
+    padding: 10px 5px;
+    border: none;
+    background: transparent;
+    resize: none;
+    min-height: 24px;
+    max-height: 120px;
+    font-family: inherit;
+    font-size: 0.95rem;
+    color: var(--text-dark);
+}
+
+.chat-input textarea:focus {
+    outline: none;
+}
+
+.input-actions {
+    display: flex;
+    gap: 5px;
+}
+
+.emoji-btn {
+    background: none;
+    border: none;
+    color: var(--text-light);
+    cursor: pointer;
+    padding: 5px;
+    font-size: 1.1rem;
+    transition: color 0.2s ease;
+}
+
+.emoji-btn:hover {
+    color: var(--primary-color);
+}
+
+#send-btn {
+    width: 45px;
+    height: 45px;
+    border-radius: 50%;
+    background: var(--primary-color);
+    color: white;
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 1.1rem;
+}
+
+#send-btn:hover {
+    background: var(--primary-dark);
+    transform: scale(1.05);
+}
+
+/* Empty States */
+.empty-chat, .empty-messages, .empty-chat-list {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    text-align: center;
+    color: var(--text-light);
+    padding: 20px;
+}
+
+.empty-chat-content, .empty-messages-content {
+    max-width: 400px;
+}
+
+.empty-chat i, .empty-messages i, .empty-chat-list i {
+    font-size: 3rem;
+    color: var(--primary-light);
+    margin-bottom: 20px;
+}
+
+.empty-chat h3, .empty-messages h3 {
+    font-size: 1.5rem;
+    color: var(--text-dark);
+    margin-bottom: 10px;
+}
+
+.empty-chat p, .empty-messages p, .empty-chat-list p {
+    font-size: 1rem;
+    margin-bottom: 5px;
+}
+
+.empty-chat small, .empty-messages small, .empty-chat-list small {
+    font-size: 0.85rem;
+}
+
+/* Modal */
+.modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+    justify-content: center;
+    align-items: center;
+}
+
+.modal-content {
+    background: var(--background-white);
+    border-radius: 12px;
+    width: 100%;
+    max-width: 450px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    animation: modalAppear 0.3s ease-out;
+}
+
+@keyframes modalAppear {
+    from { opacity: 0; transform: translateY(-20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.modal-header {
+    padding: 20px;
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.modal-header h3 {
+    margin: 0;
+    font-size: 1.2rem;
+    color: var(--text-dark);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.modal-header h3 i {
+    color: var(--danger-color);
+}
+
+.close-modal {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    color: var(--text-light);
+}
+
+.modal-body {
+    padding: 20px;
+}
+
+.warning-text {
+    background: rgba(231, 76, 60, 0.1);
+    padding: 15px;
+    border-radius: 8px;
+    margin-top: 15px;
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+}
+
+.warning-text i {
+    color: var(--danger-color);
+    margin-top: 3px;
+}
+
+.modal-footer {
+    padding: 20px;
+    border-top: 1px solid var(--border-color);
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+}
+
+.btn {
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: none;
+}
+
+.cancel-btn {
+    background: var(--background-light);
+    color: var(--text-medium);
+}
+
+.cancel-btn:hover {
+    background: var(--border-color);
+}
+
+.block-btn {
+    background: var(--danger-color);
+    color: white;
+}
+
+.block-btn:hover {
+    background: #c0392b;
+}
+
+/* Success Message */
+.block-success-message {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: var(--primary-color);
+    color: white;
+    padding: 15px 20px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    z-index: 1100;
+    animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+    from { transform: translateX(100%); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+}
+
+.block-success-message i {
+    font-size: 1.2rem;
+}
+
+/* Responsive */
+@media (max-width: 992px) {
+    .chat-container {
+        height: 75vh;
+    }
+}
+
+@media (max-width: 768px) {
+    .chat-list {
+        width: 280px;
+    }
+    
+    .chat-container {
+        height: 70vh;
+    }
+    
+    .chat-item h4 {
+        max-width: 120px;
+    }
+}
+
+@media (max-width: 576px) {
+    .main_content {
+        padding: 10px;
+    }
+    
+    .chat-container {
+        flex-direction: column;
+        height: 80vh;
+    }
+    
+    .chat-list {
+        width: 100%;
+        height: 30%;
+        min-height: 200px;
+    }
+    
+    .chat-window {
+        height: 70%;
+    }
+    
+    .chat-header-user {
+        gap: 10px;
+    }
+    
+    .chat-avatar {
+        width: 40px;
+        height: 40px;
+    }
+}
+</style>
+
+<meta name="current-user" content="{{ request.user.username }}">
+{% if receiver %}
+<meta name="receiver-user" content="{{ receiver.username }}">
+{% endif %}
+
+<div class="pet-feed-content">
+    <div class="main_content">
+        <div class="chat-container">
+            <!-- Chat List -->
+            <div class="chat-list">
+                <div class="chat-list-header">
+                    <h2><i class="fas fa-comments"></i> Messages</h2>
+                    <div class="search-box">
+                        <input type="text" id="search-contacts" placeholder="Search conversations...">
+                        <i class="fas fa-search"></i>
+                    </div>
+                </div>
+                
+                <!-- Chat List Items -->
+                <div class="chat-list-items">
+                    {% for chat in message_list %}
+                        {# Determine conversation partner #}
+                        {% if chat.sender == request.user %}
+                            {% with partner=chat.receiver %}
+                                <a href="{% url 'coreFunctions:inbox_details' partner.username %}" class="chat-link">
+                                    <div class="chat-item {% if receiver == partner %}active{% endif %}" data-username="{{ partner.username }}">
+                                        {% if partner.petownerprofile.human_image %}
+    <img src="{{ partner.petownerprofile.human_image.url }}" class="chat-avatar">
+{% elif partner.vetprofile.vet_image %}
+    <img src="{{ partner.vetprofile.vet_image.url }}" class="chat-avatar">
+{% else %}
+    <img src="{% static 'assets/images/default-avatar.png' %}" class="chat-avatar">
+{% endif %}
+                                        <div class="chat-item-content">
+                                            <div class="chat-item-header">
+                                                <h4>{{ partner.get_full_name|default:partner.username }}</h4>
+                                                <span class="chat-time">{{ chat.date|time:"h:i A" }}</span>
+                                            </div>
+                                            <p>{{ chat.message|truncatechars:28 }}</p>
+                                            {% if chat.receiver == request.user and not chat.is_read %}
+                                                <span class="unread-badge"></span>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </a>
+                            {% endwith %}
+                        {% else %}
+                            {% with partner=chat.sender %}
+                                <a href="{% url 'coreFunctions:inbox_details' partner.username %}" class="chat-link">
+                                    <div class="chat-item {% if receiver == partner %}active{% endif %}" data-username="{{ partner.username }}">
+                                        {% if partner.petownerprofile.human_image %}
+    <img src="{{ partner.petownerprofile.human_image.url }}" class="chat-avatar">
+{% elif partner.vetprofile.vet_image %}
+    <img src="{{ partner.vetprofile.vet_image.url }}" class="chat-avatar">
+{% else %}
+    <img src="{% static 'assets/images/default-avatar.png' %}" class="chat-avatar">
+{% endif %}
+                                        <div class="chat-item-content">
+                                            <div class="chat-item-header">
+                                                <h4>{{ partner.get_full_name|default:partner.username }}</h4>
+                                                <span class="chat-time">{{ chat.date|time:"h:i A" }}</span>
+                                            </div>
+                                            <p>{{ chat.message|truncatechars:28 }}</p>
+                                            {% if chat.receiver == request.user and not chat.is_read %}
+                                                <span class="unread-badge"></span>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </a>
+                            {% endwith %}
+                        {% endif %}
                     {% empty %}
-                        <div class="text-center text-gray-500 py-4">No messages yet</div>
+                        <div class="empty-chat-list">
+                            <i class="fas fa-comments"></i>
+                            <p>No conversations yet</p>
+                            <small>Start a new conversation from the community page</small>
+                        </div>
                     {% endfor %}
+                </div>
+            </div>
+
+            <!-- Chat Window -->
+            <div class="chat-window">
+                {% if receiver %}
+                    <div class="chat-header">
+                        <div class="chat-header-user">
+                            {% if receiver.petownerprofile.human_image %}
+    <img src="{{ receiver.petownerprofile.human_image.url }}" class="chat-avatar">
+{% elif receiver.vetprofile.vet_image %}
+    <img src="{{ receiver.vetprofile.vet_image.url }}" class="chat-avatar">
+{% else %}
+    <img src="{% static 'assets/images/default-avatar.png' %}" class="chat-avatar">
+{% endif %}
+                            <div>
+                                <h3>{{ receiver.get_full_name|default:receiver.username }}</h3>
+                                <span class="status-indicator online"></span>
+                                <span class="status-text">Online</span>
+                            </div>
+                        </div>
+                        <div class="chat-header-actions">
+                            <button class="action-btn" id="block-user-btn" title="Block User">
+                                <i class="fas fa-ban"></i>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="chat-messages" id="chat-messages">
+                        {% for message in message_detail %}
+                            <div class="message {% if message.sender == request.user %}sent{% else %}received{% endif %}">
+                                <div class="message-content">{{ message.message }}</div>
+                                <div class="message-meta">
+                                    <span class="message-time">{{ message.date|time:"h:i A" }}</span>
+                                    {% if message.sender == request.user %}
+                                        <span class="message-status">
+                                            {% if message.is_read %}
+                                                <i class="fas fa-check-double"></i>
+                                            {% else %}
+                                                <i class="fas fa-check"></i>
+                                            {% endif %}
+                                        </span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        {% empty %}
+                            <div class="empty-messages">
+                                <div class="empty-messages-content">
+                                    <i class="fas fa-comments"></i>
+                                    <p>No messages yet</p>
+                                    <small>Start the conversation by sending a message below</small>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+
+                    <div class="chat-input">
+                        <form method="POST" action="{% url 'coreFunctions:inbox_details' receiver.username %}" id="chat-f">
+                            {% csrf_token %}
+                            <div class="input-wrapper">
+                                <textarea id="chat-input-area" name="message" placeholder="Type your message..." required></textarea>
+                                <div class="input-actions">
+                                    <button type="button" class="emoji-btn" title="Add Emoji">
+                                        <i class="far fa-smile"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <button id="send-btn" type="submit">
+                                <i class="fas fa-paper-plane"></i>
+                            </button>
+                        </form>
+                    </div>
                 {% else %}
-                    <div class="text-center text-gray-500 py-4">Select a conversation to view messages</div>
+                    <div class="empty-chat">
+                        <div class="empty-chat-content">
+                            <i class="fas fa-comments"></i>
+                            <h3>Welcome to Messages</h3>
+                            <p>Select a conversation to start chatting</p>
+                        </div>
+                    </div>
                 {% endif %}
             </div>
-            
-
-            {% if receiver %}
-                <form method="POST" action="{% url 'coreFunctions:inbox_details' receiver.username %}" class="chat-input" id="chat-f">
-                    {% csrf_token %}
-                    <textarea id="chat-input-area" name="message" placeholder="Type your message..." required></textarea>
-                    <button id="send-btn" type="submit">Send</button>
-                </form>
-            {% endif %}
+        </div>
+        
+        <!-- Block User Modal -->
+        <div id="block-modal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3><i class="fas fa-ban"></i> Block User</h3>
+                    <button class="close-modal">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <p>Are you sure you want to block <strong id="block-username">{{ receiver.get_full_name|default:receiver.username }}</strong>?</p>
+                    <p class="warning-text">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        Blocking this user will prevent them from sending you messages and seeing your posts.
+                    </p>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn cancel-btn" id="cancel-block">Cancel</button>
+                    <form method="POST" action="" id="block-form">
+                        {% csrf_token %}
+                        <input type="hidden" name="blocked_user" id="blocked-user-id" value="{{ receiver.id }}">
+                        <button type="submit" class="btn block-btn">Block User</button>
+                    </form>
+                </div>
+            </div>
         </div>
     </div>
 </div>
 
-
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
 <script>
- document.addEventListener('DOMContentLoaded', function() {
-    // Get elements
-    const chatForm = document.querySelector('#chat-f');
-    const textarea = document.querySelector('#chat-input-area');
-    const chatMessages = document.querySelector('.chat-messages');
-    
-    // Check if elements exist
-    if (!chatForm || !textarea || !chatMessages) {
-        console.error('Required elements not found!');
-        return;
-    }
+document.addEventListener("DOMContentLoaded", () => {
+  // Track if we've handled the first message
+  let isFirstMessageHandled = false;
+  
+  // Initialize WebSocket for all users
+  setupGlobalWebSocket();
 
-    // Get current and receiver usernames
+  // Set up WebSocket for the active conversation if there is one
+  if (document.querySelector(".chat-header")) {
+    setupActiveConversationWebSocket();
+  }
+
+  function setupGlobalWebSocket() {
+    const currentUser = "{{ request.user.username }}";
+    if (!currentUser) return;
+
+    const wsScheme = window.location.protocol === "https:" ? "wss" : "ws";
+    const wsPath = `${wsScheme}://${window.location.host}/ws/notifications/${currentUser}/`;
+    let notificationSocket = new WebSocket(wsPath);
+
+    notificationSocket.onopen = () => {
+      console.log("Notification WebSocket connected");
+    };
+
+    notificationSocket.onmessage = (e) => {
+      const data = JSON.parse(e.data);
+      console.log("Notification received:", data);
+
+      if (data.type === "new_message") {
+        updateChatListPreview(data.sender, data.message, true, data.timestamp);
+        
+        // If the user is not currently viewing this chat, show a notification
+        if (!document.querySelector(`.chat-item[data-username="${data.sender}"].active`)) {
+          showDesktopNotification(data.sender, data.message);
+        }
+      }
+    };
+
+    notificationSocket.onerror = (error) => {
+      console.error("Notification WebSocket error:", error);
+      setTimeout(setupGlobalWebSocket, 3000);
+    };
+
+    notificationSocket.onclose = () => {
+      console.log("Notification WebSocket closed, reconnecting...");
+      setTimeout(setupGlobalWebSocket, 3000);
+    };
+  }
+
+  function setupActiveConversationWebSocket() {
     const currentUser = "{{ request.user.username }}";
     const receiverUsername = "{{ receiver.username }}";
-    
-    // Create consistent room name (sorted usernames to ensure same group for both users)
-    const roomName = [currentUser, receiverUsername].sort().join('_');
-    
-    // WebSocket connection
-    const wsScheme = window.location.protocol === 'https:' ? 'wss' : 'ws';
+
+    if (!currentUser || !receiverUsername) return;
+
+    // Create consistent room name
+    const roomName = [currentUser, receiverUsername].sort().join("_");
+    const wsScheme = window.location.protocol === "https:" ? "wss" : "ws";
     const wsPath = `${wsScheme}://${window.location.host}/ws/chat/${roomName}/`;
     let chatSocket = new WebSocket(wsPath);
 
-    // WebSocket event handlers
-    chatSocket.onopen = function() {
-        console.log('WebSocket connection established for room:', roomName);
+    // Track messages we've added to the UI
+    const displayedMessages = new Set();
+
+    chatSocket.onopen = () => {
+      console.log("Chat WebSocket connected for room:", roomName);
     };
 
-    chatSocket.onerror = function(error) {
-        console.error('WebSocket error:', error);
+    chatSocket.onerror = (error) => {
+      console.error("Chat WebSocket error:", error);
     };
 
-    chatSocket.onclose = function() {
-        console.log('WebSocket connection closed, attempting to reconnect...');
-        setTimeout(function() {
-            chatSocket = new WebSocket(wsPath);
-        }, 3000);
+    chatSocket.onclose = () => {
+      console.log("Chat WebSocket closed, reconnecting...");
+      setTimeout(() => {
+        const newSocket = new WebSocket(wsPath);
+        chatSocket = newSocket;
+      }, 3000);
     };
 
-    // Handle incoming messages
-    chatSocket.onmessage = function(e) {
-        const data = JSON.parse(e.data);
-        console.log('Received message:', data);
-        if (data.sender === currentUser) return;
-        // Only process if this message is relevant to current chat
-        if ((data.sender === currentUser && data.receiver === receiverUsername) || 
-            (data.sender === receiverUsername && data.receiver === currentUser)) {
-            
-            const isSent = data.sender === currentUser;
-            const messageTime = data.timestamp ? 
-                new Date(data.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 
-                new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    chatSocket.onmessage = (e) => {
+      const data = JSON.parse(e.data);
+      console.log("Chat message received:", data);
 
-            // Create message element
-            const messageDiv = document.createElement('div');
-            messageDiv.className = `message ${isSent ? 'sent' : 'received'}`;
-            messageDiv.innerHTML = `
-                <p>${data.message}</p>
-                <span>${messageTime}</span>
-            `;
-            messageDiv.style.animation = 'messageAppear 0.3s ease-out';
+      // Create a unique message ID
+      const messageId = `${data.sender}_${data.timestamp || new Date().toISOString()}`;
+      
+      if (displayedMessages.has(messageId)) {
+        console.log("Skipping duplicate message:", messageId);
+        return;
+      }
 
-            // Append to chat
-            chatMessages.appendChild(messageDiv);
-            chatMessages.scrollTop = chatMessages.scrollHeight;
-
-            // Update chat list preview if this is a received message
-            if (!isSent) {
-                updateChatListPreview(data.sender, data.message);
-            }
-        }
+      if ((data.sender === currentUser && data.receiver === receiverUsername) ||
+          (data.sender === receiverUsername && data.receiver === currentUser)) {
+        
+        // Mark as displayed before adding to UI to prevent duplicates
+        displayedMessages.add(messageId);
+        
+        // Add message to UI
+        addMessageToUI(data, data.sender === currentUser);
+        
+        // Update chat list preview
+        updateChatListPreview(
+          data.sender === currentUser ? receiverUsername : data.sender,
+          data.message,
+          data.receiver === currentUser,
+          data.timestamp || new Date().toISOString()
+        );
+        
+        // Update chat header
+        updateChatHeader(data.sender === currentUser ? receiverUsername : data.sender);
+      }
     };
 
-    // Handle form submission
-    chatForm.addEventListener('submit', function(e) {
+    const chatForm = document.querySelector("#chat-f");
+    const textarea = document.querySelector("#chat-input-area");
+
+    if (chatForm) {
+      chatForm.addEventListener("submit", async (e) => {
         e.preventDefault();
         const message = textarea.value.trim();
-        
-        if (message && chatSocket.readyState === WebSocket.OPEN) {
-            // Create message data
-            const messageData = {
-                'message': message,
-                'sender': currentUser,
-                'receiver': receiverUsername,
-                'timestamp': new Date().toISOString()
-            };
 
+        if (message && chatSocket.readyState === WebSocket.OPEN) {
+          const timestamp = new Date().toISOString();
+          const messageData = {
+            message: message,
+            sender: currentUser,
+            receiver: receiverUsername,
+            timestamp: timestamp,
+          };
+
+          // Create unique ID and mark as displayed immediately
+          const messageId = `${currentUser}_${timestamp}`;
+          displayedMessages.add(messageId);
+
+          // Optimistic UI update
+          addMessageToUI({
+            message: message,
+            sender: currentUser,
+            timestamp: timestamp
+          }, true);
+
+          // Clear input
+          textarea.value = "";
+          textarea.style.height = "auto";
+
+          try {
             // Send via WebSocket
             chatSocket.send(JSON.stringify(messageData));
             
-            // Also add to UI immediately (optimistic update)
-            const messageDiv = document.createElement('div');
-            messageDiv.className = 'message sent';
-            messageDiv.innerHTML = `
-                <p>${message}</p>
-                <span>${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
-            `;
-            chatMessages.appendChild(messageDiv);
-            chatMessages.scrollTop = chatMessages.scrollHeight;
+            // Update chat header for sender as well - THIS IS THE KEY FIX
+            updateChatHeader(receiverUsername);
             
-            // Clear input
-            textarea.value = '';
-            
-            // Update chat list preview
-            updateChatListPreview(receiverUsername, message);
+          } catch (error) {
+            console.error("Error sending message:", error);
+          }
         }
-    });
-
-    // Update chat list preview
-    function updateChatListPreview(username, message) {
-        const chatItems = document.querySelectorAll('.chat-item');
-        chatItems.forEach(item => {
-            const nameElement = item.querySelector('h4');
-            if (nameElement && (nameElement.textContent.includes(username) || 
-                                nameElement.textContent === username)) {
-                // Update last message preview
-                const preview = item.querySelector('p');
-                if (preview) {
-                    preview.textContent = message.length > 20 ? message.substring(0, 20) + '...' : message;
-                }
-                
-                // Add unread badge if this is a received message
-                if (username !== currentUser) {
-                    let badge = item.querySelector('.unread-badge');
-                    if (!badge) {
-                        badge = document.createElement('span');
-                        badge.className = 'unread-badge';
-                        item.appendChild(badge);
-                    }
-                }
-            }
-        });
+      });
     }
+  }
 
-    // Input validation
-    textarea.addEventListener('input', function() {
-        const sendBtn = document.querySelector('#send-btn');
-        if (sendBtn) {
-            sendBtn.disabled = this.value.trim() === '';
+  function addMessageToUI(data, isSent) {
+    const messageTime = formatTime(data.timestamp || new Date().toISOString());
+    const messageDiv = document.createElement("div");
+    messageDiv.className = `message ${isSent ? "sent" : "received"}`;
+    messageDiv.innerHTML = `
+      <div class="message-content">${data.message}</div>
+      <div class="message-meta">
+        <span class="message-time">${messageTime}</span>
+        ${isSent ? '<span class="message-status"><i class="fas fa-check"></i></span>' : ""}
+      </div>
+    `;
+
+    const chatMessages = document.querySelector(".chat-messages");
+    const emptyMessages = chatMessages.querySelector(".empty-messages");
+    if (emptyMessages) emptyMessages.remove();
+
+    chatMessages.appendChild(messageDiv);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+  }
+
+  function updateChatListPreview(username, message, isUnread, timestamp) {
+    const chatItems = document.querySelectorAll(".chat-item");
+    const formattedTime = formatTime(timestamp);
+
+    let found = false;
+    chatItems.forEach((item) => {
+      if (item.dataset.username === username) {
+        found = true;
+        const preview = item.querySelector("p");
+        if (preview) preview.textContent = message.length > 28 ? `${message.substring(0, 28)}...` : message;
+
+        const timeElement = item.querySelector(".chat-time");
+        if (timeElement) timeElement.textContent = formattedTime;
+
+        if (isUnread) {
+          let badge = item.querySelector(".unread-badge");
+          if (!badge) {
+            badge = document.createElement("span");
+            badge.className = "unread-badge";
+            item.appendChild(badge);
+          }
+        } else {
+          const badge = item.querySelector(".unread-badge");
+          if (badge) badge.remove();
         }
+
+        // Move to top
+        const parent = item.closest(".chat-link");
+        const container = parent.parentNode;
+        container.insertBefore(parent, container.firstChild);
+      }
     });
 
-    // Initial scroll to bottom
-    chatMessages.scrollTop = chatMessages.scrollHeight;
+    // If chat item doesn't exist yet, we might need to create it
+    // This would require additional server-side support to get user details
+    if (!found) {
+      console.log("Chat item for user", username, "not found. Consider refreshing the page.");
+    }
+  }
+
+  function updateChatHeader(username) {
+    const chatHeader = document.querySelector(".chat-header");
+    if (!chatHeader) return;
+    
+    // Update the status text to show active
+    const statusText = chatHeader.querySelector(".status-text");
+    if (statusText) {
+      statusText.textContent = "Active now";
+    }
+    
+    // Make sure the status indicator shows online
+    const statusIndicator = chatHeader.querySelector(".status-indicator");
+    if (statusIndicator) {
+      statusIndicator.className = "status-indicator online";
+    }
+  }
+
+  function formatTime(timestamp) {
+    try {
+      return new Date(timestamp).toLocaleTimeString([], {
+        hour: "2-digit",
+        minute: "2-digit",
+      });
+    } catch (e) {
+      return new Date().toLocaleTimeString([], {
+        hour: "2-digit",
+        minute: "2-digit",
+      });
+    }
+  }
+
+  function showDesktopNotification(sender, message) {
+    if (!("Notification" in window)) return;
+    
+    if (Notification.permission === "granted") {
+      new Notification(`New message from ${sender}`, {
+        body: message,
+        icon: "/static/assets/images/notification-icon.png"
+      });
+    } else if (Notification.permission !== "denied") {
+      Notification.requestPermission().then(permission => {
+        if (permission === "granted") {
+          new Notification(`New message from ${sender}`, {
+            body: message,
+            icon: "/static/assets/images/notification-icon.png"
+          });
+        }
+      });
+    }
+  }
+
+  // Auto-resize textarea as user types
+  const chatInput = document.querySelector("#chat-input-area");
+  if (chatInput) {
+    chatInput.addEventListener("input", function() {
+      this.style.height = "auto";
+      this.style.height = (this.scrollHeight) + "px";
+    });
+  }
 });
     </script>
-</div>
+    
+
+
 {% endblock %}

@@ -1,115 +1,270 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Dashboard</title>
-    <style>
-        body { font-family: Arial, sans-serif; margin: 20px; }
-        .logout-btn { float: right; }
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-        th { background-color: #f4f4f4; }
-        .btn-container { display: flex; gap: 10px; }
-        .action-box { padding: 10px; text-align: center; border-radius: 5px; }
-        .btn-approve { background-color: #4CAF50; color: white; border: none; text-decoration: none; display: block; }
-        .btn-decline { background-color: #f44336; color: white; border: none; text-decoration: none; display: block; }
-        .action-box-approve { background-color: #e8f5e9; border: 1px solid #4CAF50; }
-        .action-box-decline { background-color: #ffebee; border: 1px solid #f44336; }
-        .action-box:hover { box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); }
-    </style>
-</head>
-<body>
-    <h1>Welcome, {{ admin_user.username }}</h1>
-    <a href="{% url 'django_admin:admin_logout' %}" class="logout-btn">Logout</a>
+{% extends 'main/base3.html' %}
+{% load static %}
 
-    <h2>Pending Vet Approvals</h2>
-    <table>
-        <thead>
-            <tr>
-                <th>Vet Name</th>
-                <th>Email</th>
-                <th>Clinic Name</th>
-                <th>Requested At</th>
-                <th>Actions</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for vet in pending_vets %}
-            <tr>
-                <td>{{ vet.user.full_name }}</td>
-                <td>{{ vet.user.email }}</td>
-                <td>{{ vet.clinic_name }}</td>
-                <td>{{ vet.date }}</td>
-                <td>
-                    <div class="btn-container">
-                        <div class="action-box action-box-approve">
-                            <a href="{% url 'django_admin:approve_vet' vet.id %}" class="btn-approve">Approve</a>
+{% block title %}Dashboard - PetVet Admin{% endblock %}
+
+{% block page_title %}Dashboard{% endblock %}
+
+{% block content %}
+<div class="stats-grid">
+    <div class="stat-card">
+        <div class="stat-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        </div>
+        <div class="stat-title">Total Users</div>
+        <div class="stat-value">{{ total_users }}</div>
+        <div class="stat-description">Registered users on the platform</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 9V6a2 2 0 0 0-2-2H7a2 2 0 0 0-2 2v3"/><path d="M3 11v5a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-5a2 2 0 0 0-4 0v2H7v-2a2 2 0 0 0-4 0Z"/><path d="M5 18v2"/><path d="M19 18v2"/></svg>
+        </div>
+        <div class="stat-title">Veterinarians</div>
+        <div class="stat-value">{{ total_vets }}</div>
+        <div class="stat-description">Registered veterinarians</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 22h2a2 2 0 0 0 2-2v-4.172a2 2 0 0 0-.586-1.414L12 7l-1.5-1.5"/><path d="M22 2 2 22"/><path d="M17 7 7 17"/><path d="M8 2h8"/><path d="M12 2v5"/><path d="m2 22 10.455-10.455"/><path d="M7 17H2"/></svg>
+        </div>
+        <div class="stat-title">Pet Owners</div>
+        <div class="stat-value">{{ total_pet_owners }}</div>
+        <div class="stat-description">Registered pet owners</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 22h16a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v16a2 2 0 0 1-2 2Zm0 0a2 2 0 0 1-2-2v-9c0-1.1.9-2 2-2h2"/><path d="M18 14h-8"/><path d="M15 18h-5"/><path d="M10 6h8v4h-8V6Z"/></svg>
+        </div>
+        <div class="stat-title">Total Posts</div>
+        <div class="stat-value">{{ total_posts }}</div>
+        <div class="stat-description">Posts created by users</div>
+    </div>
+</div>
+
+<div class="chart-grid">
+    <div class="chart-card">
+        <div class="chart-header">
+            <h3 class="chart-title">User Statistics</h3>
+        </div>
+        <div class="chart-container">
+            <canvas id="userStatsChart"></canvas>
+        </div>
+    </div>
+    <div class="chart-card">
+        <div class="chart-header">
+            <h3 class="chart-title">Posts by Category</h3>
+        </div>
+        <div class="chart-container">
+            <canvas id="postStatsChart"></canvas>
+        </div>
+    </div>
+</div>
+
+<div class="table-container">
+    <div class="table-header">
+        <h3 class="table-title">Recent Posts</h3>
+        <a href="{% url 'django_admin:post_management' %}" class="view-all-link">View All</a>
+    </div>
+    <div class="table-responsive">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Title</th>
+                    <th>Author</th>
+                    <th>Category</th>
+                    <th>Date</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for post in recent_posts %}
+                <tr>
+                    <td>{{ post.title }}</td>
+                    <td>{{ post.user.username }}</td>
+                    <td>{{ post.category.name|default:"Uncategorized" }}</td>
+                    <td>{{ post.date|date:"M d, Y" }}</td>
+                    <td>
+                        <div class="table-actions">
+                            <a href="{% url 'django_admin:view_post' post.id %}" class="btn btn-primary btn-sm">View</a>
                         </div>
-                        <div class="action-box action-box-decline">
-                            <a href="{% url 'django_admin:decline_vet' vet.id %}" class="btn-decline">Decline</a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="6" class="text-center">No posts found.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div class="table-container">
+    <div class="table-header">
+        <h3 class="table-title">Pending Vet Approvals</h3>
+        <a href="{% url 'django_admin:vet_approvals' %}" class="view-all-link">View All</a>
+    </div>
+    <div class="table-responsive">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Email</th>
+                    <th>Clinic Name</th>
+                    <th>Requested At</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for vet in pending_vets %}
+                <tr>
+                    <td>{{ vet.user.full_name }}</td>
+                    <td>{{ vet.user.email }}</td>
+                    <td>{{ vet.clinic_name }}</td>
+                    <td>{{ vet.date|date:"M d, Y" }}</td>
+                    <td>
+                        <div class="table-actions">
+                            <a href="{% url 'django_admin:view_vet' vet.id %}" class="btn btn-primary btn-sm">View</a>
+                            <a href="{% url 'django_admin:approve_vet' vet.id %}" class="btn btn-success btn-sm">Approve</a>
+                            <a href="{% url 'django_admin:decline_vet' vet.id %}" class="btn btn-danger btn-sm">Decline</a>
                         </div>
-                    </div>
-                </td>
-            </tr>
-            {% empty %}
-            <tr>
-                <td colspan="5">No pending requests.</td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="5" class="text-center">No pending vet approvals.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
 
-    <h2>Recently Approved Vets</h2>
-    <table>
-        <thead>
-            <tr>
-                <th>Vet Name</th>
-                <th>Email</th>
-                <th>Clinic Name</th>
-                <th>Approved At</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for vet in recently_approved_vets %}
-            <tr>
-                <td>{{ vet.user.full_name }}</td>
-                <td>{{ vet.user.email }}</td>
-                <td>{{ vet.clinic_name }}</td>
-                <td>{{ vet.user.date_joined }}</td>
-            </tr>
-            {% empty %}
-            <tr>
-                <td colspan="4">No recent approvals.</td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // User Statistics Chart
+    const userStatsCanvas = document.getElementById('userStatsChart');
+    if (userStatsCanvas) {
+        new Chart(userStatsCanvas, {
+            type: 'doughnut',
+            data: {
+                labels: ['Veterinarians', 'Pet Owners'],
+                datasets: [{
+                    data: [{{ total_vets }}, {{ total_pet_owners }}],
+                    backgroundColor: [
+                        'rgba(79, 70, 229, 0.7)',
+                        'rgba(16, 185, 129, 0.7)'
+                    ],
+                    borderColor: [
+                        'rgba(79, 70, 229, 1)',
+                        'rgba(16, 185, 129, 1)'
+                    ],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'right',
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                const label = context.label || '';
+                                const value = context.raw || 0;
+                                const total = context.dataset.data.reduce((acc, val) => acc + val, 0);
+                                const percentage = Math.round((value / total) * 100);
+                                return `${label}: ${value} (${percentage}%)`;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
 
-    <h2>Recently Declined Vets</h2>
-    <table>
-        <thead>
-            <tr>
-                <th>Vet Name</th>
-                <th>Email</th>
-                <th>Clinic Name</th>
-                <th>Declined At</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for vet in recently_declined_vets %}
-            <tr>
-                <td>{{ vet.user.full_name }}</td>
-                <td>{{ vet.user.email }}</td>
-                <td>{{ vet.clinic_name }}</td>
-                <td>{{ vet.date }}</td>
-            </tr>
-            {% empty %}
-            <tr>
-                <td colspan="4">No recent declines.</td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
-</body>
-</html>
+    // Posts by Category Chart
+    const postStatsCanvas = document.getElementById('postStatsChart');
+    if (postStatsCanvas) {
+        try {
+            const categoryData = {{ category_data|safe }};
+            
+            // Extract names and counts from the data
+            const labels = categoryData.map(item => item.name);
+            const data = categoryData.map(item => item.count);
+            
+            // Generate colors based on the number of categories
+            const generateColors = (count, opacity) => {
+                const colors = [];
+                const baseColors = [
+                    [79, 70, 229],   // Primary (indigo)
+                    [16, 185, 129],  // Success (emerald)
+                    [245, 158, 11],  // Warning (amber)
+                    [239, 68, 68],   // Danger (red)
+                    [59, 130, 246],  // Info (blue)
+                    [168, 85, 247],  // Purple
+                    [236, 72, 153]   // Pink
+                ];
+                
+                for (let i = 0; i < count; i++) {
+                    const colorIndex = i % baseColors.length;
+                    const [r, g, b] = baseColors[colorIndex];
+                    colors.push(`rgba(${r}, ${g}, ${b}, ${opacity})`);
+                }
+                
+                return colors;
+            };
+            
+            new Chart(postStatsCanvas, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Number of Posts',
+                        data: data,
+                        backgroundColor: generateColors(labels.length, 0.7),
+                        borderColor: generateColors(labels.length, 1),
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    indexAxis: 'y',
+                    scales: {
+                        x: {
+                            beginAtZero: true,
+                            ticks: {
+                                precision: 0
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return `${context.parsed.x} posts`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        } catch (error) {
+            console.error('Error rendering posts by category chart:', error);
+            postStatsCanvas.parentElement.innerHTML = `
+                <div class="chart-error">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12.01" y1="16" y2="16"/></svg>
+                    <p>Could not load category data</p>
+                </div>
+            `;
+        }
+    }
+});
+</script>
+{% endblock %}

@@ -1,0 +1,187 @@
+{% extends 'main/base3.html' %}
+{% load static %}
+
+{% block title %}Category Management - PetVet Admin{% endblock %}
+
+{% block page_title %}Category Management{% endblock %}
+
+{% block content %}
+<div class="grid-layout">
+    <div class="form-container">
+        <h3>Add New Category</h3>
+        <form method="post" action="{% url 'django_admin:add_category' %}">
+            {% csrf_token %}
+            <div class="form-group">
+                <label for="name" class="form-label">Category Name</label>
+                <input type="text" id="name" name="name" class="form-input" required>
+            </div>
+            <div class="form-group">
+                <label for="description" class="form-label">Description</label>
+                <textarea id="description" name="description" class="form-textarea"></textarea>
+            </div>
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary">Add Category</button>
+            </div>
+        </form>
+    </div>
+    
+    <div class="table-container">
+        <h3 class="chart-title" style="padding: 1rem 1rem 0 1rem;">Categories</h3>
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Slug</th>
+                    <th>Description</th>
+                    <th>Post Count</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for category in categories %}
+                <tr>
+                    <td>{{ category.name }}</td>
+                    <td>{{ category.slug }}</td>
+                    <td>{{ category.description|truncatechars:50 }}</td>
+                    <td>{{ category.post_count }}</td>
+                    <td>
+                        <div class="table-actions">
+                            <button type="button" class="btn btn-primary btn-sm" onclick="showEditModal('{{ category.id }}', '{{ category.name|escapejs }}', '{{ category.description|escapejs }}')">Edit</button>
+                            <button type="button" class="btn btn-danger btn-sm" onclick="confirmDelete('{{ category.id }}', '{{ category.name|escapejs }}')">Delete</button>
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="5" class="text-center">No categories found.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Edit Category Modal -->
+<div id="editModal" class="modal" style="display: none;">
+    <div class="modal-content">
+        <h3>Edit Category</h3>
+        <form id="editForm" method="post" action="">
+            {% csrf_token %}
+            <div class="form-group">
+                <label for="edit_name" class="form-label">Category Name</label>
+                <input type="text" id="edit_name" name="name" class="form-input" required>
+            </div>
+            <div class="form-group">
+                <label for="edit_description" class="form-label">Description</label>
+                <textarea id="edit_description" name="description" class="form-textarea"></textarea>
+            </div>
+            <div class="modal-actions">
+                <button type="button" class="btn btn-secondary" onclick="closeEditModal()">Cancel</button>
+                <button type="submit" class="btn btn-primary">Save Changes</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div id="deleteModal" class="modal" style="display: none;">
+    <div class="modal-content">
+        <h3>Confirm Deletion</h3>
+        <p>Are you sure you want to delete the category "<span id="deleteCategoryName"></span>"?</p>
+        <p>This action cannot be undone. Posts in this category will be set to uncategorized.</p>
+        <div class="modal-actions">
+            <button type="button" class="btn btn-primary" onclick="closeDeleteModal()">Cancel</button>
+            <form id="deleteForm" method="post" action="">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-danger">Delete</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<style>
+.grid-layout {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+}
+
+@media (min-width: 1024px) {
+    .grid-layout {
+        grid-template-columns: 1fr 2fr;
+    }
+}
+
+.modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+}
+
+.modal-content {
+    background-color: white;
+    padding: 2rem;
+    border-radius: 0.5rem;
+    max-width: 500px;
+    width: 100%;
+}
+
+.modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
+    margin-top: 1.5rem;
+}
+
+.btn-secondary {
+    background-color: var(--muted);
+    color: var(--foreground);
+}
+
+.btn-secondary:hover {
+    background-color: #cbd5e1;
+}
+</style>
+
+<script>
+function showEditModal(categoryId, name, description) {
+    document.getElementById('edit_name').value = name;
+    document.getElementById('edit_description').value = description;
+    document.getElementById('editForm').action = "{% url 'django_admin:edit_category' 0 %}".replace('0', categoryId);
+    document.getElementById('editModal').style.display = 'flex';
+}
+
+function closeEditModal() {
+    document.getElementById('editModal').style.display = 'none';
+}
+
+function confirmDelete(categoryId, categoryName) {
+    document.getElementById('deleteCategoryName').textContent = categoryName;
+    document.getElementById('deleteForm').action = "{% url 'django_admin:delete_category' 0 %}".replace('0', categoryId);
+    document.getElementById('deleteModal').style.display = 'flex';
+}
+
+function closeDeleteModal() {
+    document.getElementById('deleteModal').style.display = 'none';
+}
+
+// Close modals when clicking outside
+window.onclick = function(event) {
+    const editModal = document.getElementById('editModal');
+    const deleteModal = document.getElementById('deleteModal');
+    
+    if (event.target === editModal) {
+        closeEditModal();
+    } else if (event.target === deleteModal) {
+        closeDeleteModal();
+    }
+}
+</script>
+{% endblock %}

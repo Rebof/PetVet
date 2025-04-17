@@ -8,9 +8,12 @@
 
 <div class="pet-feed-content">
     <div class="appointments-container">
+        <!-- Header Section -->
         <div class="section-header">
-            <h1><i class="fas fa-calendar-check"></i> My Appointments</h1>
-            <p>View and manage your upcoming veterinary appointments</p>
+            <div class="header-content">
+                <h1><i class="fas fa-calendar-check"></i> My Appointments</h1>
+                <p>View and manage your upcoming veterinary appointments</p>
+            </div>
             
             <div class="appointment-filters">
                 <div class="filter-group">
@@ -28,15 +31,20 @@
             </div>
         </div>
 
+        <!-- Appointments List -->
         <div class="appointments-list">
             {% for appointment in appointments %}
             <div class="appointment-card" data-status="{{ appointment.status }}">
                 <div class="appointment-header">
                     <div class="vet-avatar">
-                        <img src="" alt="{{ appointment.vet.user.full_name }}">
+                        {% if appointment.vet.user.profile_picture %}
+                        <img src="{{ appointment.vet.user.profile_picture.url }}" alt="{{ appointment.vet.user.full_name }}">
+                        {% else %}
+                        <img src="{% static 'assets/images/default-avatar.png' %}" alt="{{ appointment.vet.user.full_name }}">
+                        {% endif %}
                     </div>
                     <div class="appointment-info">
-                        <h3>Appointment with {{ appointment.vet.user.full_name }}</h3>
+                        <h3>Appointment with Dr. {{ appointment.vet.user.full_name }}</h3>
                         <div class="appointment-meta">
                             <span class="date-time">
                                 <i class="fas fa-calendar-day"></i> 
@@ -55,329 +63,520 @@
                             {% endif %}
                         </div>
                     </div>
+                    <div class="appointment-status">
+                        <span class="status-badge {{ appointment.status|lower }}">
+                            {{ appointment.get_status_display }}
+                        </span>
+                        {% if appointment.payment_status != 'unpaid' %}
+                        <span class="payment-badge {{ appointment.payment_status|lower }}">
+                            {{ appointment.get_payment_status_display }}
+                        </span>
+                        {% endif %}
+                    </div>
                 </div>
                 
-                <div class="appointment-status">
-                    <span class="status-badge {{ appointment.status|lower }}">
-                        {{ appointment.get_status_display }}
-                    </span>
-                    {% if appointment.payment_status != 'unpaid' %}
-                    <span class="payment-badge {{ appointment.payment_status|lower }}">
-                        {{ appointment.get_payment_status_display }}
-                    </span>
-                    {% endif %}
+                <div class="appointment-details">
+                    <div class="pet-info">
+                        <div class="pet-avatar">
+                            {% if appointment.pet.image %}
+                            <img src="{{ appointment.pet.image.url }}" alt="{{ appointment.pet.name }}">
+                            {% else %}
+                            <img src="{% static 'assets/images/default-pet.png' %}" alt="{{ appointment.pet.name }}">
+                            {% endif %}
+                        </div>
+                        <div class="pet-details">
+                            <h4>{{ appointment.pet.name }}</h4>
+                            <p>{{ appointment.pet.species }} • {{ appointment.pet.breed }}</p>
+                        </div>
+                    </div>
+                    
+                    <div class="reason-box">
+                        <h4><i class="fas fa-comment-medical"></i> Reason for Visit</h4>
+                        <p>{{ appointment.reason|truncatechars:150 }}</p>
+                    </div>
                 </div>
                 
                 <div class="appointment-actions">
                     <a href="{% url 'appointment:appointment_detail' appointment.id %}" class="btn btn-primary">
-                        <i class="fas fa-info-circle"></i> Details
+                        <i class="fas fa-info-circle"></i> View Details
                     </a>
                     {% if appointment.status == 'paid_pending_approval' or appointment.status == 'confirmed' %}
                     <a href="{% url 'appointment:cancel_appointment' appointment.id %}" class="btn btn-outline cancel-btn">
-                        <i class="fas fa-times"></i> Cancel
+                        <i class="fas fa-times"></i> Cancel Appointment
                     </a>
                     {% endif %}
                 </div>
             </div>
             {% empty %}
-<!-- No appointments at all -->
-{% endfor %}
-<div class="no-appointments" style="display: none;">
-    <i class="fas fa-calendar-times fa-2x"></i>
-    <h3>No appointments match your filter</h3>
-    <p>Try selecting a different status, or <a href="{% url 'appointment:vet_list' %}">find a vet</a> to schedule one.</p>
-</div>
+            <div class="no-appointments empty-state">
+                <i class="fas fa-calendar-times fa-3x"></i>
+                <h3>No Appointments Found</h3>
+                <p>You don't have any appointments scheduled yet.</p>
+                <a href="{% url 'appointment:vet_list' %}" class="btn btn-primary">
+                    <i class="fas fa-search"></i> Find a Vet
+                </a>
+            </div>
+            {% endfor %}
+            
+            <div class="no-appointments filter-empty-state" style="display: none;">
+                <i class="fas fa-filter fa-3x"></i>
+                <h3>No Matching Appointments</h3>
+                <p>No appointments match your current filter.</p>
+                <button id="reset-filter" class="btn btn-outline">
+                    <i class="fas fa-undo"></i> Reset Filter
+                </button>
+            </div>
         </div>
     </div>
 </div>
 
 <style>
-    /* Appointments Page Specific Styles */
-    .appointments-container {
-        max-width: 1200px;
+    /* Appointments Container */
+    .pet-feed-content .appointments-container {
+        max-width: 900px;
         margin: 0 auto;
         padding: 2rem;
     }
     
-    .section-header {
-        margin-bottom: 2.5rem;
-        text-align: left;
+    /* Header Section */
+    .pet-feed-content .section-header {
+        margin-bottom: 2rem;
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-between;
+        align-items: flex-end;
+        gap: 1.5rem;
     }
     
-    .section-header h1 {
-        font-size: 2.2rem;
-        color: var(--dark);
+    .pet-feed-content .header-content h1 {
+        font-size: 2rem;
+        color: #2D3142;
         margin-bottom: 0.5rem;
         display: flex;
         align-items: center;
         gap: 0.8rem;
     }
     
-    .section-header p {
-        color: var(--text-light);
-        font-size: 1.1rem;
+    .pet-feed-content .header-content h1 i {
+        color: #4ECDC4;
     }
     
-    .appointment-filters {
-        margin: 1.5rem 0;
+    .pet-feed-content .header-content p {
+        color: #7C8798;
+        font-size: 1rem;
     }
     
-    .filter-group {
+    /* Filter Styles */
+    .pet-feed-content .appointment-filters {
+        margin-bottom: 0.5rem;
+    }
+    
+    .pet-feed-content .filter-group {
         display: flex;
         align-items: center;
         gap: 1rem;
+        background: white;
+        padding: 0.8rem 1.2rem;
+        border-radius: 50px;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
     }
     
-    .filter-group label {
+    .pet-feed-content .filter-group label {
         font-weight: 500;
-        color: var(--dark);
+        color: #2D3142;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        white-space: nowrap;
     }
     
-    .filter-select {
+    .pet-feed-content .filter-group label i {
+        color: #4ECDC4;
+    }
+    
+    .pet-feed-content .filter-select {
         padding: 0.6rem 1rem;
         border-radius: 8px;
         border: 1px solid rgba(0, 0, 0, 0.1);
-        background-color: white;
+        background-color: #F8F9FA;
         font-family: 'Poppins', sans-serif;
-        color: var(--text);
+        color: #4F5D75;
         cursor: pointer;
-        min-width: 200px;
+        min-width: 220px;
+        transition: all 0.3s ease;
     }
     
-    .appointments-list {
+    .pet-feed-content .filter-select:focus {
+        outline: none;
+        border-color: #4ECDC4;
+        box-shadow: 0 0 0 3px rgba(78, 205, 196, 0.2);
+    }
+    
+    /* Appointments List */
+    .pet-feed-content .appointments-list {
         display: flex;
         flex-direction: column;
         gap: 1.5rem;
     }
     
-    .appointment-card {
+    /* Appointment Card */
+    .pet-feed-content .appointment-card {
         background: white;
         border-radius: 15px;
         overflow: hidden;
-        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.05);
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
         transition: all 0.3s ease;
         border: 1px solid rgba(0, 0, 0, 0.05);
-        padding: 1.5rem;
     }
     
-    .appointment-card:hover {
+    .pet-feed-content .appointment-card:hover {
         transform: translateY(-3px);
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        box-shadow: 0 15px 40px rgba(0, 0, 0, 0.1);
     }
     
-    .appointment-header {
+    /* Card Header */
+    .pet-feed-content .appointment-header {
         display: flex;
         gap: 1.5rem;
-        margin-bottom: 1rem;
+        padding: 1.5rem;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+        background-color: #F8F9FA;
+        position: relative;
     }
     
-    .vet-avatar img {
+    .pet-feed-content .vet-avatar {
+        flex-shrink: 0;
+    }
+    
+    .pet-feed-content .vet-avatar img {
         width: 70px;
         height: 70px;
         border-radius: 50%;
         object-fit: cover;
-        border: 3px solid var(--secondary);
+        border: 3px solid #4ECDC4;
+        background-color: white;
     }
     
-    .appointment-info {
+    .pet-feed-content .appointment-info {
         flex: 1;
     }
     
-    .appointment-info h3 {
-        font-size: 1.3rem;
-        color: var(--dark);
+    .pet-feed-content .appointment-info h3 {
+        font-size: 1.2rem;
+        color: #2D3142;
         margin-bottom: 0.8rem;
+        font-weight: 600;
     }
     
-    .appointment-meta {
+    .pet-feed-content .appointment-meta {
         display: flex;
         flex-wrap: wrap;
         gap: 1rem;
         font-size: 0.9rem;
-        color: var(--text-light);
+        color: #4F5D75;
     }
     
-    .appointment-meta span {
+    .pet-feed-content .appointment-meta span {
         display: flex;
         align-items: center;
         gap: 0.5rem;
-    }
-    
-    .appointment-meta i {
-        color: var(--primary);
-        font-size: 0.9rem;
-    }
-    
-    .appointment-status {
-        margin: 1rem 0;
-        display: flex;
-        gap: 0.8rem;
-        flex-wrap: wrap;
-    }
-    
-    .status-badge, .payment-badge {
+        background: white;
         padding: 0.4rem 0.8rem;
         border-radius: 50px;
-        font-size: 0.8rem;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+    }
+    
+    .pet-feed-content .appointment-meta i {
+        color: #FF6B6B;
+    }
+    
+    /* Status Badges */
+    .pet-feed-content .appointment-status {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+        position: absolute;
+        top: 1.5rem;
+        right: 1.5rem;
+    }
+    
+    .pet-feed-content .status-badge, 
+    .pet-feed-content .payment-badge {
+        padding: 0.4rem 0.8rem;
+        border-radius: 50px;
+        font-size: 0.75rem;
         font-weight: 600;
         display: inline-block;
+        text-align: center;
+        min-width: 120px;
     }
     
     /* Status Badge Colors */
-    .status-badge.unpaid {
+    .pet-feed-content .status-badge.unpaid {
         background-color: rgba(108, 117, 125, 0.2);
         color: #6c757d;
     }
     
-    .status-badge.paid_pending_approval {
+    .pet-feed-content .status-badge.paid_pending_approval {
         background-color: rgba(255, 193, 7, 0.2);
         color: #ffc107;
     }
     
-    .status-badge.confirmed {
+    .pet-feed-content .status-badge.confirmed {
         background-color: rgba(78, 205, 196, 0.2);
-        color: var(--secondary);
+        color: #4ECDC4;
     }
     
-    .status-badge.completed {
+    .pet-feed-content .status-badge.completed {
         background-color: rgba(40, 167, 69, 0.2);
         color: #28a745;
     }
     
-    .status-badge.cancelled {
+    .pet-feed-content .status-badge.cancelled {
         background-color: rgba(220, 53, 69, 0.2);
         color: #dc3545;
     }
     
-    .status-badge.rejected {
+    .pet-feed-content .status-badge.rejected {
         background-color: rgba(220, 53, 69, 0.2);
         color: #dc3545;
     }
     
     /* Payment Badge Colors */
-    .payment-badge.paid {
+    .pet-feed-content .payment-badge.paid {
         background-color: rgba(40, 167, 69, 0.2);
         color: #28a745;
     }
     
-    .payment-badge.refunded {
+    .pet-feed-content .payment-badge.refunded {
         background-color: rgba(23, 162, 184, 0.2);
         color: #17a2b8;
     }
     
-    .payment-badge.refund_failed {
+    .pet-feed-content .payment-badge.refund_failed {
         background-color: rgba(220, 53, 69, 0.2);
         color: #dc3545;
     }
     
-    .payment-badge.failed {
+    .pet-feed-content .payment-badge.failed {
         background-color: rgba(220, 53, 69, 0.2);
         color: #dc3545;
     }
     
-    .appointment-actions {
+    /* Appointment Details */
+    .pet-feed-content .appointment-details {
+        padding: 1.5rem;
+        display: flex;
+        gap: 1.5rem;
+        flex-wrap: wrap;
+    }
+    
+    /* Pet Info */
+    .pet-feed-content .pet-info {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        padding: 1rem;
+        background: #F8F9FA;
+        border-radius: 8px;
+        min-width: 200px;
+        flex: 1;
+    }
+    
+    .pet-feed-content .pet-avatar {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        overflow: hidden;
+        border: 2px solid #FFD166;
+    }
+    
+    .pet-feed-content .pet-avatar img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+    
+    .pet-feed-content .pet-details h4 {
+        font-size: 1rem;
+        color: #2D3142;
+        margin-bottom: 0.2rem;
+    }
+    
+    .pet-feed-content .pet-details p {
+        font-size: 0.85rem;
+        color: #7C8798;
+    }
+    
+    /* Reason Box */
+    .pet-feed-content .reason-box {
+        flex: 2;
+        padding: 1rem;
+        background: #F8F9FA;
+        border-radius: 8px;
+        min-width: 300px;
+    }
+    
+    .pet-feed-content .reason-box h4 {
+        font-size: 0.9rem;
+        color: #2D3142;
+        margin-bottom: 0.5rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .pet-feed-content .reason-box h4 i {
+        color: #4ECDC4;
+    }
+    
+    .pet-feed-content .reason-box p {
+        font-size: 0.9rem;
+        color: #4F5D75;
+        line-height: 1.5;
+    }
+    
+    /* Appointment Actions */
+    .pet-feed-content .appointment-actions {
         display: flex;
         gap: 1rem;
-        margin-top: 1.5rem;
+        padding: 1.5rem;
+        border-top: 1px solid rgba(0, 0, 0, 0.05);
+        background-color: #F8F9FA;
     }
     
-    .no-appointments {
-        text-align: center;
-        padding: 3rem;
-        color: var(--text-light);
-    }
-    
-    .no-appointments i {
-        margin-bottom: 1rem;
-        color: var(--primary);
-    }
-    
-    .no-appointments h3 {
-        color: var(--dark);
-        margin-bottom: 0.5rem;
-    }
-    
-    .no-appointments a {
-        color: var(--primary);
-        text-decoration: none;
-        font-weight: 500;
-    }
-    
-    .no-appointments a:hover {
-        text-decoration: underline;
-    }
-    
-    /* Buttons (consistent with your existing style) */
-    .btn {
-        padding: 0.6rem 1.2rem;
+    /* Buttons */
+    .pet-feed-content .btn {
+        padding: 0.7rem 1.2rem;
         border-radius: 50px;
         font-weight: 600;
         cursor: pointer;
         transition: all 0.3s ease;
         display: inline-flex;
         align-items: center;
+        justify-content: center;
         gap: 0.5rem;
         font-size: 0.9rem;
         text-decoration: none;
         border: none;
+        flex: 1;
     }
     
-    .btn-primary {
-        background-color: var(--primary);
+    .pet-feed-content .btn-primary {
+        background-color: #FF6B6B;
         color: white;
         box-shadow: 0 4px 15px rgba(255, 107, 107, 0.3);
     }
     
-    .btn-primary:hover {
+    .pet-feed-content .btn-primary:hover {
         transform: translateY(-2px);
         box-shadow: 0 6px 20px rgba(255, 107, 107, 0.4);
     }
     
-    .btn-outline {
+    .pet-feed-content .btn-outline {
         background-color: transparent;
-        border: 2px solid var(--primary);
-        color: var(--primary);
+        border: 2px solid #FF6B6B;
+        color: #FF6B6B;
     }
     
-    .btn-outline:hover {
-        background-color: var(--primary);
+    .pet-feed-content .btn-outline:hover {
+        background-color: #FF6B6B;
         color: white;
     }
     
-    .cancel-btn {
+    .pet-feed-content .cancel-btn {
         border-color: #dc3545;
         color: #dc3545;
     }
     
-    .cancel-btn:hover {
+    .pet-feed-content .cancel-btn:hover {
         background-color: #dc3545;
         color: white;
     }
     
-    /* Responsive */
+    /* Empty States */
+    .pet-feed-content .empty-state, 
+    .pet-feed-content .filter-empty-state {
+        text-align: center;
+        padding: 3rem;
+        background: white;
+        border-radius: 15px;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 1rem;
+    }
+    
+    .pet-feed-content .empty-state i, 
+    .pet-feed-content .filter-empty-state i {
+        color: #7C8798;
+        margin-bottom: 0.5rem;
+    }
+    
+    .pet-feed-content .empty-state h3, 
+    .pet-feed-content .filter-empty-state h3 {
+        color: #2D3142;
+        margin-bottom: 0.5rem;
+        font-size: 1.3rem;
+    }
+    
+    .pet-feed-content .empty-state p, 
+    .pet-feed-content .filter-empty-state p {
+        color: #7C8798;
+        margin-bottom: 1.5rem;
+    }
+    
+    .pet-feed-content .empty-state .btn, 
+    .pet-feed-content .filter-empty-state .btn {
+        min-width: 180px;
+    }
+    
+    /* Responsive Styles */
+    @media (max-width: 992px) {
+        .pet-feed-content .appointments-container {
+            padding: 1.5rem 1rem;
+        }
+        
+        .pet-feed-content .section-header {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+        
+        .pet-feed-content .appointment-status {
+            position: static;
+            flex-direction: row;
+            margin-top: 1rem;
+        }
+    }
+    
     @media (max-width: 768px) {
-        .appointment-header {
+        .pet-feed-content .appointment-header {
             flex-direction: column;
             align-items: center;
             text-align: center;
+            gap: 1rem;
         }
         
-        .appointment-meta {
+        .pet-feed-content .appointment-meta {
+            justify-content: center;
+        }
+        
+        .pet-feed-content .appointment-details {
             flex-direction: column;
-            gap: 0.5rem;
         }
         
-        .appointment-actions {
+        .pet-feed-content .appointment-actions {
             flex-direction: column;
         }
         
-        .filter-group {
+        .pet-feed-content .filter-group {
             flex-direction: column;
             align-items: flex-start;
             gap: 0.5rem;
         }
         
-        .filter-select {
+        .pet-feed-content .filter-select {
             width: 100%;
         }
     }
@@ -385,23 +584,20 @@
 
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        // Status filter functionality
+        // Cache DOM elements
         const statusFilter = document.getElementById('status-filter');
         const appointmentCards = document.querySelectorAll('.appointment-card');
-        const noAppointments = document.querySelector('.no-appointments');
-
-        // Initially hide the no appointments message if we have appointments
-        if (appointmentCards.length > 0) {
-            noAppointments.style.display = 'none';
-        }
-
-        statusFilter.addEventListener('change', function() {
-            const selectedStatus = this.value;
+        const noAppointmentsFilter = document.querySelector('.filter-empty-state');
+        const resetFilterBtn = document.getElementById('reset-filter');
+        
+        // Function to filter appointments
+        function filterAppointments() {
+            const selectedStatus = statusFilter.value;
             let visibleCount = 0;
-
+            
             appointmentCards.forEach(card => {
                 const cardStatus = card.dataset.status;
-
+                
                 if (selectedStatus === 'all' || cardStatus === selectedStatus) {
                     card.style.display = 'block';
                     visibleCount++;
@@ -409,18 +605,31 @@
                     card.style.display = 'none';
                 }
             });
-
+            
             // Show/hide no appointments message
             if (visibleCount === 0 && appointmentCards.length > 0) {
-                noAppointments.style.display = 'block';
+                noAppointmentsFilter.style.display = 'flex';
             } else {
-                noAppointments.style.display = 'none';
+                noAppointmentsFilter.style.display = 'none';
             }
-        });
-
-        // Cancel button functionality
+        }
+        
+        // Status filter event listener
+        if (statusFilter) {
+            statusFilter.addEventListener('change', filterAppointments);
+        }
+        
+        // Reset filter button
+        if (resetFilterBtn) {
+            resetFilterBtn.addEventListener('click', function() {
+                statusFilter.value = 'all';
+                filterAppointments();
+            });
+        }
+        
+        // Cancel button confirmation
         const cancelButtons = document.querySelectorAll('.cancel-btn');
-
+        
         cancelButtons.forEach(button => {
             button.addEventListener('click', function(e) {
                 e.preventDefault();
@@ -431,5 +640,4 @@
         });
     });
 </script>
-
 {% endblock %}

@@ -8,10 +8,14 @@
 
 <div class="pet-feed-content">
     <div class="vet-schedule-container">
-        <!-- Vet Profile Header -->
-        <div class="vet-profile-card">
+        <!-- Vet Profile Header - Matching design system -->
+        <div class="vet-profile-header">
             <div class="vet-avatar">
+                {% if vet.user.profile_picture %}
                 <img src="{{ vet.user.profile_picture.url }}" alt="Dr. {{ vet.user.full_name }}">
+                {% else %}
+                <img src="{% static 'assets/images/default-avatar.png' %}" alt="Dr. {{ vet.user.full_name }}">
+                {% endif %}
             </div>
             <div class="vet-info">
                 <h1><i class="fas fa-calendar-alt"></i> Dr. {{ vet.user.full_name }}'s Schedule</h1>
@@ -30,32 +34,36 @@
             </div>
         </div>
 
-        <!-- Schedule List -->
-        <div class="schedule-list-container">
+        <!-- Schedule List - Consistent with other pages -->
+        <div class="schedule-list">
             {% if schedules %}
-            <div class="schedule-header">
-                <h2>Available Time Slots</h2>
+            <div class="section-header">
+                <h2><i class="fas fa-clock"></i> Available Time Slots</h2>
                 <p>Select a time slot to book your appointment</p>
             </div>
             
-            <div class="schedule-grid">
+            <div class="time-slots-grid">
                 {% for schedule in schedules %}
                 <div class="time-slot-card {% if not schedule.available %}unavailable{% endif %}">
-                    <div class="time-info">
-                        <span class="day">{{ schedule.day_of_week }}</span>
-                        <span class="time">
+                    <div class="time-slot-info">
+                        <div class="date-info">
+                            <span class="day">{{ schedule.day_of_week }}</span>
+                            <span class="date">{{ schedule.date|date:"F j, Y" }}</span>
+                        </div>
+                        <div class="time-range">
+                            <i class="fas fa-clock"></i>
                             {{ schedule.start_time|time:"g:i A" }} - {{ schedule.end_time|time:"g:i A" }}
-                        </span>
+                        </div>
                     </div>
                     
-                    <div class="slot-status">
+                    <div class="time-slot-actions">
                         {% if schedule.available %}
                         <span class="status-badge available">
                             <i class="fas fa-check-circle"></i> Available
                         </span>
                         {% if request.user.petownerprofile %}
                         <a href="{% url 'appointment:book_appointment' vet.id schedule.id %}" class="btn btn-primary">
-                            <i class="fas fa-calendar-plus"></i> Book
+                            <i class="fas fa-calendar-plus"></i> Book Now
                         </a>
                         {% endif %}
                         {% else %}
@@ -68,16 +76,16 @@
                 {% endfor %}
             </div>
             {% else %}
-            <div class="empty-schedule">
-                <i class="fas fa-calendar-times"></i>
+            <div class="empty-state">
+                <i class="fas fa-calendar-times fa-3x"></i>
                 <h3>No Schedule Available</h3>
                 <p>This veterinarian hasn't set up their availability yet.</p>
             </div>
             {% endif %}
         </div>
 
-        <!-- Back Button -->
-        <div class="back-action">
+        <!-- Back Button - Consistent styling -->
+        <div class="action-buttons">
             <a href="{% url 'appointment:vet_list' %}" class="btn btn-outline">
                 <i class="fas fa-arrow-left"></i> Back to Vets
             </a>
@@ -86,237 +94,311 @@
 </div>
 
 <style>
-    /* Vet Schedule Page Styles */
-    .vet-schedule-container {
+    /* Base Container - matches other pages */
+    .pet-feed-content .vet-schedule-container {
         max-width: 900px;
         margin: 0 auto;
         padding: 2rem;
     }
-
-    .vet-profile-card {
+    
+    /* Vet Profile Header - consistent with other pages */
+    .pet-feed-content .vet-profile-header {
         display: flex;
-        align-items: center;
         gap: 1.5rem;
         background: white;
-        border-radius: 12px;
+        border-radius: 15px;
         padding: 1.5rem;
-        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
         margin-bottom: 2rem;
+        align-items: center;
     }
-
-    .vet-avatar img {
-        width: 90px;
-        height: 90px;
+    
+    .pet-feed-content .vet-avatar img {
+        width: 80px;
+        height: 80px;
         border-radius: 50%;
         object-fit: cover;
-        border: 3px solid var(--secondary);
+        border: 3px solid #4ECDC4;
     }
-
-    .vet-info h1 {
+    
+    .pet-feed-content .vet-info h1 {
         font-size: 1.8rem;
-        color: var(--dark);
-        margin-bottom: 0.5rem;
+        color: #2D3142;
+        margin-bottom: 0.8rem;
         display: flex;
         align-items: center;
         gap: 0.8rem;
     }
-
-    .vet-meta {
+    
+    .pet-feed-content .vet-info h1 i {
+        color: #4ECDC4;
+    }
+    
+    .pet-feed-content .vet-meta {
         display: flex;
         flex-wrap: wrap;
         gap: 1rem;
     }
-
-    .vet-meta span {
-        display: inline-flex;
+    
+    .pet-feed-content .vet-meta span {
+        display: flex;
         align-items: center;
         gap: 0.5rem;
-        background: rgba(78, 205, 196, 0.1);
-        color: var(--secondary);
+        background: #F8F9FA;
         padding: 0.5rem 1rem;
         border-radius: 50px;
         font-size: 0.9rem;
+        color: #4F5D75;
     }
-
-    .specialization {
-        background: rgba(255, 193, 7, 0.1) !important;
-        color: #ffc107 !important;
+    
+    .pet-feed-content .vet-meta i {
+        color: #FF6B6B;
     }
-
-    .schedule-list-container {
+    
+    /* Schedule List - matching appointments list */
+    .pet-feed-content .schedule-list {
         background: white;
-        border-radius: 12px;
-        padding: 2rem;
-        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+        border-radius: 15px;
+        padding: 1.5rem;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+        margin-bottom: 2rem;
     }
-
-    .schedule-header {
+    
+    .pet-feed-content .section-header {
         margin-bottom: 1.5rem;
     }
-
-    .schedule-header h2 {
-        color: var(--dark);
+    
+    .pet-feed-content .section-header h2 {
         font-size: 1.5rem;
+        color: #2D3142;
+        display: flex;
+        align-items: center;
+        gap: 0.8rem;
+        margin-bottom: 0.5rem;
     }
-
-    .schedule-header p {
-        color: var(--text-light);
+    
+    .pet-feed-content .section-header h2 i {
+        color: #4ECDC4;
     }
-
-    .schedule-grid {
+    
+    .pet-feed-content .section-header p {
+        color: #7C8798;
+        font-size: 1rem;
+    }
+    
+    /* Time Slots Grid */
+    .pet-feed-content .time-slots-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
         gap: 1rem;
     }
-
-    .time-slot-card {
+    
+    /* Time Slot Card - matching appointment cards */
+    .pet-feed-content .time-slot-card {
         display: flex;
         justify-content: space-between;
-        align-items: center;
-        padding: 1rem 1.5rem;
-        border-radius: 8px;
-        background: #f9f9f9;
-        border-left: 4px solid var(--primary);
-        transition: all 0.2s ease;
+        background: #F8F9FA;
+        border-radius: 12px;
+        padding: 1.2rem;
+        border-left: 4px solid #4ECDC4;
+        transition: all 0.3s ease;
     }
-
-    .time-slot-card.unavailable {
+    
+    .pet-feed-content .time-slot-card.unavailable {
         border-left-color: #6c757d;
         opacity: 0.8;
     }
-
-    .time-slot-card:hover {
-        transform: translateY(-2px);
+    
+    .pet-feed-content .time-slot-card:hover {
+        transform: translateY(-3px);
         box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
     }
-
-    .time-info {
-        display: flex;
-        flex-direction: column;
+    
+    .pet-feed-content .time-slot-info {
+        flex: 1;
     }
-
-    .day {
-        font-weight: 600;
-        color: var(--dark);
-    }
-
-    .time {
-        color: var(--text);
-        font-size: 0.9rem;
-    }
-
-    .slot-status {
-        display: flex;
-        align-items: center;
-        gap: 1rem;
-    }
-
-    .status-badge {
-        padding: 0.5rem 0.8rem;
-        border-radius: 50px;
-        font-size: 0.85rem;
-        font-weight: 600;
-        display: inline-flex;
-        align-items: center;
-        gap: 0.5rem;
-    }
-
-    .available {
-        background: rgba(78, 205, 196, 0.1);
-        color: var(--secondary);
-    }
-
-    .unavailable {
-        background: rgba(108, 117, 125, 0.1);
-        color: #6c757d;
-    }
-
-    .empty-schedule {
-        text-align: center;
-        padding: 2rem;
-    }
-
-    .empty-schedule i {
-        font-size: 2.5rem;
-        color: var(--primary);
-        margin-bottom: 1rem;
-    }
-
-    .empty-schedule h3 {
-        color: var(--dark);
+    
+    .pet-feed-content .date-info {
         margin-bottom: 0.5rem;
     }
-
-    .empty-schedule p {
-        color: var(--text-light);
-    }
-
-    .back-action {
-        margin-top: 2rem;
-        text-align: center;
-    }
-
-    /* Buttons */
-    .btn {
-        padding: 0.6rem 1.2rem;
-        border-radius: 50px;
+    
+    .pet-feed-content .day {
         font-weight: 600;
-        font-size: 0.9rem;
+        color: #2D3142;
+        font-size: 1rem;
+    }
+    
+    .pet-feed-content .date {
+        color: #7C8798;
+        font-size: 0.85rem;
+    }
+    
+    .pet-feed-content .time-range {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        color: #4F5D75;
+        font-size: 0.95rem;
+    }
+    
+    .pet-feed-content .time-range i {
+        color: #FF6B6B;
+    }
+    
+    /* Time Slot Actions */
+    .pet-feed-content .time-slot-actions {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
+        gap: 0.8rem;
+    }
+    
+    /* Status Badges - matching appointments page */
+    .pet-feed-content .status-badge {
+        padding: 0.4rem 0.8rem;
+        border-radius: 50px;
+        font-size: 0.75rem;
+        font-weight: 600;
         display: inline-flex;
         align-items: center;
         gap: 0.5rem;
-        transition: all 0.2s ease;
+    }
+    
+    .pet-feed-content .available {
+        background-color: rgba(78, 205, 196, 0.2);
+        color: #4ECDC4;
+    }
+    
+    .pet-feed-content .unavailable {
+        background-color: rgba(108, 117, 125, 0.2);
+        color: #6c757d;
+    }
+    
+    /* Buttons - consistent with other pages */
+    .pet-feed-content .btn {
+        padding: 0.6rem 1rem;
+        border-radius: 50px;
+        font-weight: 600;
+        font-size: 0.85rem;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        transition: all 0.3s ease;
         text-decoration: none;
-    }
-
-    .btn-primary {
-        background: var(--primary);
-        color: rgb(240, 153, 153);
         border: none;
+        white-space: nowrap;
     }
-
-    .btn-primary:hover {
-        background: var(--primary-dark);
+    
+    .pet-feed-content .btn-primary {
+        background-color: #FF6B6B;
+        color: white;
+        box-shadow: 0 4px 15px rgba(255, 107, 107, 0.3);
+    }
+    
+    .pet-feed-content .btn-primary:hover {
         transform: translateY(-2px);
-        box-shadow: 0 4px 10px rgba(255, 107, 107, 0.3);
+        box-shadow: 0 6px 20px rgba(255, 107, 107, 0.4);
     }
-
-    .btn-outline {
-        background: transparent;
-        border: 2px solid var(--primary);
-        color: var(--primary);
+    
+    .pet-feed-content .btn-outline {
+        background-color: transparent;
+        border: 2px solid #FF6B6B;
+        color: #FF6B6B;
     }
-
-    .btn-outline:hover {
-        background: var(--primary);
+    
+    .pet-feed-content .btn-outline:hover {
+        background-color: #FF6B6B;
         color: white;
     }
-
-    /* Responsive */
+    
+    /* Empty State - matching other pages */
+    .pet-feed-content .empty-state {
+        text-align: center;
+        padding: 3rem;
+    }
+    
+    .pet-feed-content .empty-state i {
+        color: #7C8798;
+        margin-bottom: 1rem;
+    }
+    
+    .pet-feed-content .empty-state h3 {
+        color: #2D3142;
+        margin-bottom: 0.5rem;
+        font-size: 1.3rem;
+    }
+    
+    .pet-feed-content .empty-state p {
+        color: #7C8798;
+        margin-bottom: 1.5rem;
+    }
+    
+    /* Action Buttons */
+    .pet-feed-content .action-buttons {
+        text-align: center;
+    }
+    
+    /* Responsive Styles */
     @media (max-width: 768px) {
-        .vet-profile-card {
+        .pet-feed-content .vet-profile-header {
             flex-direction: column;
             text-align: center;
+            align-items: center;
         }
-
-        .vet-meta {
+        
+        .pet-feed-content .vet-meta {
             justify-content: center;
         }
-
-        .schedule-grid {
+        
+        .pet-feed-content .time-slots-grid {
             grid-template-columns: 1fr;
         }
-
-        .time-slot-card {
+        
+        .pet-feed-content .time-slot-card {
             flex-direction: column;
-            align-items: flex-start;
             gap: 1rem;
         }
-
-        .slot-status {
-            width: 100%;
+        
+        .pet-feed-content .time-slot-actions {
+            flex-direction: row;
             justify-content: space-between;
+            width: 100%;
+            align-items: center;
+        }
+    }
+    
+    @media (max-width: 480px) {
+        .pet-feed-content .vet-schedule-container {
+            padding: 1.5rem 1rem;
+        }
+        
+        .pet-feed-content .vet-info h1 {
+            font-size: 1.5rem;
+        }
+        
+        .pet-feed-content .time-slot-actions {
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 0.5rem;
         }
     }
 </style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Add any necessary JavaScript here
+        // For example, booking confirmation or time slot selection
+        
+        // Example: Confirm before booking
+        const bookButtons = document.querySelectorAll('.btn-primary');
+        bookButtons.forEach(button => {
+            button.addEventListener('click', function(e) {
+                if (!confirm('Are you sure you want to book this appointment?')) {
+                    e.preventDefault();
+                }
+            });
+        });
+    });
+</script>
 {% endblock %}
