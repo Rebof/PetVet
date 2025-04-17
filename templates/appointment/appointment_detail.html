@@ -20,11 +20,12 @@
         <div class="appointment-detail-card">
             <div class="appointment-header">
                 <div class="vet-avatar">
-                    {% if appointment.vet.user.profile_picture %}
-                    <img src="{{ appointment.vet.user.profile_picture.url }}" alt="Dr. {{ appointment.vet.user.full_name }}">
-                    {% else %}
-                    <img src="{% static 'assets/images/default-avatar.png' %}" alt="Dr. {{ appointment.vet.user.full_name }}">
-                    {% endif %}
+                    {% if appointment.vet.vet_image %}
+    <img src="{{ appointment.vet.vet_image.url }}" alt="Dr. {{ appointment.vet.user.get_full_name|default:appointment.vet.user.username }}">
+{% else %}
+    <img src="/static/assets/default-avatar.png" alt="Dr. {{ appointment.vet.user.get_full_name|default:appointment.vet.user.username }}">
+{% endif %}
+
                 </div>
                 <div class="appointment-info">
                     <h3>Appointment with Dr. {{ appointment.vet.user.full_name }}</h3>
@@ -32,7 +33,7 @@
                         <span class="date-time">
                             <i class="fas fa-calendar-day"></i> 
                             {{ appointment.schedule.day_of_week }}, 
-                            {{ appointment.schedule.date|date:"F j, Y" }}
+                            {{ appointment.schedule.created_at|date:"F j, Y" }}
                         </span>
                         <span class="time-slot">
                             <i class="fas fa-clock"></i> 
@@ -73,12 +74,7 @@
                         <i class="fas fa-paw"></i> Pet:
                     </div>
                     <div class="detail-value">
-                        {{ appointment.pet.name }} ({{ appointment.pet.get_species_display }})
-                        {% if appointment.pet.image %}
-                        <div class="pet-thumbnail">
-                            <img src="{{ appointment.pet.image.url }}" alt="{{ appointment.pet.name }}">
-                        </div>
-                        {% endif %}
+                        {{ appointment.pet.name }}
                     </div>
                 </div>
 
@@ -91,14 +87,6 @@
                     </div>
                 </div>
 
-                <div class="detail-row">
-                    <div class="detail-label">
-                        <i class="fas fa-info-circle"></i> Additional Notes:
-                    </div>
-                    <div class="detail-value">
-                        {{ appointment.notes|default:"No additional notes" }}
-                    </div>
-                </div>
             </div>
 
             <!-- Status Section - Matching appointments list -->

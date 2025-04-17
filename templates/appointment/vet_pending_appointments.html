@@ -1,35 +1,506 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pending Appointment Requests</title>
-</head>
-<body>
-    <h1>Pending Appointment Requests for Dr. {{ vet.user.full_name }}</h1>
+{% extends 'main/base1.html' %}
+{% load static %}
 
-    {% if pending_appointments %}
-        <ul>
-            {% for appointment in pending_appointments %}
-                <li>
-                    <p><strong>Pet Owner:</strong> {{ appointment.pet_owner.user.full_name }}</p>
-                    <p><strong>Reason:</strong> {{ appointment.reason }}</p>
-                    <p><strong>Requested Time:</strong> {{ appointment.schedule.start_time }} - {{ appointment.schedule.end_time }}</p>
-                    
-                    <form method="POST" action="{% url 'appointment:accept_appointment' appointment.id %}">
-                        {% csrf_token %}
-                        <button type="submit">Accept</button>
-                    </form>
+{% block title %}Pending Appointments | PetCare Connect{% endblock %}
 
-                    <form method="POST" action="{% url 'appointment:reject_appointment' appointment.id %}">
-                        {% csrf_token %}
-                        <button type="submit">Reject</button>
-                    </form>
-                </li>
-            {% endfor %}
-        </ul>
-    {% else %}
-        <p>No pending appointments</p>
-    {% endif %}
-</body>
-</html>
+{% block content %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+<div class="pet-feed-content">
+    <div class="appointment-list-container">
+        <!-- Header Section - Matching appointments detail page -->
+        <div class="section-header">
+            <div class="header-content">
+                <h1><i class="fas fa-clock"></i> Pending Appointment Requests</h1>
+                <p>Review and manage incoming appointment requests</p>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="vet-appointments-content">
+            <div class="vet-profile-header">
+                <div class="vet-avatar">
+                    {% if vet.user.vetprofile.vet_image %}
+                        <img src="{{ vet.user.vetprofile.vet_image.url }}" alt="Dr. {{ vet.user.full_name }}">
+                    {% else %}
+                        <img src="/static/assets/default-avatar.png" alt="Dr. {{ vet.user.full_name }}">
+                    {% endif %}
+                </div>
+                <div class="vet-info">
+                    <h2>Dr. {{ vet.user.full_name }}</h2>
+                    {% if vet.clinic_name %}
+                    <p class="clinic-name">
+                        <i class="fas fa-clinic-medical"></i> {{ vet.clinic_name }}
+                    </p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Appointments List -->
+            <div class="appointments-list">
+                {% if pending_appointments %}
+                    {% for appointment in pending_appointments %}
+                    <div class="appointment-card pending">
+                        <div class="appointment-header">
+                            <div class="pet-owner-info">
+                                <h3>
+                                    <i class="fas fa-user"></i> 
+                                    {{ appointment.pet_owner.user.full_name }}
+                                </h3>
+                                <div class="pet-info">
+                                    <span class="pet-name">
+                                        <i class="fas fa-paw"></i> {{ appointment.pet.name }}
+                                    </span>
+                                    <span class="pet-species">
+                                        ({{ appointment.pet.species }})
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="appointment-status">
+                                <span class="status-badge pending">
+                                    <i class="fas fa-clock"></i> Pending
+                                </span>
+                            </div>
+                        </div>
+
+                        <div class="appointment-details">
+                            <div class="detail-row">
+                                <div class="detail-label">
+                                    <i class="fas fa-comment-medical"></i> Reason:
+                                </div>
+                                <div class="detail-value">
+                                    {{ appointment.reason }}
+                                </div>
+                            </div>
+
+                            <div class="detail-row">
+                                <div class="detail-label">
+                                    <i class="fas fa-clock"></i> Requested Time:
+                                </div>
+                                <div class="detail-value">
+                                    {{ appointment.schedule.start_time|time:"g:i A" }} - {{ appointment.schedule.end_time|time:"g:i A" }}
+                                </div>
+                            </div>
+
+                            <div class="detail-row">
+                                <div class="detail-label">
+                                    <i class="fas fa-calendar-day"></i> Date:
+                                </div>
+                                <div class="detail-value">
+                                    {{ appointment.schedule.day_of_week }}, {{ appointment.schedule.date|date:"F j, Y" }}
+                                </div>
+                            </div>
+
+                            <!-- Pet Information Section -->
+                            <div class="detail-row">
+                                <div class="detail-label">
+                                    <i class="fas fa-dna"></i> Breed:
+                                </div>
+                                <div class="detail-value">
+                                    {{ appointment.pet.breed|default:"Not specified" }}
+                                </div>
+                            </div>
+
+                            <div class="detail-row">
+                                <div class="detail-label">
+                                    <i class="fas fa-birthday-cake"></i> Age:
+                                </div>
+                                <div class="detail-value">
+                                    {{ appointment.pet.age }} year{{ appointment.pet.age|pluralize }}
+                                </div>
+                            </div>
+
+                            {% if appointment.pet.weight %}
+                            <div class="detail-row">
+                                <div class="detail-label">
+                                    <i class="fas fa-weight"></i> Weight:
+                                </div>
+                                <div class="detail-value">
+                                    {{ appointment.pet.weight }} kg
+                                </div>
+                            </div>
+                            {% endif %}
+
+                            {% if appointment.pet.color %}
+                            <div class="detail-row">
+                                <div class="detail-label">
+                                    <i class="fas fa-palette"></i> Color:
+                                </div>
+                                <div class="detail-value">
+                                    {{ appointment.pet.color }}
+                                </div>
+                            </div>
+                            {% endif %}
+
+                            {% if appointment.pet.vaccination_status %}
+                            <div class="detail-row">
+                                <div class="detail-label">
+                                    <i class="fas fa-syringe"></i> Vaccination:
+                                </div>
+                                <div class="detail-value">
+                                    {{ appointment.pet.vaccination_status }}
+                                </div>
+                            </div>
+                            {% endif %}
+
+                            {% if appointment.pet.allergies %}
+                            <div class="detail-row">
+                                <div class="detail-label">
+                                    <i class="fas fa-allergies"></i> Allergies:
+                                </div>
+                                <div class="detail-value">
+                                    {{ appointment.pet.allergies }}
+                                </div>
+                            </div>
+                            {% endif %}
+
+                            {% if appointment.pet.medical_history %}
+                            <div class="detail-row">
+                                <div class="detail-label">
+                                    <i class="fas fa-file-medical"></i> Medical History:
+                                </div>
+                                <div class="detail-value">
+                                    {{ appointment.pet.medical_history }}
+                                </div>
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="appointment-actions dual-buttons">
+                            <form method="POST" action="{% url 'appointment:accept_appointment' appointment.id %}" class="action-form">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-success">
+                                    <i class="fas fa-check-circle"></i> Accept
+                                </button>
+                            </form>
+
+                            <form method="POST" action="{% url 'appointment:reject_appointment' appointment.id %}" class="action-form">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-danger">
+                                    <i class="fas fa-times-circle"></i> Reject
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="empty-state">
+                        <i class="fas fa-calendar-check"></i>
+                        <h3>No Pending Appointments</h3>
+                        <p>You currently don't have any pending appointment requests.</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+       /* Reusing all the existing styles from the appointments page */
+    /* Base Container - matches other pages */
+    .pet-feed-content .appointment-list-container {
+        max-width: 900px;
+        margin: 0 auto;
+        padding: 2rem;
+    }
+    
+    /* Header Section - consistent with other pages */
+    .pet-feed-content .section-header {
+        margin-bottom: 2rem;
+    }
+    
+    .pet-feed-content .header-content h1 {
+        font-size: 2rem;
+        color: #2D3142;
+        margin-bottom: 0.5rem;
+        display: flex;
+        align-items: center;
+        gap: 0.8rem;
+    }
+    
+    .pet-feed-content .header-content h1 i {
+        color: #4ECDC4;
+    }
+    
+    .pet-feed-content .header-content p {
+        color: #7C8798;
+        font-size: 1rem;
+    }
+    
+    /* Vet Profile Header */
+    .pet-feed-content .vet-profile-header {
+        display: flex;
+        align-items: center;
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+        padding-bottom: 1.5rem;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    }
+    
+    .pet-feed-content .vet-avatar img {
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 3px solid #4ECDC4;
+        background-color: white;
+    }
+    
+    .pet-feed-content .vet-info h2 {
+        font-size: 1.5rem;
+        color: #2D3142;
+        margin-bottom: 0.8rem;
+    }
+    
+    .pet-feed-content .clinic-name {
+        color: #4F5D75;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 0.9rem;
+    }
+    
+    .pet-feed-content .clinic-name i {
+        color: #FF6B6B;
+    }
+    
+    /* Appointments List */
+    .pet-feed-content .appointments-list {
+        display: flex;
+        flex-direction: column;
+        gap: 1.5rem;
+    }
+    
+    /* Appointment Card */
+    .pet-feed-content .appointment-card {
+        background: white;
+        border-radius: 15px;
+        overflow: hidden;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+        transition: all 0.3s ease;
+        border: 1px solid rgba(0, 0, 0, 0.05);
+        padding: 1.5rem;
+    }
+    
+    .pet-feed-content .appointment-card.pending {
+        border-left: 4px solid #FFC107;
+    }
+    
+    .pet-feed-content .appointment-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 1.5rem;
+    }
+    
+    .pet-feed-content .pet-owner-info h3 {
+        font-size: 1.2rem;
+        color: #2D3142;
+        margin-bottom: 0.5rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .pet-feed-content .pet-owner-info h3 i {
+        color: #4ECDC4;
+    }
+    
+    .pet-feed-content .pet-info {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        color: #4F5D75;
+        font-size: 0.9rem;
+    }
+    
+    .pet-feed-content .pet-info i {
+        color: #FF6B6B;
+    }
+    
+    /* Status Badges - matching appointments detail */
+    .pet-feed-content .status-badge {
+        padding: 0.4rem 0.8rem;
+        border-radius: 50px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .pet-feed-content .status-badge.pending {
+        background-color: rgba(255, 193, 7, 0.2);
+        color: #ffc107;
+    }
+    
+    /* Appointment Details */
+    .pet-feed-content .appointment-details {
+        margin: 1.5rem 0;
+    }
+    
+    .pet-feed-content .detail-row {
+        display: flex;
+        margin-bottom: 1rem;
+    }
+    
+    .pet-feed-content .detail-label {
+        width: 150px;
+        font-weight: 500;
+        color: #2D3142;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .pet-feed-content .detail-label i {
+        color: #4ECDC4;
+        width: 20px;
+        text-align: center;
+    }
+    
+    .pet-feed-content .detail-value {
+        flex: 1;
+        color: #4F5D75;
+    }
+    
+    /* Appointment Actions */
+    .pet-feed-content .appointment-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 1rem;
+        padding-top: 1rem;
+        border-top: 1px solid rgba(0, 0, 0, 0.05);
+    }
+    
+    .pet-feed-content .dual-buttons {
+        justify-content: space-between;
+    }
+    
+    .pet-feed-content .action-form {
+        margin: 0;
+    }
+    
+    /* Buttons - consistent with other pages */
+    .pet-feed-content .btn {
+        padding: 0.6rem 1rem;
+        border-radius: 50px;
+        font-weight: 600;
+        font-size: 0.85rem;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        border: none;
+        white-space: nowrap;
+        cursor: pointer;
+    }
+    
+    .pet-feed-content .btn-success {
+        background-color: rgba(40, 167, 69, 0.2);
+        color: #28a745;
+    }
+    
+    .pet-feed-content .btn-success:hover {
+        background-color: rgba(40, 167, 69, 0.3);
+    }
+    
+    .pet-feed-content .btn-danger {
+        background-color: rgba(220, 53, 69, 0.2);
+        color: #dc3545;
+    }
+    
+    .pet-feed-content .btn-danger:hover {
+        background-color: rgba(220, 53, 69, 0.3);
+    }
+    
+    /* Empty State */
+    .pet-feed-content .empty-state {
+        text-align: center;
+        padding: 3rem 1rem;
+        background: #F8F9FA;
+        border-radius: 15px;
+    }
+    
+    .pet-feed-content .empty-state i {
+        font-size: 3rem;
+        color: #7C8798;
+        margin-bottom: 1rem;
+    }
+    
+    .pet-feed-content .empty-state h3 {
+        color: #2D3142;
+        margin-bottom: 0.5rem;
+    }
+    
+    .pet-feed-content .empty-state p {
+        color: #7C8798;
+    }
+    
+    /* Responsive Styles */
+    @media (max-width: 768px) {
+        .pet-feed-content .vet-profile-header {
+            flex-direction: column;
+            text-align: center;
+        }
+        
+        .pet-feed-content .appointment-header {
+            flex-direction: column;
+            gap: 1rem;
+        }
+        
+        .pet-feed-content .detail-row {
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+        
+        .pet-feed-content .detail-label {
+            width: 100%;
+        }
+        
+        .pet-feed-content .dual-buttons {
+            flex-direction: column;
+            gap: 0.8rem;
+        }
+    }
+    
+    @media (max-width: 480px) {
+        .pet-feed-content .appointment-list-container {
+            padding: 1.5rem 1rem;
+        }
+    }
+    .pet-feed-content .detail-label .fa-dna { color: #9C27B0; }
+    .pet-feed-content .detail-label .fa-birthday-cake { color: #FF9800; }
+    .pet-feed-content .detail-label .fa-weight { color: #795548; }
+    .pet-feed-content .detail-label .fa-palette { color: #00BCD4; }
+    .pet-feed-content .detail-label .fa-syringe { color: #3F51B5; }
+    .pet-feed-content .detail-label .fa-allergies { color: #F44336; }
+    .pet-feed-content .detail-label .fa-file-medical { color: #4CAF50; }
+</style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Add confirmation dialogs for accept/reject actions
+        const acceptButtons = document.querySelectorAll('.btn-success');
+        const rejectButtons = document.querySelectorAll('.btn-danger');
+        
+        acceptButtons.forEach(button => {
+            button.addEventListener('click', function(e) {
+                if (!confirm('Are you sure you want to accept this appointment?')) {
+                    e.preventDefault();
+                }
+            });
+        });
+        
+        rejectButtons.forEach(button => {
+            button.addEventListener('click', function(e) {
+                if (!confirm('Are you sure you want to reject this appointment?')) {
+                    e.preventDefault();
+                }
+            });
+        });
+    });
+</script>
+{% endblock %}

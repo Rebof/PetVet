@@ -1,0 +1,380 @@
+{% extends 'main/base1.html' %}
+{% load static %}
+
+{% block title %}Page Not Found | PetCare Connect{% endblock %}
+
+{% block content %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+<div class="pet-feed-content">
+    <div class="error-container">
+        <div class="error-card glass-card">
+            <div class="error-illustration">
+                <img src="{% static 'assets/images/lost-pet.svg' %}" alt="Lost Pet" class="lost-pet-image">
+                <div class="error-code">404</div>
+            </div>
+            
+            <div class="error-content">
+                <h1><i class="fas fa-paw"></i> Oops! This page is playing hide and seek</h1>
+                <p>We've sent our best search dogs to find it, but it seems this page doesn't exist.</p>
+                
+                <div class="error-actions">
+                    <a href="{% url 'coreFunctions:index' %}" class="btn btn-primary">
+                        <i class="fas fa-home"></i> Back to Home
+                    </a>
+                    <button onclick="window.history.back()" class="btn btn-outline">
+                        <i class="fas fa-arrow-left"></i> Go Back
+                    </button>
+                </div>
+                
+                <div class="error-search">
+                    <p>Or try searching for what you're looking for:</p>
+                    <form action="{% url 'coreFunctions:search' %}" method="GET" class="search-form">
+                        <div class="search-input-container">
+                            <input type="text" name="q" placeholder="Search for posts, pets, or vets..." class="search-input">
+                            <button type="submit" class="search-btn">
+                                <i class="fas fa-search"></i>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            
+            <div class="error-footer">
+                <div class="paw-prints">
+                    <i class="fas fa-paw"></i>
+                    <i class="fas fa-paw"></i>
+                    <i class="fas fa-paw"></i>
+                </div>
+            </div>
+        </div>
+        
+        <div class="error-suggestions glass-card">
+            <h3><i class="fas fa-lightbulb"></i> You might be interested in</h3>
+            <div class="suggestion-links">
+                <a href="{% url 'coreFunctions:index' %}" class="suggestion-link">
+                    <i class="fas fa-newspaper"></i> Latest Posts
+                </a>
+                <a href="{% url 'appointment:vet_list' %}" class="suggestion-link">
+                    <i class="fas fa-user-md"></i> Find a Vet
+                </a>
+                <a href="#" class="suggestion-link">
+                    <i class="fas fa-paw"></i> Pet Care Tips
+                </a>
+                <a href="#" class="suggestion-link">
+                    <i class="fas fa-question-circle"></i> Help & Support
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* Error Page Styles */
+    .error-container {
+        max-width: 900px;
+        margin: 0 auto;
+        padding: 2rem;
+        display: flex;
+        flex-direction: column;
+        gap: 2rem;
+    }
+    
+    .error-card {
+        padding: 2rem;
+        text-align: center;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .error-illustration {
+        position: relative;
+        margin-bottom: 2rem;
+    }
+    
+    .lost-pet-image {
+        max-width: 300px;
+        height: auto;
+        margin: 0 auto;
+    }
+    
+    .error-code {
+        font-size: 8rem;
+        font-weight: 800;
+        color: rgba(78, 205, 196, 0.15);
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        z-index: -1;
+        width: 100%;
+    }
+    
+    .error-content {
+        max-width: 600px;
+        margin: 0 auto;
+    }
+    
+    .error-content h1 {
+        font-size: 2rem;
+        color: #2D3142;
+        margin-bottom: 1rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.8rem;
+    }
+    
+    .error-content h1 i {
+        color: #FF6B6B;
+    }
+    
+    .error-content p {
+        color: #7C8798;
+        font-size: 1.1rem;
+        margin-bottom: 2rem;
+    }
+    
+    .error-actions {
+        display: flex;
+        justify-content: center;
+        gap: 1rem;
+        margin-bottom: 2rem;
+    }
+    
+    .btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        padding: 0.8rem 1.5rem;
+        border-radius: 50px;
+        font-weight: 600;
+        font-size: 0.95rem;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        border: none;
+        cursor: pointer;
+    }
+    
+    .btn-primary {
+        background-color: #4ECDC4;
+        color: white;
+        box-shadow: 0 4px 15px rgba(78, 205, 196, 0.3);
+    }
+    
+    .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(78, 205, 196, 0.4);
+        background-color: #3dbeb5;
+    }
+    
+    .btn-outline {
+        background-color: transparent;
+        border: 2px solid #4ECDC4;
+        color: #4ECDC4;
+    }
+    
+    .btn-outline:hover {
+        background-color: #4ECDC4;
+        color: white;
+    }
+    
+    .error-search {
+        margin-top: 2rem;
+    }
+    
+    .error-search p {
+        margin-bottom: 1rem;
+        font-size: 0.95rem;
+    }
+    
+    .search-form {
+        max-width: 400px;
+        margin: 0 auto;
+    }
+    
+    .search-input-container {
+        display: flex;
+        border-radius: 50px;
+        overflow: hidden;
+        border: 1px solid rgba(0, 0, 0, 0.1);
+        background-color: white;
+        padding: 0.3rem 0.3rem 0.3rem 1.2rem;
+    }
+    
+    .search-input {
+        flex: 1;
+        border: none;
+        padding: 0.5rem 0;
+        font-size: 0.95rem;
+        outline: none;
+        background: transparent;
+    }
+    
+    .search-btn {
+        background-color: #4ECDC4;
+        color: white;
+        border: none;
+        border-radius: 50px;
+        width: 40px;
+        height: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+    
+    .search-btn:hover {
+        background-color: #3dbeb5;
+    }
+    
+    .error-footer {
+        margin-top: 2rem;
+    }
+    
+    .paw-prints {
+        display: flex;
+        justify-content: center;
+        gap: 1.5rem;
+    }
+    
+    .paw-prints i {
+        color: rgba(78, 205, 196, 0.3);
+        font-size: 1.5rem;
+        transform: rotate(45deg);
+    }
+    
+    .paw-prints i:nth-child(2) {
+        font-size: 1.2rem;
+    }
+    
+    .error-suggestions {
+        padding: 1.5rem;
+    }
+    
+    .error-suggestions h3 {
+        font-size: 1.2rem;
+        color: #2D3142;
+        margin-bottom: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .error-suggestions h3 i {
+        color: #FF6B6B;
+    }
+    
+    .suggestion-links {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        gap: 1rem;
+    }
+    
+    .suggestion-link {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.8rem 1rem;
+        border-radius: 8px;
+        background-color: rgba(0, 0, 0, 0.02);
+        color: #4F5D75;
+        text-decoration: none;
+        transition: all 0.3s ease;
+    }
+    
+    .suggestion-link:hover {
+        background-color: rgba(78, 205, 196, 0.1);
+        color: #4ECDC4;
+    }
+    
+    .suggestion-link i {
+        width: 20px;
+        text-align: center;
+    }
+    
+    /* Glass card effect */
+    .glass-card {
+        background: rgba(255, 255, 255, 0.95);
+        border: 1px solid rgba(0, 0, 0, 0.05);
+        border-radius: 15px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        overflow: hidden;
+        transition: all 0.3s ease;
+    }
+    
+    /* Responsive styles */
+    @media (max-width: 768px) {
+        .error-container {
+            padding: 1.5rem 1rem;
+        }
+        
+        .error-code {
+            font-size: 6rem;
+        }
+        
+        .error-content h1 {
+            font-size: 1.5rem;
+        }
+        
+        .error-actions {
+            flex-direction: column;
+            gap: 0.8rem;
+        }
+        
+        .btn {
+            width: 100%;
+        }
+        
+        .suggestion-links {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+
+<!-- Create a lost pet SVG if you don't have one -->
+<script>
+    // Check if the lost pet image exists, if not, create a fallback
+    document.addEventListener('DOMContentLoaded', function() {
+        const lostPetImage = document.querySelector('.lost-pet-image');
+        
+        lostPetImage.addEventListener('error', function() {
+            // If image fails to load, replace with a fallback
+            this.style.display = 'none';
+            
+            const errorIllustration = document.querySelector('.error-illustration');
+            const fallbackIcons = document.createElement('div');
+            fallbackIcons.className = 'fallback-icons';
+            fallbackIcons.innerHTML = `
+                <i class="fas fa-dog"></i>
+                <i class="fas fa-question"></i>
+                <i class="fas fa-cat"></i>
+            `;
+            
+            errorIllustration.appendChild(fallbackIcons);
+            
+            // Add style for fallback icons
+            const style = document.createElement('style');
+            style.textContent = `
+                .fallback-icons {
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    gap: 1.5rem;
+                    font-size: 4rem;
+                    color: rgba(78, 205, 196, 0.5);
+                    margin: 2rem 0;
+                }
+                
+                .fallback-icons i:nth-child(2) {
+                    font-size: 3rem;
+                    color: rgba(255, 107, 107, 0.5);
+                }
+            `;
+            document.head.appendChild(style);
+        });
+    });
+</script>
+{% endblock %}

@@ -13,6 +13,8 @@ from django.template.loader import render_to_string
 from django.utils.html import strip_tags
 from .models import VetProfile, VetSchedule, Appointment
 from authUser.models import VetProfile, PetOwnerProfile, Pet
+from datetime import datetime
+
 
 # Khalti Configuration
 KHALTI_SECRET_KEY = 'key 669c9d57a23f42edbd586629b54b0a25'
@@ -144,34 +146,146 @@ def vet_list(request):
 @login_required
 def vet_schedule(request, vet_id):
     vet = get_object_or_404(VetProfile, id=vet_id)
+    
+    # Get all schedules for this vet
     schedules = VetSchedule.objects.filter(vet=vet)
+    
+    # Define the order of days for sorting
+    day_order = {
+        'Sunday': 0,
+        'Monday': 1,
+        'Tuesday': 2,
+        'Wednesday': 3,
+        'Thursday': 4,
+        'Friday': 5,
+        'Saturday': 6
+    }
+    
+    # Sort schedules by day of week first, then by start time
+    sorted_schedules = sorted(schedules, key=lambda x: (day_order[x.day_of_week], x.start_time))
+    
+    days_with_schedules = []
+    for day in ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']:
+        days_with_schedules.append({
+            'name': day,
+            'schedules': [schedule for schedule in sorted_schedules if schedule.day_of_week == day]
+        })
+    
     return render(request, 'appointment/appointment_schedule.html', {
         'vet': vet,
-        'schedules': schedules
+        'days_with_schedules': days_with_schedules
     })
 
-@login_required
+
+
+def edit_schedule(request, schedule_id):
+    user = request.user
+    vet = get_object_or_404(VetProfile, user=user)
+    schedule = get_object_or_404(VetSchedule, id=schedule_id, vet=vet)
+    
+    if request.method == 'POST':
+        # Check if this is a delete request
+        if 'delete_schedule' in request.POST:
+            schedule.delete()
+            return redirect('appointment:vet_schedule', vet_id=vet.id)
+        
+        # Otherwise, process as an edit request
+        day_of_week = request.POST.get('day_of_week')
+        start_time = datetime.strptime(request.POST.get('start_time'), '%H:%M').time()
+        end_time = datetime.strptime(request.POST.get('end_time'), '%H:%M').time()
+        
+        # Validate time range
+        if start_time >= end_time:
+            return render(request, 'appointment/edit_schedule.html', {
+                'vet': vet,
+                'schedule': schedule,
+                'error': 'End time must be after start time.'
+            })
+
+        # Check for overlapping schedules (excluding the current schedule)
+        overlapping_schedules = VetSchedule.objects.filter(
+            vet=vet,
+            day_of_week=day_of_week,
+            available=True
+        ).exclude(
+            id=schedule_id  # Exclude the current schedule
+        ).exclude(
+            # Exclude schedules that don't overlap
+            end_time__lte=start_time  # Existing ends before new starts
+        ).exclude(
+            start_time__gte=end_time  # Existing starts after new ends
+        )
+
+        if overlapping_schedules.exists():
+            return render(request, 'appointment/edit_schedule.html', {
+                'vet': vet,
+                'schedule': schedule,
+                'error': 'The schedule overlaps with an existing one. Please select a different time.'
+            })
+
+        # Update the schedule
+        schedule.day_of_week = day_of_week
+        schedule.start_time = start_time
+        schedule.end_time = end_time
+        schedule.save()
+
+        return redirect('appointment:vet_schedule', vet_id=vet.id)
+
+    return render(request, 'appointment/edit_schedule.html', {
+        'vet': vet,
+        'schedule': schedule
+    })
+
+
+
 def add_schedule(request):
     user = request.user
     vet = get_object_or_404(VetProfile, user=user)
 
     if request.method == 'POST':
         day_of_week = request.POST.get('day_of_week')
-        start_time = request.POST.get('start_time')
-        end_time = request.POST.get('end_time')
-        available = 'available' in request.POST
+        start_time = datetime.strptime(request.POST.get('start_time'), '%H:%M').time()
+        end_time = datetime.strptime(request.POST.get('end_time'), '%H:%M').time()
+        
+        # Validate time range
+        if start_time >= end_time:
+            return render(request, 'appointment/appointment_creation_vets.html', {
+                'vet': vet,
+                'error': 'End time must be after start time.'
+            })
 
+        # Check for overlapping schedules
+        overlapping_schedules = VetSchedule.objects.filter(
+            vet=vet,
+            day_of_week=day_of_week,
+            available=True  # Only check against other available schedules
+        ).exclude(
+            # Exclude schedules that don't overlap
+            end_time__lte=start_time  # Existing ends before new starts
+        ).exclude(
+            start_time__gte=end_time  # Existing starts after new ends
+        )
+
+        if overlapping_schedules.exists():
+            return render(request, 'appointment/appointment_creation_vets.html', {
+                'vet': vet,
+                'error': 'The schedule overlaps with an existing one. Please select a different time.'
+            })
+
+        # If no overlap, create the new schedule
         VetSchedule.objects.create(
             pid=vet.pid,
             vet=vet,
             day_of_week=day_of_week,
             start_time=start_time,
             end_time=end_time,
-            available=available
+            available=True
         )
+
         return redirect('appointment:vet_schedule', vet_id=vet.id)
 
     return render(request, 'appointment/appointment_creation_vets.html', {'vet': vet})
+
 
 @login_required
 def book_appointment(request, vet_id, schedule_id):
@@ -349,9 +463,11 @@ def vet_pending_appointments(request, vet_id):
 def accept_appointment(request, appointment_id):
     appointment = get_object_or_404(Appointment, id=appointment_id)
 
+    # Check if the appointment belongs to the logged-in vet and if it's in the 'paid_pending_approval' status
     if appointment.vet.user != request.user or appointment.status != "paid_pending_approval":
         return HttpResponseRedirect(reverse('appointment:vet_pending_appointments', args=[appointment.vet.id]))
 
+    # Change the appointment status to 'confirmed'
     appointment.status = "confirmed"
     appointment.save()
 
@@ -360,14 +476,20 @@ def accept_appointment(request, appointment_id):
         schedule=appointment.schedule
     ).exclude(id=appointment.id).update(status="cancelled")
 
-    # Send confirmation to pet owner
+    # Update the availability of the schedule to False (unavailable) after confirming the appointment
+    appointment.schedule.available = False
+    appointment.schedule.save()
+
+    # Send confirmation to the pet owner
     send_appointment_notification(
         appointment,
         "Appointment Confirmed",
         "appointment/confirmation_email.html"
     )
 
+    # Redirect to the vet's pending appointments page
     return HttpResponseRedirect(reverse('appointment:vet_pending_appointments', args=[appointment.vet.id]))
+
 
 @login_required
 def reject_appointment(request, appointment_id):
@@ -439,3 +561,7 @@ def payment_failed(request, appointment_id):
     return render(request, 'appointment/payment_failed.html', {
         'appointment': appointment
     })
+
+
+
+

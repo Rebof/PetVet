@@ -1,42 +1,48 @@
+{% load static %}
 {% for post in posts %}
-<div class="feed-post-card glass-card">
-    <a href="{% url 'coreFunctions:post-detail' post.slug %}" class="post-link">
-        <div class="post-header">
-            <span class="post-category">{{ post.category.name }}</span>
-            <div class="post-meta">
-                <img src="{{ post.user.profile_picture.url }}" alt="{{ post.user.username }}" class="post-author-avatar">
-                <span class="post-author">Posted by u/{{ post.user.username }}</span>
-                <span class="post-time">{{ post.date|timesince }} ago</span>
-            </div>
-        </div>
-        
-        <h2 class="post-title">{{ post.title }}</h2>
-        
-        {% if post.image %}
-        <div class="post-media">
-            <img src="{{ post.image.url }}" alt="{{ post.title }}" class="post-image">
-        </div>
-        {% endif %}
-        
-        <div class="post-excerpt">
-            <p>{{ post.body|truncatewords:30 }}</p>
-        </div>
-    </a>
-    
-    <div class="post-actions">
-        <button class="action-btn like-btn {% if user in post.likes.all %}active{% endif %}" aria-label="Like" data-post-id="{{ post.id }}">
-            <i class="fas fa-heart"></i> 
-            <span class="like-count">{{ post.likes.count }}</span>
-        </button>
-        <button class="action-btn comment-btn">
-            <i class="fas fa-comment"></i> 
-            <span>{{ post.comments.count }}</span>
-        </button>
-    </div>
-</div>
-{% empty %}
-<div class="empty-feed glass-card">
-    <i class="far fa-newspaper"></i>
-    <p>No posts yet. Be the first to share something!</p>
-</div>
-{% endfor %}
+                    <div class="feed-post-card glass-card">
+                        <a href="{% url 'coreFunctions:post-detail' post.slug %}" class="post-link">
+                            <div class="post-header">
+                                <span class="post-category">{{ post.category.name }}</span>
+                                <div class="post-meta">
+                                    {% if post.user.petownerprofile %}
+                                    <img src="{{ post.user.petownerprofile.human_image.url }}" alt="{{ post.user.username }}" class="post-author-avatar">
+                                {% elif post.user.vetprofile %}
+                                    <img src="{{ post.user.vetprofile.vet_image.url }}" alt="{{ post.user.username }}" class="post-author-avatar">
+                                {% else %}
+                                    <img src="{% static 'default-avatar.png' %}" alt="Default Avatar" class="post-author-avatar">
+                                {% endif %}                                    <span class="post-author">Posted by u/{{ post.user.username }}</span>
+                                    <span class="post-time">{{ post.date|timesince }} ago</span>
+                                </div>
+                            </div>
+                            
+                            <h2 class="post-title">{{ post.title }}</h2>
+                            
+                            {% if post.image %}
+                            <div class="post-media">
+                                <img src="{{ post.image.url }}" alt="{{ post.title }}" class="post-image">
+                            </div>
+                            {% endif %}
+                            
+                            <div class="post-excerpt">
+                                <p>{{ post.body|truncatewords:30 }}</p>
+                            </div>
+                        </a>
+                        
+                        <div class="post-actions">
+                            <button class="action-btn like-btn {% if user in post.likes.all %}active{% endif %}" aria-label="Like" data-post-id="{{ post.id }}">
+                                <i class="fas fa-heart"></i> 
+                                <span class="like-count">{{ post.likes.count }}</span>
+                            </button>
+                            <button class="action-btn comment-btn">
+                                <i class="fas fa-comment"></i> 
+                                <span>{{ post.comments.count }}</span>
+                            </button>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <div class="empty-feed glass-card">
+                        <i class="far fa-newspaper"></i>
+                        <p>No posts yet. Be the first to share something!</p>
+                    </div>
+                    {% endfor %}

@@ -38,11 +38,11 @@
             <div class="vet-card" data-experience="{{ vet.experience_years|default:0 }}" data-location="{{ vet.city|default:''|lower }}">
                 <div class="vet-card-header">
                     <div class="vet-avatar">
-                        {% if vet.user.profile_picture %}
-                        <img src="{{ vet.user.profile_picture.url }}" alt="{{ vet.user.full_name }}">
-                        {% else %}
-                        <img src="{% static 'assets/images/default-avatar.png' %}" alt="{{ vet.user.full_name }}">
-                        {% endif %}
+                        {% if vet.user.vetprofile.vet_image %}
+    <img src="{{ vet.user.vetprofile.vet_image.url }}" alt="{{ vet.user.full_name }}">
+{% else %}
+    <img src="/static/assets/default-avatar.png" alt="{{ vet.user.full_name }}">
+{% endif %}
                         {% if vet.verified %}
                         <span class="verification-badge"><i class="fas fa-check-circle"></i> Verified</span>
                         {% endif %}
@@ -105,7 +105,7 @@
                     <a href="{% url 'appointment:vet_schedule' vet.id %}" class="btn btn-primary">
                         <i class="fas fa-calendar-alt"></i> Book Appointment
                     </a>
-                    <a href="" class="btn btn-outline">
+                    <a href="{% url 'authUser:user_profile' vet.user.id %}" class="btn btn-outline">
                         <i class="fas fa-user"></i> View Profile
                     </a>
                 </div>

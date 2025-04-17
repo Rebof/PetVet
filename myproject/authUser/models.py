@@ -58,7 +58,7 @@ class VetProfile(models.Model):
     specialization = models.CharField(max_length=500, null=True, blank=True)
     experience_years = models.IntegerField(null=True, blank=True)
     license_number = models.CharField(max_length=100, null=True, blank=True)
-    vet_image = models.ImageField(upload_to=user_directory_path, default="default.jpg", null=True, blank=True)
+    vet_image = models.ImageField(upload_to=user_directory_path, default="default.png", null=True, blank=True)
     country = models.CharField(max_length=100, null=True, blank=True)
     city = models.CharField(max_length=100, null=True, blank=True)
     address = models.CharField(max_length=1000, null=True, blank=True)
@@ -103,7 +103,7 @@ class PetOwnerProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     bio = models.CharField(max_length=100, null=True, blank=True)
     pets_owned = models.IntegerField(null=True, blank=True)  
-    human_image = models.ImageField(upload_to=user_directory_path, default="default.jpg", null=True, blank=True)
+    human_image = models.ImageField(upload_to=user_directory_path, default="default.png", null=True, blank=True)
     country = models.CharField(max_length=100, null=True, blank=True)
     city = models.CharField(max_length=100, null=True, blank=True)
     address = models.CharField(max_length=1000, null=True, blank=True)
@@ -130,7 +130,7 @@ class Pet(models.Model):
     breed = models.CharField(max_length=100)
     species = models.CharField(max_length=100)
     age = models.PositiveIntegerField()
-    pet_image = models.ImageField(upload_to='pet_images/', null=True, blank=True)
+    pet_image = models.ImageField(upload_to='pet_images/', default="default-pet.png" ,null=True, blank=True)
 
     # Optional fields
     medical_history = models.TextField(null=True, blank=True)

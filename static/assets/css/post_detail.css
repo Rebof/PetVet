@@ -782,3 +782,18 @@ textarea:focus {
   background: rgba(255, 255, 255, 0.1);
   border-radius: 8px;
 }
+
+/* Add this to your existing CSS */
+.current-user-comment {
+  background-color: rgba(78, 205, 196, 0.1);
+  border-left: 3px solid var(--primary-color);
+}
+
+.comment.reply.current-user-comment {
+  background-color: rgba(78, 205, 196, 0.1);
+  border-left: 3px solid var(--primary-color);
+}
+
+.replies-container {
+  margin-top: 10px;
+}

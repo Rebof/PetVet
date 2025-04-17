@@ -1,34 +1,422 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Accepted Appointments</title>
-</head>
-<body>
-    <h1>Accepted Appointments for Dr. {{ vet.user.full_name }}</h1>
+{% extends 'main/base1.html' %}
+{% load static %}
 
-    {% if accepted_appointments %}
-        <ul>
-            {% for appointment in accepted_appointments %}
-                <li>
-                    <p><strong>Pet Owner:</strong> {{ appointment.pet_owner.user.full_name }}</p>
-                    <p><strong>Reason:</strong> {{ appointment.reason }}</p>
-                    <p><strong>Scheduled Time:</strong> {{ appointment.schedule.start_time }} - {{ appointment.schedule.end_time }}</p>
-                    <p><strong>Status:</strong> {{ appointment.get_status_display }}</p>
+{% block title %}Accepted Appointments | PetCare Connect{% endblock %}
 
-                    <!-- Checkbox Form -->
-                    <form method="POST" action="{% url 'appointment:mark_completed' appointment.id %}">
-                        {% csrf_token %}
-                        <label>
-                            <input type="checkbox" name="completed" onchange="this.form.submit()"> Mark as Completed
-                        </label>
-                    </form>
-                </li>
-            {% endfor %}
-        </ul>
-    {% else %}
-        <p>No accepted appointments</p>
-    {% endif %}
-</body>
-</html>
+{% block content %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+<div class="pet-feed-content">
+    <div class="appointment-list-container">
+        <!-- Header Section - Matching appointments detail page -->
+        <div class="section-header">
+            <div class="header-content">
+                <h1><i class="fas fa-calendar-check"></i> Accepted Appointments</h1>
+                <p>Manage your upcoming veterinary appointments</p>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="vet-appointments-content">
+            <div class="vet-profile-header">
+                <div class="vet-avatar">
+                    {% if vet.vet_image %}
+                        <img src="{{ vet.vet_image.url }}" alt="Dr. {{ vet.user.get_full_name|default:vet.user.username }}">
+                    {% else %}
+                        <img src="/static/assets/default-avatar.png" alt="Dr. {{ vet.user.get_full_name|default:vet.user.username }}">
+                    {% endif %}
+                </div>
+                <div class="vet-info">
+                    <h2>Dr. {{ vet.user.full_name }}</h2>
+                    {% if vet.clinic_name %}
+                    <p class="clinic-name">
+                        <i class="fas fa-clinic-medical"></i> {{ vet.clinic_name }}
+                    </p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Appointments List -->
+            <div class="appointments-list">
+                {% if accepted_appointments %}
+                    {% for appointment in accepted_appointments %}
+                    <div class="appointment-card">
+                        <div class="appointment-header">
+                            <div class="pet-owner-info">
+                                <h3>
+                                    <i class="fas fa-user"></i> 
+                                    {{ appointment.pet_owner.user.full_name }}
+                                </h3>
+                                <div class="pet-info">
+                                    <span class="pet-name">
+                                        <i class="fas fa-paw"></i> {{ appointment.pet.name }}
+                                    </span>
+                                    <span class="pet-species">
+                                        ({{ appointment.pet.get_species_display }})
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="appointment-status">
+                                <span class="status-badge {{ appointment.status|lower }}">
+                                    {{ appointment.get_status_display }}
+                                </span>
+                            </div>
+                        </div>
+
+                        <div class="appointment-details">
+                            <div class="detail-row">
+                                <div class="detail-label">
+                                    <i class="fas fa-comment-medical"></i> Reason:
+                                </div>
+                                <div class="detail-value">
+                                    {{ appointment.reason }}
+                                </div>
+                            </div>
+
+                            <div class="detail-row">
+                                <div class="detail-label">
+                                    <i class="fas fa-clock"></i> Scheduled Time:
+                                </div>
+                                <div class="detail-value">
+                                    {{ appointment.schedule.start_time|time:"g:i A" }} - {{ appointment.schedule.end_time|time:"g:i A" }}
+                                </div>
+                            </div>
+
+                            <div class="detail-row">
+                                <div class="detail-label">
+                                    <i class="fas fa-calendar-day"></i> Date:
+                                </div>
+                                <div class="detail-value">
+                                    {{ appointment.schedule.day_of_week }}, {{ appointment.schedule.created_at|date:"F j, Y" }}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="appointment-actions">
+                            <form method="POST" action="{% url 'appointment:mark_completed' appointment.id %}" class="completion-form">
+                                {% csrf_token %}
+                                <label class="checkbox-container">
+                                    <input type="checkbox" name="completed" onchange="this.form.submit()">
+                                    <span class="checkmark"></span>
+                                    <span class="checkbox-label">Mark as Completed</span>
+                                </label>
+                            </form>
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="empty-state">
+                        <i class="fas fa-calendar-times"></i>
+                        <h3>No Accepted Appointments</h3>
+                        <p>You currently don't have any accepted appointments.</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* Base Container - matches other pages */
+    .pet-feed-content .appointment-list-container {
+        max-width: 900px;
+        margin: 0 auto;
+        padding: 2rem;
+    }
+    
+    /* Header Section - consistent with other pages */
+    .pet-feed-content .section-header {
+        margin-bottom: 2rem;
+    }
+    
+    .pet-feed-content .header-content h1 {
+        font-size: 2rem;
+        color: #2D3142;
+        margin-bottom: 0.5rem;
+        display: flex;
+        align-items: center;
+        gap: 0.8rem;
+    }
+    
+    .pet-feed-content .header-content h1 i {
+        color: #4ECDC4;
+    }
+    
+    .pet-feed-content .header-content p {
+        color: #7C8798;
+        font-size: 1rem;
+    }
+    
+    /* Vet Profile Header */
+    .pet-feed-content .vet-profile-header {
+        display: flex;
+        align-items: center;
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+        padding-bottom: 1.5rem;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    }
+    
+    .pet-feed-content .vet-avatar img {
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 3px solid #4ECDC4;
+        background-color: white;
+    }
+    
+    .pet-feed-content .vet-info h2 {
+        font-size: 1.5rem;
+        color: #2D3142;
+        margin-bottom: 0.5rem;
+    }
+    
+    .pet-feed-content .clinic-name {
+        color: #4F5D75;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .pet-feed-content .clinic-name i {
+        color: #FF6B6B;
+    }
+    
+    /* Appointments List */
+    .pet-feed-content .appointments-list {
+        display: flex;
+        flex-direction: column;
+        gap: 1.5rem;
+    }
+    
+    /* Appointment Card */
+    .pet-feed-content .appointment-card {
+        background: white;
+        border-radius: 15px;
+        overflow: hidden;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+        transition: all 0.3s ease;
+        border: 1px solid rgba(0, 0, 0, 0.05);
+        padding: 1.5rem;
+    }
+    
+    .pet-feed-content .appointment-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 1.5rem;
+    }
+    
+    .pet-feed-content .pet-owner-info h3 {
+        font-size: 1.2rem;
+        color: #2D3142;
+        margin-bottom: 0.5rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .pet-feed-content .pet-owner-info h3 i {
+        color: #4ECDC4;
+    }
+    
+    .pet-feed-content .pet-info {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        color: #4F5D75;
+        font-size: 0.9rem;
+    }
+    
+    .pet-feed-content .pet-info i {
+        color: #FF6B6B;
+    }
+    
+    /* Status Badges - matching appointments detail */
+    .pet-feed-content .status-badge {
+        padding: 0.4rem 0.8rem;
+        border-radius: 50px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        display: inline-block;
+        text-align: center;
+        min-width: 100px;
+    }
+    
+    .pet-feed-content .status-badge.pending {
+        background-color: rgba(255, 193, 7, 0.2);
+        color: #ffc107;
+    }
+    
+    .pet-feed-content .status-badge.confirmed {
+        background-color: rgba(78, 205, 196, 0.2);
+        color: #4ECDC4;
+    }
+    
+    .pet-feed-content .status-badge.completed {
+        background-color: rgba(40, 167, 69, 0.2);
+        color: #28a745;
+    }
+    
+    .pet-feed-content .status-badge.cancelled {
+        background-color: rgba(220, 53, 69, 0.2);
+        color: #dc3545;
+    }
+    
+    /* Appointment Details */
+    .pet-feed-content .appointment-details {
+        margin: 1.5rem 0;
+    }
+    
+    .pet-feed-content .detail-row {
+        display: flex;
+        margin-bottom: 1rem;
+    }
+    
+    .pet-feed-content .detail-label {
+        width: 150px;
+        font-weight: 500;
+        color: #2D3142;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .pet-feed-content .detail-label i {
+        color: #4ECDC4;
+        width: 20px;
+        text-align: center;
+    }
+    
+    .pet-feed-content .detail-value {
+        flex: 1;
+        color: #4F5D75;
+    }
+    
+    /* Checkbox Form */
+    .pet-feed-content .appointment-actions {
+        padding-top: 1rem;
+        border-top: 1px solid rgba(0, 0, 0, 0.05);
+    }
+    
+    .pet-feed-content .checkbox-container {
+        display: flex;
+        align-items: center;
+        gap: 0.8rem;
+        cursor: pointer;
+        user-select: none;
+    }
+    
+    .pet-feed-content .checkbox-container input {
+        position: absolute;
+        opacity: 0;
+        cursor: pointer;
+        height: 0;
+        width: 0;
+    }
+    
+    .pet-feed-content .checkmark {
+        position: relative;
+        height: 20px;
+        width: 20px;
+        background-color: #fff;
+        border: 2px solid #4ECDC4;
+        border-radius: 4px;
+        transition: all 0.2s;
+    }
+    
+    .pet-feed-content .checkbox-container:hover input ~ .checkmark {
+        background-color: #f1f1f1;
+    }
+    
+    .pet-feed-content .checkbox-container input:checked ~ .checkmark {
+        background-color: #4ECDC4;
+    }
+    
+    .pet-feed-content .checkmark:after {
+        content: "";
+        position: absolute;
+        display: none;
+        left: 6px;
+        top: 2px;
+        width: 5px;
+        height: 10px;
+        border: solid white;
+        border-width: 0 2px 2px 0;
+        transform: rotate(45deg);
+    }
+    
+    .pet-feed-content .checkbox-container input:checked ~ .checkmark:after {
+        display: block;
+    }
+    
+    .pet-feed-content .checkbox-label {
+        font-weight: 500;
+        color: #2D3142;
+    }
+    
+    /* Empty State */
+    .pet-feed-content .empty-state {
+        text-align: center;
+        padding: 3rem 1rem;
+        background: #F8F9FA;
+        border-radius: 15px;
+    }
+    
+    .pet-feed-content .empty-state i {
+        font-size: 3rem;
+        color: #7C8798;
+        margin-bottom: 1rem;
+    }
+    
+    .pet-feed-content .empty-state h3 {
+        color: #2D3142;
+        margin-bottom: 0.5rem;
+    }
+    
+    .pet-feed-content .empty-state p {
+        color: #7C8798;
+    }
+    
+    /* Responsive Styles */
+    @media (max-width: 768px) {
+        .pet-feed-content .vet-profile-header {
+            flex-direction: column;
+            text-align: center;
+        }
+        
+        .pet-feed-content .appointment-header {
+            flex-direction: column;
+            gap: 1rem;
+        }
+        
+        .pet-feed-content .detail-row {
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+        
+        .pet-feed-content .detail-label {
+            width: 100%;
+        }
+    }
+    
+    @media (max-width: 480px) {
+        .pet-feed-content .appointment-list-container {
+            padding: 1.5rem 1rem;
+        }
+        
+        .pet-feed-content .status-badge {
+            min-width: 80px;
+            font-size: 0.7rem;
+        }
+    }
+</style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Add any necessary JavaScript here
+        // For example, confirmation dialogs for actions
+    });
+</script>
+{% endblock %}

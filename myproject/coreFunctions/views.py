@@ -12,7 +12,8 @@ from django.db.models import Count
 from django.contrib import messages
 from django.views.decorators.csrf import csrf_exempt
 from django.template.loader import render_to_string
-from datetime import datetime
+from random import sample
+from django.db.models import Count, IntegerField, ExpressionWrapper
 
 
 @login_required(login_url='authUser:register')
@@ -50,8 +51,18 @@ def index(request, category_slug=None):
     # Get all categories with post count
     categories = Category.objects.annotate(post_count=Count('post'))
     
-    # Get trending posts (most liked posts)
-    trending_posts = Post.objects.annotate(like_count=Count('likes')).order_by('-like_count')[:5]
+    posts_with_engagement = Post.objects.annotate(
+    like_count=Count('likes'),
+    comment_count=Count('comments'),
+    engagement_score=ExpressionWrapper(
+        Count('likes') + Count('comments'),
+        output_field=IntegerField()
+    )
+).order_by('-engagement_score')[:10]  # top 10 by total engagement
+
+# Pick 5 random ones from top 10
+    trending_posts = sample(list(posts_with_engagement), min(5, len(posts_with_engagement)))
+
     
     # Check if this is an AJAX request
     if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
@@ -142,59 +153,10 @@ def create_post(request):
     # If not POST, redirect to feed
     return redirect('coreFunctions:index')
 
-# Add a feed URL that points to the index view
+
 def feed(request):
     """Alias for index view to match the URL in JavaScript"""
     return index(request)
-
-
-# @login_required
-# def create_post(request):
-#     if request.method == 'POST':
-#         title = request.POST.get('title')
-#         body = request.POST.get('body')
-#         category_id = request.POST.get('category')
-#         image = request.FILES.get('image')
-        
-#         # Validate required fields
-#         if not title or not body or not category_id:
-#             messages.error(request, 'Please fill in all required fields')
-#             return redirect('coreFunctions:feed')
-        
-#         # Get category
-#         try:
-#             category = Category.objects.get(id=category_id)
-#         except Category.DoesNotExist:
-#             messages.error(request, 'Invalid category')
-#             return redirect('coreFunctions:feed')
-        
-#         # Create slug from title
-#         slug = slugify(title)
-        
-#         # Check if slug already exists, if so, add a unique identifier
-#         if Post.objects.filter(slug=slug).exists():
-#             slug = f"{slug}-{shortuuid.ShortUUID().random(length=6)}"
-        
-#         # Create post
-#         post = Post.objects.create(
-#             title=title,
-#             body=body,
-#             category=category,
-#             user=request.user,
-#             slug=slug
-#         )
-        
-#         # Add image if provided
-#         if image:
-#             post.image = image
-#             post.save()
-        
-#         messages.success(request, 'Post created successfully')
-#         return redirect('coreFunctions:post-detail', slug=post.slug)
-    
-#     # If not POST, redirect to feed
-#     return redirect('coreFunctions:index')
-
 
 
 
@@ -488,6 +450,8 @@ def add_reply(request, comment_id):
             return JsonResponse({'success': False, 'error': 'Comment not found'}, status=404)
     
     return JsonResponse({'success': False, 'error': 'Invalid request'}, status=400)
+
+
 
 
 def add_comment(request, slug):

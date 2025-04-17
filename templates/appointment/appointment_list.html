@@ -37,11 +37,12 @@
             <div class="appointment-card" data-status="{{ appointment.status }}">
                 <div class="appointment-header">
                     <div class="vet-avatar">
-                        {% if appointment.vet.user.profile_picture %}
-                        <img src="{{ appointment.vet.user.profile_picture.url }}" alt="{{ appointment.vet.user.full_name }}">
-                        {% else %}
-                        <img src="{% static 'assets/images/default-avatar.png' %}" alt="{{ appointment.vet.user.full_name }}">
-                        {% endif %}
+                        {% if appointment.vet.vet_image %}
+        <img src="{{ appointment.vet.vet_image.url }}" alt="Dr. {{ appointment.vet.user.get_full_name|default:appointment.vet.user.username }}">
+    {% else %}
+        <img src="/static/assets/default-avatar.png" alt="Dr. {{ appointment.vet.user.get_full_name|default:appointment.vet.user.username }}">
+    {% endif %}
+    
                     </div>
                     <div class="appointment-info">
                         <h3>Appointment with Dr. {{ appointment.vet.user.full_name }}</h3>
@@ -49,7 +50,7 @@
                             <span class="date-time">
                                 <i class="fas fa-calendar-day"></i> 
                                 {{ appointment.schedule.day_of_week }}, 
-                                {{ appointment.schedule.date|date:"F j, Y" }}
+                                {{ appointment.schedule.created_at|date:"F j, Y" }}
                             </span>
                             <span class="time-slot">
                                 <i class="fas fa-clock"></i> 
@@ -78,11 +79,11 @@
                 <div class="appointment-details">
                     <div class="pet-info">
                         <div class="pet-avatar">
-                            {% if appointment.pet.image %}
-                            <img src="{{ appointment.pet.image.url }}" alt="{{ appointment.pet.name }}">
-                            {% else %}
-                            <img src="{% static 'assets/images/default-pet.png' %}" alt="{{ appointment.pet.name }}">
-                            {% endif %}
+                            {% if appointment.pet.pet_image %} 
+        <img src="{{ appointment.pet.pet_image.url }}" alt="{{ appointment.pet.name }} ({{ appointment.pet.get_species_display }})">
+    {% else %}
+        <img src="{% static 'assets/images/default-pet.png' %}" alt="{{ appointment.pet.name }} ({{ appointment.pet.get_species_display }})">
+    {% endif %}
                         </div>
                         <div class="pet-details">
                             <h4>{{ appointment.pet.name }}</h4>

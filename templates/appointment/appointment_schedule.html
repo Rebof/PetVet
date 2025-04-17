@@ -7,110 +7,205 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
 <div class="pet-feed-content">
-    <div class="vet-schedule-container">
-        <!-- Vet Profile Header - Matching design system -->
-        <div class="vet-profile-header">
-            <div class="vet-avatar">
-                {% if vet.user.profile_picture %}
-                <img src="{{ vet.user.profile_picture.url }}" alt="Dr. {{ vet.user.full_name }}">
-                {% else %}
-                <img src="{% static 'assets/images/default-avatar.png' %}" alt="Dr. {{ vet.user.full_name }}">
-                {% endif %}
-            </div>
-            <div class="vet-info">
+    <div class="appointment-list-container">
+        <!-- Header Section - Matching appointments detail page -->
+        <div class="section-header">
+            <div class="header-content">
                 <h1><i class="fas fa-calendar-alt"></i> Dr. {{ vet.user.full_name }}'s Schedule</h1>
-                <div class="vet-meta">
-                    {% if vet.clinic_name %}
-                    <span class="clinic">
-                        <i class="fas fa-clinic-medical"></i> {{ vet.clinic_name }}
-                    </span>
+                <p>
+                    {% if user.vetprofile %}
+                        Manage available time slots for appointments
+                    {% else %}
+                        Select a time slot to book your appointment
                     {% endif %}
-                    {% if vet.specialization %}
-                    <span class="specialization">
-                        <i class="fas fa-certificate"></i> {{ vet.specialization }}
-                    </span>
-                    {% endif %}
-                </div>
+                </p>
             </div>
         </div>
 
-        <!-- Schedule List - Consistent with other pages -->
-        <div class="schedule-list">
-            {% if schedules %}
-            <div class="section-header">
-                <h2><i class="fas fa-clock"></i> Available Time Slots</h2>
-                <p>Select a time slot to book your appointment</p>
-            </div>
-            
-            <div class="time-slots-grid">
-                {% for schedule in schedules %}
-                <div class="time-slot-card {% if not schedule.available %}unavailable{% endif %}">
-                    <div class="time-slot-info">
-                        <div class="date-info">
-                            <span class="day">{{ schedule.day_of_week }}</span>
-                            <span class="date">{{ schedule.date|date:"F j, Y" }}</span>
-                        </div>
-                        <div class="time-range">
-                            <i class="fas fa-clock"></i>
-                            {{ schedule.start_time|time:"g:i A" }} - {{ schedule.end_time|time:"g:i A" }}
-                        </div>
-                    </div>
-                    
-                    <div class="time-slot-actions">
-                        {% if schedule.available %}
-                        <span class="status-badge available">
-                            <i class="fas fa-check-circle"></i> Available
-                        </span>
-                        {% if request.user.petownerprofile %}
-                        <a href="{% url 'appointment:book_appointment' vet.id schedule.id %}" class="btn btn-primary">
-                            <i class="fas fa-calendar-plus"></i> Book Now
-                        </a>
-                        {% endif %}
-                        {% else %}
-                        <span class="status-badge unavailable">
-                            <i class="fas fa-times-circle"></i> Booked
-                        </span>
+        <!-- Main Content -->
+        <div class="vet-appointments-content">
+            <div class="vet-profile-header">
+                <div class="vet-avatar">
+                    {% if vet.user.vetprofile.vet_image %}
+                        <img src="{{ vet.user.vetprofile.vet_image.url }}" alt="Dr. {{ vet.user.full_name }}">
+                    {% else %}
+                        <img src="/static/assets/default-avatar.png" alt="Dr. {{ vet.user.full_name }}">
+                    {% endif %}
+                </div>
+                <div class="vet-info">
+                    <h2>Dr. {{ vet.user.full_name }}</h2>
+                    <div class="vet-meta">
+                        {% if vet.clinic_name %}
+                        <p class="clinic-name">
+                            <i class="fas fa-clinic-medical"></i> {{ vet.clinic_name }}
+                        </p>
                         {% endif %}
                     </div>
                 </div>
-                {% endfor %}
             </div>
+
+            <!-- Schedule List Grouped by Day -->
+            {% if days_with_schedules %}
+                <div class="day-tabs">
+                    {% for day in days_with_schedules %}
+                        <button class="day-tab {% if forloop.first %}active{% endif %}" data-day="{{ day.name }}">
+                            {{ day.name }}
+                        </button>
+                    {% endfor %}
+                </div>
+                
+                <div class="day-schedules">
+                    {% for day in days_with_schedules %}
+                        <div class="day-schedule {% if forloop.first %}active{% endif %}" id="day-{{ day.name }}">
+                            <div class="day-header">
+                                <h3><i class="fas fa-calendar-day"></i> {{ day.name }}</h3>
+                            </div>
+                            
+                            <div class="appointments-list">
+                                {% if day.schedules %}
+                                    {% for schedule in day.schedules %}
+                                        <div class="appointment-card {% if not schedule.available %}unavailable{% endif %}">
+                                            <div class="appointment-header">
+                                                <div class="pet-owner-info">
+                                                    <div class="time-range">
+                                                        <i class="fas fa-clock"></i>
+                                                        {{ schedule.start_time|time:"g:i A" }} - {{ schedule.end_time|time:"g:i A" }}
+                                                    </div>
+                                                </div>
+                                                <div class="appointment-status">
+                                                    <span class="status-badge {% if schedule.available %}available{% else %}unavailable{% endif %}">
+                                                        {% if schedule.available %}
+                                                            <i class="fas fa-check-circle"></i> Available
+                                                        {% else %}
+                                                            <i class="fas fa-times-circle"></i> Booked
+                                                        {% endif %}
+                                                    </span>
+                                                </div>
+                                            </div>
+
+                                            <div class="appointment-actions">
+                                                {% if schedule.available %}
+                                                    {% if request.user.petownerprofile %}
+                                                    <a href="{% url 'appointment:book_appointment' vet.id schedule.id %}" class="btn btn-primary">
+                                                        <i class="fas fa-calendar-plus"></i> Book Now
+                                                    </a>
+                                                    {% endif %}
+                                                    {% if request.user == vet.user %}
+                                                    <a href="{% url 'appointment:edit_schedule' schedule.id %}" class="btn btn-edit">
+                                                        <i class="fas fa-edit"></i> Edit
+                                                    </a>
+                                                    {% endif %}
+                                                {% else %}
+                                                    {% if request.user == vet.user %}
+                                                    <a href="#" class="btn btn-edit disabled" tabindex="-1" aria-disabled="true" style="pointer-events: none; ">
+                                                        <i class="fas fa-lock"></i> Locked
+                                                    </a>
+                                                    {% endif %}
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                    {% endfor %}
+                                {% else %}
+                                    <div class="empty-day-state">
+                                        <i class="fas fa-calendar-times"></i>
+                                        <p>No schedules available for {{ day.name }}</p>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
             {% else %}
-            <div class="empty-state">
-                <i class="fas fa-calendar-times fa-3x"></i>
-                <h3>No Schedule Available</h3>
-                <p>This veterinarian hasn't set up their availability yet.</p>
-            </div>
+                <div class="empty-state">
+                    <i class="fas fa-calendar-times"></i>
+                    <h3>No Schedule Available</h3>
+                    <p>This veterinarian hasn't set up their availability yet.</p>
+                    {% if request.user == vet.user %}
+                    <a href="{% url 'appointment:add_schedule' %}" class="btn btn-primary">
+                        <i class="fas fa-plus"></i> Add Schedule
+                    </a>
+                    {% endif %}
+                </div>
             {% endif %}
         </div>
 
-        <!-- Back Button - Consistent styling -->
+        <!-- Action Buttons -->
         <div class="action-buttons">
+            {% if request.user == vet.user %}
+            <a href="{% url 'appointment:add_schedule' %}" class="btn btn-primary">
+                <i class="fas fa-plus"></i> Add New Slot
+            </a>
+            {% else %}
             <a href="{% url 'appointment:vet_list' %}" class="btn btn-outline">
                 <i class="fas fa-arrow-left"></i> Back to Vets
             </a>
+            {% endif %}
         </div>
     </div>
 </div>
 
 <style>
+    /* Reusing all the existing styles from the appointments page */
     /* Base Container - matches other pages */
-    .pet-feed-content .vet-schedule-container {
+    .pet-feed-content .appointment-list-container {
         max-width: 900px;
         margin: 0 auto;
         padding: 2rem;
     }
     
-    /* Vet Profile Header - consistent with other pages */
+    /* Header Section - consistent with other pages */
+    .pet-feed-content .section-header {
+        margin-bottom: 2rem;
+    }
+    
+    .pet-feed-content .section-subheader {
+        margin-bottom: 1.5rem;
+    }
+    
+    .pet-feed-content .section-subheader h3 {
+        font-size: 1.3rem;
+        color: #2D3142;
+        display: flex;
+        align-items: center;
+        gap: 0.8rem;
+        margin-bottom: 0.5rem;
+    }
+    
+    .pet-feed-content .section-subheader h3 i {
+        color: #4ECDC4;
+    }
+    
+    .pet-feed-content .section-subheader p {
+        color: #7C8798;
+        font-size: 1rem;
+    }
+    
+    .pet-feed-content .header-content h1 {
+        font-size: 2rem;
+        color: #2D3142;
+        margin-bottom: 0.5rem;
+        display: flex;
+        align-items: center;
+        gap: 0.8rem;
+    }
+    
+    .pet-feed-content .header-content h1 i {
+        color: #4ECDC4;
+    }
+    
+    .pet-feed-content .header-content p {
+        color: #7C8798;
+        font-size: 1rem;
+    }
+    
+    /* Vet Profile Header */
     .pet-feed-content .vet-profile-header {
         display: flex;
-        gap: 1.5rem;
-        background: white;
-        border-radius: 15px;
-        padding: 1.5rem;
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
-        margin-bottom: 2rem;
         align-items: center;
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+        padding-bottom: 1.5rem;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.05);
     }
     
     .pet-feed-content .vet-avatar img {
@@ -119,103 +214,132 @@
         border-radius: 50%;
         object-fit: cover;
         border: 3px solid #4ECDC4;
+        background-color: white;
     }
     
-    .pet-feed-content .vet-info h1 {
-        font-size: 1.8rem;
+    .pet-feed-content .vet-info h2 {
+        font-size: 1.5rem;
         color: #2D3142;
         margin-bottom: 0.8rem;
-        display: flex;
-        align-items: center;
-        gap: 0.8rem;
-    }
-    
-    .pet-feed-content .vet-info h1 i {
-        color: #4ECDC4;
     }
     
     .pet-feed-content .vet-meta {
         display: flex;
-        flex-wrap: wrap;
         gap: 1rem;
+        flex-wrap: wrap;
     }
     
-    .pet-feed-content .vet-meta span {
+    .pet-feed-content .clinic-name, 
+    .pet-feed-content .specialization {
+        color: #4F5D75;
         display: flex;
         align-items: center;
         gap: 0.5rem;
-        background: #F8F9FA;
-        padding: 0.5rem 1rem;
-        border-radius: 50px;
         font-size: 0.9rem;
-        color: #4F5D75;
     }
     
-    .pet-feed-content .vet-meta i {
+    .pet-feed-content .clinic-name i {
         color: #FF6B6B;
     }
     
-    /* Schedule List - matching appointments list */
-    .pet-feed-content .schedule-list {
-        background: white;
-        border-radius: 15px;
-        padding: 1.5rem;
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
-        margin-bottom: 2rem;
+    .pet-feed-content .specialization i {
+        color: #FFC107;
     }
     
-    .pet-feed-content .section-header {
+    /* Day Tabs */
+    .pet-feed-content .day-tabs {
+        display: flex;
+        overflow-x: auto;
+        gap: 0.5rem;
+        margin-bottom: 1.5rem;
+        padding-bottom: 0.5rem;
+        -ms-overflow-style: none;  /* IE and Edge */
+        scrollbar-width: none;  /* Firefox */
+    }
+    
+    .pet-feed-content .day-tabs::-webkit-scrollbar {
+        display: none;
+    }
+    
+    .pet-feed-content .day-tab {
+        padding: 0.6rem 1.2rem;
+        border-radius: 50px;
+        font-weight: 600;
+        font-size: 0.9rem;
+        background-color: #F5F7FA;
+        color: #4F5D75;
+        border: none;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        white-space: nowrap;
+    }
+    
+    .pet-feed-content .day-tab.active {
+        background-color: #4ECDC4;
+        color: white;
+        box-shadow: 0 4px 15px rgba(78, 205, 196, 0.3);
+    }
+    
+    .pet-feed-content .day-tab:hover:not(.active) {
+        background-color: #E9ECEF;
+    }
+    
+    /* Day Schedules */
+    .pet-feed-content .day-schedules {
+        position: relative;
+    }
+    
+    .pet-feed-content .day-schedule {
+        display: none;
+    }
+    
+    .pet-feed-content .day-schedule.active {
+        display: block;
+    }
+    
+    .pet-feed-content .day-header {
         margin-bottom: 1.5rem;
     }
     
-    .pet-feed-content .section-header h2 {
-        font-size: 1.5rem;
+    .pet-feed-content .day-header h3 {
+        font-size: 1.3rem;
         color: #2D3142;
         display: flex;
         align-items: center;
         gap: 0.8rem;
-        margin-bottom: 0.5rem;
     }
     
-    .pet-feed-content .section-header h2 i {
+    .pet-feed-content .day-header h3 i {
         color: #4ECDC4;
     }
     
-    .pet-feed-content .section-header p {
-        color: #7C8798;
-        font-size: 1rem;
-    }
-    
-    /* Time Slots Grid */
-    .pet-feed-content .time-slots-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-        gap: 1rem;
-    }
-    
-    /* Time Slot Card - matching appointment cards */
-    .pet-feed-content .time-slot-card {
+    /* Appointments List */
+    .pet-feed-content .appointments-list {
         display: flex;
-        justify-content: space-between;
-        background: #F8F9FA;
-        border-radius: 12px;
-        padding: 1.2rem;
-        border-left: 4px solid #4ECDC4;
-        transition: all 0.3s ease;
+        flex-direction: column;
+        gap: 1.5rem;
     }
     
-    .pet-feed-content .time-slot-card.unavailable {
-        border-left-color: #6c757d;
+    /* Appointment Card */
+    .pet-feed-content .appointment-card {
+        background: white;
+        border-radius: 15px;
+        overflow: hidden;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+        transition: all 0.3s ease;
+        border: 1px solid rgba(0, 0, 0, 0.05);
+        padding: 1.5rem;
+    }
+    
+    .pet-feed-content .appointment-card.unavailable {
         opacity: 0.8;
     }
     
-    .pet-feed-content .time-slot-card:hover {
-        transform: translateY(-3px);
-        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-    }
-    
-    .pet-feed-content .time-slot-info {
-        flex: 1;
+    .pet-feed-content .appointment-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 1.5rem;
     }
     
     .pet-feed-content .date-info {
@@ -245,15 +369,7 @@
         color: #FF6B6B;
     }
     
-    /* Time Slot Actions */
-    .pet-feed-content .time-slot-actions {
-        display: flex;
-        flex-direction: column;
-        align-items: flex-end;
-        gap: 0.8rem;
-    }
-    
-    /* Status Badges - matching appointments page */
+    /* Status Badges - matching appointments detail */
     .pet-feed-content .status-badge {
         padding: 0.4rem 0.8rem;
         border-radius: 50px;
@@ -264,12 +380,12 @@
         gap: 0.5rem;
     }
     
-    .pet-feed-content .available {
+    .pet-feed-content .status-badge.available {
         background-color: rgba(78, 205, 196, 0.2);
         color: #4ECDC4;
     }
     
-    .pet-feed-content .unavailable {
+    .pet-feed-content .status-badge.unavailable {
         background-color: rgba(108, 117, 125, 0.2);
         color: #6c757d;
     }
@@ -288,6 +404,7 @@
         text-decoration: none;
         border: none;
         white-space: nowrap;
+        cursor: pointer;
     }
     
     .pet-feed-content .btn-primary {
@@ -299,6 +416,7 @@
     .pet-feed-content .btn-primary:hover {
         transform: translateY(-2px);
         box-shadow: 0 6px 20px rgba(255, 107, 107, 0.4);
+        background-color: #ff5252;
     }
     
     .pet-feed-content .btn-outline {
@@ -312,13 +430,35 @@
         color: white;
     }
     
-    /* Empty State - matching other pages */
+    .pet-feed-content .btn-edit {
+        background-color: rgba(255, 193, 7, 0.2);
+        color: #ffc107;
+        border: none;
+    }
+    
+    .pet-feed-content .btn-edit:hover {
+        background-color: rgba(255, 193, 7, 0.3);
+    }
+    
+    /* Appointment Actions */
+    .pet-feed-content .appointment-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 1rem;
+        padding-top: 1rem;
+        border-top: 1px solid rgba(0, 0, 0, 0.05);
+    }
+    
+    /* Empty State */
     .pet-feed-content .empty-state {
         text-align: center;
-        padding: 3rem;
+        padding: 3rem 1rem;
+        background: #F8F9FA;
+        border-radius: 15px;
     }
     
     .pet-feed-content .empty-state i {
+        font-size: 3rem;
         color: #7C8798;
         margin-bottom: 1rem;
     }
@@ -326,17 +466,37 @@
     .pet-feed-content .empty-state h3 {
         color: #2D3142;
         margin-bottom: 0.5rem;
-        font-size: 1.3rem;
     }
     
     .pet-feed-content .empty-state p {
         color: #7C8798;
-        margin-bottom: 1.5rem;
+    }
+    
+    /* Empty Day State */
+    .pet-feed-content .empty-day-state {
+        text-align: center;
+        padding: 2rem 1rem;
+        background: #F8F9FA;
+        border-radius: 15px;
+    }
+    
+    .pet-feed-content .empty-day-state i {
+        font-size: 2rem;
+        color: #7C8798;
+        margin-bottom: 0.5rem;
+    }
+    
+    .pet-feed-content .empty-day-state p {
+        color: #7C8798;
+        margin: 0;
     }
     
     /* Action Buttons */
     .pet-feed-content .action-buttons {
-        text-align: center;
+        display: flex;
+        justify-content: center;
+        gap: 1rem;
+        margin-top: 2rem;
     }
     
     /* Responsive Styles */
@@ -344,57 +504,76 @@
         .pet-feed-content .vet-profile-header {
             flex-direction: column;
             text-align: center;
-            align-items: center;
         }
         
         .pet-feed-content .vet-meta {
             justify-content: center;
         }
         
-        .pet-feed-content .time-slots-grid {
-            grid-template-columns: 1fr;
-        }
-        
-        .pet-feed-content .time-slot-card {
+        .pet-feed-content .appointment-header {
             flex-direction: column;
             gap: 1rem;
         }
         
-        .pet-feed-content .time-slot-actions {
-            flex-direction: row;
-            justify-content: space-between;
-            width: 100%;
+        .pet-feed-content .appointment-actions {
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 0.8rem;
+        }
+        
+        .pet-feed-content .action-buttons {
+            flex-direction: column;
             align-items: center;
         }
     }
     
     @media (max-width: 480px) {
-        .pet-feed-content .vet-schedule-container {
+        .pet-feed-content .appointment-list-container {
             padding: 1.5rem 1rem;
         }
         
-        .pet-feed-content .vet-info h1 {
-            font-size: 1.5rem;
+        .pet-feed-content .vet-info h2 {
+            font-size: 1.3rem;
         }
         
-        .pet-feed-content .time-slot-actions {
+        .pet-feed-content .vet-meta {
             flex-direction: column;
-            align-items: flex-end;
             gap: 0.5rem;
+            align-items: center;
+        }
+        
+        .pet-feed-content .day-tabs {
+            padding-bottom: 0.8rem;
         }
     }
 </style>
 
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        // Add any necessary JavaScript here
-        // For example, booking confirmation or time slot selection
+        // Tab switching functionality
+        const dayTabs = document.querySelectorAll('.day-tab');
+        const daySchedules = document.querySelectorAll('.day-schedule');
         
-        // Example: Confirm before booking
+        dayTabs.forEach(tab => {
+            tab.addEventListener('click', function() {
+                // Remove active class from all tabs and schedules
+                dayTabs.forEach(t => t.classList.remove('active'));
+                daySchedules.forEach(s => s.classList.remove('active'));
+                
+                // Add active class to clicked tab
+                tab.classList.add('active');
+                
+                // Show corresponding schedule
+                const day = tab.getAttribute('data-day');
+                document.getElementById('day-' + day).classList.add('active');
+            });
+        });
+        
+        // Booking confirmation
         const bookButtons = document.querySelectorAll('.btn-primary');
         bookButtons.forEach(button => {
             button.addEventListener('click', function(e) {
-                if (!confirm('Are you sure you want to book this appointment?')) {
+                if (button.closest('.appointment-actions') && !confirm('Are you sure you want to book this appointment?')) {
                     e.preventDefault();
                 }
             });

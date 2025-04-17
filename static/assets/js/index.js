@@ -127,8 +127,6 @@ function fetchSortedPosts(sortType, dateFilter) {
             const newUrl = `${currentPath}?${params.toString()}`;
             window.history.pushState({ path: newUrl }, '', newUrl);
             
-            // Re-attach like button event listeners
-            attachLikeButtonListeners();
         }
     })
     .catch(function(error) {
@@ -169,75 +167,6 @@ if (sortButtons && sortButtons.length > 0) {
         });
     });
 }
-    
-    // Like functionality
-    function attachLikeButtonListeners() {
-        const likeBtns = document.querySelectorAll('.like-btn');
-        
-        likeBtns.forEach(function(btn) {
-            btn.addEventListener('click', function(e) {
-                e.preventDefault();
-                
-                const postId = this.getAttribute('data-post-id');
-                const likeCount = this.querySelector('.like-count');
-                
-                // Add animation class
-                this.classList.add('like-animation');
-                
-                // Remove animation class after animation completes
-                setTimeout(function() {
-                    btn.classList.remove('like-animation');
-                }, 300);
-                
-                // Send AJAX request to like/unlike post
-                fetch(`/like-post/${postId}/`, {
-                    method: 'POST',
-                    headers: {
-                        'X-CSRFToken': getCookie('csrftoken'),
-                        'Content-Type': 'application/json'
-                    },
-                    credentials: 'same-origin'
-                })
-                .then(function(response) {
-                    return response.json();
-                })
-                .then(function(data) {
-                    if (data.status === 'success') {
-                        // Update like count
-                        likeCount.textContent = data.likes_count;
-                        
-                        // Toggle active class
-                        if (data.liked) {
-                            btn.classList.add('active');
-                        } else {
-                            btn.classList.remove('active');
-                        }
-                    }
-                })
-                .catch(function(error) {
-                    console.error('Error:', error);
-                });
-            });
-        });
-    }
-    
-    // Initial attachment of like button listeners
-    attachLikeButtonListeners();
-    
-    // Helper function to get CSRF token
-    function getCookie(name) {
-        let cookieValue = null;
-        if (document.cookie && document.cookie !== '') {
-            const cookies = document.cookie.split(';');
-            for (let i = 0; i < cookies.length; i++) {
-                const cookie = cookies[i].trim();
-                if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                    break;
-                }
-            }
-        }
-        return cookieValue;
-    }
+
 });
 

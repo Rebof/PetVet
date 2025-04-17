@@ -21,14 +21,8 @@ urlpatterns = [
     path("vet/<int:vet_id>/appointments/accepted/", views.vet_accepted_appointments, name="vet_accepted_appointments"),
 
     path("appointments/<int:appointment_id>/complete/", views.mark_completed, name="mark_completed"),
-
-    # path("appointments/testing/", views.open_test , name="open_test"),
-
-
-
-    # path('verify-payment/<int:appointment_id>/', views.verify_payment, name='verify_payment'),
-
-    # path('verify/<str:appointment_id>/', views.verify_payment, name='verify_payment'),
+    
+    path('schedule/edit/<int:schedule_id>/', views.edit_schedule, name='edit_schedule'),
 
     path('book/<int:vet_id>/schedule/<int:schedule_id>/', views.book_appointment, name='book_appointment'),
 

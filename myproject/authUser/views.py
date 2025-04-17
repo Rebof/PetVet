@@ -368,7 +368,7 @@ def add_pet(request):
             owner_profile = PetOwnerProfile.objects.get(user=request.user)
         except PetOwnerProfile.DoesNotExist:
             # Handle case where the user is not a pet owner
-            return redirect('coreFunctions:indeex')  # or any fallback
+            return redirect('coreFunctions:index')  # or any fallback
 
         # Create and save the pet instance
         pet = Pet.objects.create(

@@ -1,38 +1,363 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Add Vet Schedule</title>
-</head>
-<body>
-    <h1>Add New Vet Schedule</h1>
-    <form method="POST">
-        {% csrf_token %}
+{% extends 'main/base1.html' %}
+{% load static %}
+
+{% block title %}Add Vet Schedule | PetCare Connect{% endblock %}
+
+{% block content %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+<div class="pet-feed-content">
+    <div class="appointment-list-container">
+        {% if error %}
+    <div class="alert alert-danger" role="alert">
+        {{ error }}
+    </div>
+{% endif %}
+        <!-- Header Section - Matching appointments detail page -->
+        <div class="section-header">
+            <div class="header-content">
+                <h1><i class="fas fa-calendar-plus"></i> Add New Schedule</h1>
+                <p>Create new available time slots for appointments</p>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="vet-appointments-content">
+            <div class="vet-profile-header">
+                <div class="vet-avatar">
+                    {% if vet.user.vetprofile.vet_image %}
+                        <img src="{{ vet.user.vetprofile.vet_image.url }}" alt="Dr. {{ vet.user.full_name }}">
+                    {% else %}
+                        <img src="/static/assets/default-avatar.png" alt="Dr. {{ vet.user.full_name }}">
+                    {% endif %}
+                </div>
+                <div class="vet-info">
+                    <h2>Dr. {{ vet.user.full_name }}</h2>
+                    {% if vet.clinic_name %}
+                    <p class="clinic-name">
+                        <i class="fas fa-clinic-medical"></i> {{ vet.clinic_name }}
+                    </p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Schedule Form -->
+            <div class="form-container">
+                <form method="POST" class="schedule-form">
+                    {% csrf_token %}
+                    
+                    <div class="form-group">
+                        <label for="day_of_week" class="form-label">
+                            <i class="fas fa-calendar-day"></i> Day of the Week:
+                        </label>
+                        <select name="day_of_week" id="day_of_week" class="form-select" required>
+                            <option value="Monday">Monday</option>
+                            <option value="Tuesday">Tuesday</option>
+                            <option value="Wednesday">Wednesday</option>
+                            <option value="Thursday">Thursday</option>
+                            <option value="Friday">Friday</option>
+                            <option value="Saturday">Saturday</option>
+                            <option value="Sunday">Sunday</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="start_time" class="form-label">
+                            <i class="fas fa-clock"></i> Start Time:
+                        </label>
+                        <input type="time" name="start_time" id="start_time" class="form-input" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="end_time" class="form-label">
+                            <i class="fas fa-clock"></i> End Time:
+                        </label>
+                        <input type="time" name="end_time" id="end_time" class="form-input" required>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save"></i> Save Schedule
+                        </button>
+                        <a href="{% url 'appointment:vet_schedule' vet.id %}" class="btn btn-outline">
+                            <i class="fas fa-arrow-left"></i> Cancel
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* Reusing all the existing styles from the appointments page */
+    /* Base Container - matches other pages */
+    .pet-feed-content .appointment-list-container {
+        max-width: 900px;
+        margin: 0 auto;
+        padding: 2rem;
+    }
+    
+    /* Header Section - consistent with other pages */
+    .pet-feed-content .section-header {
+        margin-bottom: 2rem;
+    }
+    
+    .pet-feed-content .header-content h1 {
+        font-size: 2rem;
+        color: #2D3142;
+        margin-bottom: 0.5rem;
+        display: flex;
+        align-items: center;
+        gap: 0.8rem;
+    }
+    
+    .pet-feed-content .header-content h1 i {
+        color: #4ECDC4;
+    }
+    
+    .pet-feed-content .header-content p {
+        color: #7C8798;
+        font-size: 1rem;
+    }
+    
+    /* Vet Profile Header */
+    .pet-feed-content .vet-profile-header {
+        display: flex;
+        align-items: center;
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+        padding-bottom: 1.5rem;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    }
+    
+    .pet-feed-content .vet-avatar img {
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 3px solid #4ECDC4;
+        background-color: white;
+    }
+    
+    .pet-feed-content .vet-info h2 {
+        font-size: 1.5rem;
+        color: #2D3142;
+        margin-bottom: 0.8rem;
+    }
+    
+    .pet-feed-content .clinic-name {
+        color: #4F5D75;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 0.9rem;
+    }
+    
+    .pet-feed-content .clinic-name i {
+        color: #FF6B6B;
+    }
+    
+    /* Form Styles */
+    .pet-feed-content .form-container {
+        background: white;
+        border-radius: 15px;
+        padding: 1.5rem;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+    }
+    
+    .pet-feed-content .schedule-form {
+        display: flex;
+        flex-direction: column;
+        gap: 1.5rem;
+    }
+    
+    .pet-feed-content .form-group {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+    
+    .pet-feed-content .form-label {
+        font-weight: 500;
+        color: #2D3142;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .pet-feed-content .form-label i {
+        color: #4ECDC4;
+        width: 20px;
+        text-align: center;
+    }
+    
+    .pet-feed-content .form-select,
+    .pet-feed-content .form-input {
+        padding: 0.8rem 1rem;
+        border: 1px solid #E0E0E0;
+        border-radius: 8px;
+        font-size: 1rem;
+        transition: all 0.3s ease;
+    }
+    
+    .pet-feed-content .form-select {
+        background-color: white;
+        appearance: none;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%234F5D75' viewBox='0 0 16 16'%3E%3Cpath d='M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: right 1rem center;
+        background-size: 16px;
+    }
+    
+    .pet-feed-content .form-select:focus,
+    .pet-feed-content .form-input:focus {
+        outline: none;
+        border-color: #4ECDC4;
+        box-shadow: 0 0 0 3px rgba(78, 205, 196, 0.2);
+    }
+    
+    /* Checkbox Styles */
+    .pet-feed-content .checkbox-group {
+        margin-top: 1rem;
+    }
+    
+    .pet-feed-content .checkbox-container {
+        display: flex;
+        align-items: center;
+        gap: 0.8rem;
+        cursor: pointer;
+        user-select: none;
+    }
+    
+    .pet-feed-content .checkbox-container input {
+        position: absolute;
+        opacity: 0;
+        cursor: pointer;
+        height: 0;
+        width: 0;
+    }
+    
+    .pet-feed-content .checkmark {
+        position: relative;
+        height: 20px;
+        width: 20px;
+        background-color: #fff;
+        border: 2px solid #4ECDC4;
+        border-radius: 4px;
+        transition: all 0.2s;
+    }
+    
+    .pet-feed-content .checkbox-container:hover input ~ .checkmark {
+        background-color: #f1f1f1;
+    }
+    
+    .pet-feed-content .checkbox-container input:checked ~ .checkmark {
+        background-color: #4ECDC4;
+    }
+    
+    .pet-feed-content .checkmark:after {
+        content: "";
+        position: absolute;
+        display: none;
+        left: 6px;
+        top: 2px;
+        width: 5px;
+        height: 10px;
+        border: solid white;
+        border-width: 0 2px 2px 0;
+        transform: rotate(45deg);
+    }
+    
+    .pet-feed-content .checkbox-container input:checked ~ .checkmark:after {
+        display: block;
+    }
+    
+    .pet-feed-content .checkbox-label {
+        font-weight: 500;
+        color: #2D3142;
+    }
+    
+    /* Form Actions */
+    .pet-feed-content .form-actions {
+        display: flex;
+        gap: 1rem;
+        margin-top: 2rem;
+        padding-top: 1.5rem;
+        border-top: 1px solid rgba(0, 0, 0, 0.05);
+    }
+    
+    /* Buttons - consistent with other pages */
+    .pet-feed-content .btn {
+        padding: 0.8rem 1.5rem;
+        border-radius: 50px;
+        font-weight: 600;
+        font-size: 0.9rem;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        border: none;
+        white-space: nowrap;
+        cursor: pointer;
+    }
+    
+    .pet-feed-content .btn-primary {
+        background-color: #FF6B6B;
+        color: white;
+        box-shadow: 0 4px 15px rgba(255, 107, 107, 0.3);
+    }
+    
+    .pet-feed-content .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(255, 107, 107, 0.4);
+        background-color: #ff5252;
+    }
+    
+    .pet-feed-content .btn-outline {
+        background-color: transparent;
+        border: 2px solid #FF6B6B;
+        color: #FF6B6B;
+    }
+    
+    .pet-feed-content .btn-outline:hover {
+        background-color: #FF6B6B;
+        color: white;
+    }
+    
+    /* Responsive Styles */
+    @media (max-width: 768px) {
+        .pet-feed-content .vet-profile-header {
+            flex-direction: column;
+            text-align: center;
+        }
         
-        <label for="day_of_week">Day of the Week:</label>
-        <select name="day_of_week" id="day_of_week" required>
-            <option value="Monday">Monday</option>
-            <option value="Tuesday">Tuesday</option>
-            <option value="Wednesday">Wednesday</option>
-            <option value="Thursday">Thursday</option>
-            <option value="Friday">Friday</option>
-            <option value="Saturday">Saturday</option>
-            <option value="Sunday">Sunday</option>
-        </select><br>
+        .pet-feed-content .form-actions {
+            flex-direction: column;
+        }
+        
+        .pet-feed-content .btn {
+            width: 100%;
+            justify-content: center;
+        }
+    }
+    
+    @media (max-width: 480px) {
+        .pet-feed-content .appointment-list-container {
+            padding: 1.5rem 1rem;
+        }
+        
+        .pet-feed-content .vet-info h2 {
+            font-size: 1.3rem;
+        }
+    }
+</style>
 
-        <label for="start_time">Start Time:</label>
-        <input type="time" name="start_time" id="start_time" required><br>
-
-        <label for="end_time">End Time:</label>
-        <input type="time" name="end_time" id="end_time" required><br>
-
-        <label for="available">Available:</label>
-        <input type="checkbox" name="available" id="available" checked><br>
-
-        <button type="submit">Save Schedule</button>
-    </form>
-
-    <a href="{% url 'appointment:vet_schedule' vet.id %}">Back to Schedule List</a>
-</body>
-</html>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Add any necessary JavaScript here
+    });
+</script>
+{% endblock %}

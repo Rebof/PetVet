@@ -7,6 +7,7 @@ from authUser.views import complete_profile
 from coreFunctions.routing import websocket_urlpatterns
 
 
+
 urlpatterns = [
     path('admin/', admin.site.urls),
     path("", include("coreFunctions.urls")),

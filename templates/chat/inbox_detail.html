@@ -725,9 +725,10 @@
     <img src="{% static 'assets/images/default-avatar.png' %}" class="chat-avatar">
 {% endif %}
                             <div>
-                                <h3>{{ receiver.get_full_name|default:receiver.username }}</h3>
-                                <span class="status-indicator online"></span>
-                                <span class="status-text">Online</span>
+                                <a href="{% url 'authUser:user_profile' receiver.id %}" 
+   style="font-size: 20px; font-weight: 500; color: #333; text-decoration: none;">
+  {{ receiver.get_full_name|default:receiver.username }}
+</a>
                             </div>
                         </div>
                         <div class="chat-header-actions">
@@ -793,30 +794,6 @@
             </div>
         </div>
         
-        <!-- Block User Modal -->
-        <div id="block-modal" class="modal">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h3><i class="fas fa-ban"></i> Block User</h3>
-                    <button class="close-modal">&times;</button>
-                </div>
-                <div class="modal-body">
-                    <p>Are you sure you want to block <strong id="block-username">{{ receiver.get_full_name|default:receiver.username }}</strong>?</p>
-                    <p class="warning-text">
-                        <i class="fas fa-exclamation-triangle"></i>
-                        Blocking this user will prevent them from sending you messages and seeing your posts.
-                    </p>
-                </div>
-                <div class="modal-footer">
-                    <button class="btn cancel-btn" id="cancel-block">Cancel</button>
-                    <form method="POST" action="" id="block-form">
-                        {% csrf_token %}
-                        <input type="hidden" name="blocked_user" id="blocked-user-id" value="{{ receiver.id }}">
-                        <button type="submit" class="btn block-btn">Block User</button>
-                    </form>
-                </div>
-            </div>
-        </div>
     </div>
 </div>
 

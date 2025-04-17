@@ -18,13 +18,6 @@ document.addEventListener('DOMContentLoaded', function() {
         e.stopPropagation();
     });
     
-    // Messages dropdown
-    const messagesBtn = document.getElementById('messages-btn');
-    // You would add similar functionality for messages dropdown
-    
-    // Notifications dropdown
-    const notificationsBtn = document.getElementById('notifications-btn');
-    // You would add similar functionality for notifications dropdown
     
     // Active sidebar link highlighting
     const currentUrl = window.location.pathname;

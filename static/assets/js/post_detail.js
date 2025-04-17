@@ -5,82 +5,86 @@ document.addEventListener('DOMContentLoaded', function() {
     initializeReplyButtons();
     initializeDeleteModals();
     initializeShareButtons();
-    initializeReplyForms();
     initializeCommentForm();
+    // Remove duplicate initialization - we'll handle replies in the main function
 });
 
 // Initialize reply forms
 function initializeReplyForms() {
     document.querySelectorAll('.reply-form').forEach(form => {
-        form.addEventListener('submit', function(e) {
-            e.preventDefault();
+        if (!form.dataset.initialized) {
+            form.addEventListener('submit', handleReplySubmit);
+            form.dataset.initialized = 'true';
+        }
+    });
+}
+
+// Handle reply form submission
+function handleReplySubmit(e) {
+    e.preventDefault();
+    
+    const form = this;
+    const formData = new FormData(form);
+    const url = form.action;
+    const commentId = form.getAttribute('data-comment-id');
+    
+    // Show loading state
+    const submitButton = form.querySelector('button[type="submit"]');
+    const originalButtonText = submitButton.innerHTML;
+    submitButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+    submitButton.disabled = true;
+    
+    fetch(url, {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-CSRFToken': formData.get('csrfmiddlewaretoken'),
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('Network response was not ok');
+        }
+        return response.json();
+    })
+    .then(data => {
+        if (data.success) {
+            // Clear the form
+            form.reset();
             
-            const formData = new FormData(this);
-            const url = this.action;
-            const commentId = this.closest('.reply-form-container').id.split('-')[2];
+            // Hide the reply form
+            form.closest('.reply-form-container').style.display = 'none';
             
-            // Show loading state
-            const submitButton = this.querySelector('button[type="submit"]');
-            const originalButtonText = submitButton.innerHTML;
-            submitButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
-            submitButton.disabled = true;
+            // Add new reply to the comment
+            const repliesContainer = document.getElementById(`replies-container-${commentId}`);
             
-            fetch(url, {
-                method: 'POST',
-                body: formData,
-                headers: {
-                    'X-CSRFToken': formData.get('csrfmiddlewaretoken'),
-                    'X-Requested-With': 'XMLHttpRequest'
-                }
-            })
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error('Network response was not ok');
-                }
-                return response.json();
-            })
-            .then(data => {
-                if (data.success) {
-                    // Clear the form
-                    this.reset();
-                    
-                    // Hide the reply form
-                    this.closest('.reply-form-container').style.display = 'none';
-                    
-                    // Add new reply to the comment
-                    const commentContainer = document.getElementById(`comment-${commentId}`);
-                    
-                    // Create and insert new reply
-                    const tempDiv = document.createElement('div');
-                    tempDiv.innerHTML = data.reply_html;
-                    const newReply = tempDiv.firstChild;
-                    
-                    // Find or create replies container
-                    let repliesContainer = commentContainer.querySelector('.replies-container');
-                    if (!repliesContainer) {
-                        repliesContainer = document.createElement('div');
-                        repliesContainer.className = 'replies-container';
-                        commentContainer.querySelector('.comment-content').appendChild(repliesContainer);
-                    }
-                    
-                    repliesContainer.appendChild(newReply);
-                    
-                    // Show success message
-                    showToast('Reply added successfully!');
-                } else {
-                    showToast(data.error || 'Error adding reply');
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                showToast('Error adding reply. Please try again.');
-            })
-            .finally(() => {
-                // Restore button state
-                submitButton.innerHTML = originalButtonText;
-                submitButton.disabled = false;
-            });
-        });
+            // Create and insert new reply
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = data.reply_html;
+            const newReply = tempDiv.firstChild;
+            
+            // Add current-user-comment class if this is the current user's reply
+            if (newReply.querySelector('.delete-btn')) {
+                newReply.classList.add('current-user-comment');
+            }
+            
+            repliesContainer.appendChild(newReply);
+            
+            // Show success message
+            showToast('Reply added successfully!');
+        } else {
+            showToast(data.error || 'Error adding reply');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showToast('Error adding reply. Please try again.');
+    })
+    .finally(() => {
+        // Restore button state
+        submitButton.innerHTML = originalButtonText;
+        submitButton.disabled = false;
     });
 }
 
@@ -88,10 +92,13 @@ function initializeReplyForms() {
 function initializePostLikes() {
     const postLikeButtons = document.querySelectorAll('.like-btn[data-post-id]');
     postLikeButtons.forEach(button => {
-        button.addEventListener('click', function() {
-            const postId = this.getAttribute('data-post-id');
-            handleLike('post', postId, this);
-        });
+        if (!button.dataset.initialized) {
+            button.addEventListener('click', function() {
+                const postId = this.getAttribute('data-post-id');
+                handleLike('post', postId, this);
+            });
+            button.dataset.initialized = 'true';
+        }
     });
 }
 
@@ -100,12 +107,12 @@ function initializeCommentLikes(container = document) {
     const commentLikeButtons = container.querySelectorAll('.like-btn[data-comment-id]');
     commentLikeButtons.forEach(button => {
         // Only add listener if not already added
-        if (!button.dataset.listenerAdded) {
+        if (!button.dataset.initialized) {
             button.addEventListener('click', function() {
                 const commentId = this.getAttribute('data-comment-id');
                 handleLike('comment', commentId, this);
             });
-            button.dataset.listenerAdded = 'true';
+            button.dataset.initialized = 'true';
         }
     });
 }
@@ -114,36 +121,45 @@ function initializeCommentLikes(container = document) {
 function initializeReplyButtons() {
     const replyButtons = document.querySelectorAll('.reply-btn');
     replyButtons.forEach(button => {
-        button.addEventListener('click', function() {
-            const commentId = this.getAttribute('data-comment-id');
-            const replyForm = document.getElementById(`reply-form-${commentId}`);
-            
-            // Hide all other reply forms first
-            document.querySelectorAll('.reply-form-container').forEach(form => {
-                if (form.id !== `reply-form-${commentId}`) {
-                    form.style.display = 'none';
+        if (!button.dataset.initialized) {
+            button.addEventListener('click', function() {
+                const commentId = this.getAttribute('data-comment-id');
+                const replyForm = document.getElementById(`reply-form-${commentId}`);
+                
+                // Hide all other reply forms first
+                document.querySelectorAll('.reply-form-container').forEach(form => {
+                    if (form.id !== `reply-form-${commentId}`) {
+                        form.style.display = 'none';
+                    }
+                });
+                
+                // Toggle this reply form
+                replyForm.style.display = replyForm.style.display === 'none' ? 'block' : 'none';
+                
+                // Focus on textarea if form is visible
+                if (replyForm.style.display === 'block') {
+                    replyForm.querySelector('textarea').focus();
                 }
             });
-            
-            // Toggle this reply form
-            replyForm.style.display = replyForm.style.display === 'none' ? 'block' : 'none';
-            
-            // Focus on textarea if form is visible
-            if (replyForm.style.display === 'block') {
-                replyForm.querySelector('textarea').focus();
-            }
-        });
+            button.dataset.initialized = 'true';
+        }
     });
 
     // Cancel reply buttons
     const cancelReplyButtons = document.querySelectorAll('.cancel-reply');
     cancelReplyButtons.forEach(button => {
-        button.addEventListener('click', function() {
-            const commentId = this.getAttribute('data-comment-id');
-            const replyForm = document.getElementById(`reply-form-${commentId}`);
-            replyForm.style.display = 'none';
-        });
+        if (!button.dataset.initialized) {
+            button.addEventListener('click', function() {
+                const commentId = this.getAttribute('data-comment-id');
+                const replyForm = document.getElementById(`reply-form-${commentId}`);
+                replyForm.style.display = 'none';
+            });
+            button.dataset.initialized = 'true';
+        }
     });
+    
+    // Initialize reply forms when reply buttons are set up
+    initializeReplyForms();
 }
 
 // Initialize delete modals
@@ -167,20 +183,23 @@ function initializeDeleteModals() {
 // Initialize share buttons
 function initializeShareButtons() {
     document.querySelectorAll('.share-btn').forEach(button => {
-        button.addEventListener('click', function() {
-            const url = window.location.href;
-            
-            if (navigator.share) {
-                navigator.share({
-                    title: document.title,
-                    url: url
-                }).catch(error => console.error('Error sharing:', error));
-            } else {
-                navigator.clipboard.writeText(url)
-                    .then(() => showToast('Link copied to clipboard!'))
-                    .catch(err => console.error('Could not copy text: ', err));
-            }
-        });
+        if (!button.dataset.initialized) {
+            button.addEventListener('click', function() {
+                const url = window.location.href;
+                
+                if (navigator.share) {
+                    navigator.share({
+                        title: document.title,
+                        url: url
+                    }).catch(error => console.error('Error sharing:', error));
+                } else {
+                    navigator.clipboard.writeText(url)
+                        .then(() => showToast('Link copied to clipboard!'))
+                        .catch(err => console.error('Could not copy text: ', err));
+                }
+            });
+            button.dataset.initialized = 'true';
+        }
     });
 }
 
@@ -188,7 +207,7 @@ function initializeShareButtons() {
 function initializeCommentForm() {
     const commentForm = document.querySelector('.comment-form');
     
-    if (commentForm) {
+    if (commentForm && !commentForm.dataset.initialized) {
         commentForm.addEventListener('submit', function(e) {
             e.preventDefault();
             
@@ -220,7 +239,7 @@ function initializeCommentForm() {
                     // Clear the form
                     this.reset();
                     
-                    // Add new comment to the top of comments section
+                    // Add new comment to the comments section
                     const commentsSection = document.querySelector('.comments-section');
                     
                     // Remove empty state if exists
@@ -233,10 +252,19 @@ function initializeCommentForm() {
                     const tempDiv = document.createElement('div');
                     tempDiv.innerHTML = data.comment_html;
                     const newComment = tempDiv.firstChild;
-                    commentsSection.insertBefore(newComment, commentsSection.firstChild);
                     
-                    // Initialize like button for the new comment
+                    // Add current-user-comment class if this is the current user's comment
+                    if (newComment.querySelector('.delete-btn')) {
+                        newComment.classList.add('current-user-comment');
+                    }
+                    
+                    // Insert after the header
+                    const commentsHeader = commentsSection.querySelector('.comments-header');
+                    commentsSection.insertBefore(newComment, commentsHeader.nextSibling);
+                    
+                    // Initialize interactive elements for the new comment
                     initializeCommentLikes(newComment);
+                    initializeReplyButtons();
                     
                     // Update comment count
                     updateCommentCount();
@@ -257,6 +285,7 @@ function initializeCommentForm() {
                 submitButton.disabled = false;
             });
         });
+        commentForm.dataset.initialized = 'true';
     }
 }
 
@@ -339,29 +368,32 @@ function handleLike(type, id, button) {
 
 // Delete modal functions
 function createDeleteModal() {
-    const modal = document.createElement('div');
-    modal.className = 'modal';
-    modal.id = 'delete-modal';
-    
-    modal.innerHTML = `
-        <div class="modal-content">
-            <h3 class="modal-title">Confirm Delete</h3>
-            <p>Are you sure you want to delete this? This action cannot be undone.</p>
-            <div class="modal-actions">
-                <button id="cancel-delete" class="btn btn-outline">Cancel</button>
-                <button id="confirm-delete" class="btn btn-danger">Delete</button>
+    // Only create if it doesn't exist
+    if (!document.getElementById('delete-modal')) {
+        const modal = document.createElement('div');
+        modal.className = 'modal';
+        modal.id = 'delete-modal';
+        
+        modal.innerHTML = `
+            <div class="modal-content">
+                <h3 class="modal-title">Confirm Delete</h3>
+                <p>Are you sure you want to delete this? This action cannot be undone.</p>
+                <div class="modal-actions">
+                    <button id="cancel-delete" class="btn btn-outline">Cancel</button>
+                    <button id="confirm-delete" class="btn btn-danger">Delete</button>
+                </div>
             </div>
-        </div>
-    `;
-    
-    document.body.appendChild(modal);
-    
-    document.getElementById('cancel-delete').addEventListener('click', closeDeleteModal);
-    modal.addEventListener('click', function(event) {
-        if (event.target === modal) {
-            closeDeleteModal();
-        }
-    });
+        `;
+        
+        document.body.appendChild(modal);
+        
+        document.getElementById('cancel-delete').addEventListener('click', closeDeleteModal);
+        modal.addEventListener('click', function(event) {
+            if (event.target === modal) {
+                closeDeleteModal();
+            }
+        });
+    }
 }
 
 function showDeleteModal(type, id) {
@@ -423,28 +455,27 @@ function deleteItem(type, id) {
                 const reply = document.getElementById(`reply-${id}`);
                 reply.remove();
             }
+            
+            showToast('Item deleted successfully');
         } else {
             console.error('Error:', data.error);
+            showToast(data.error || 'Error deleting item');
         }
     })
     .catch(error => {
         console.error('Error:', error);
+        showToast('Error deleting item. Please try again.');
     });
 }
 
 // Update comment count
 function updateCommentCount() {
-    const commentCount = document.querySelectorAll('.comment').length;
+    const commentCount = document.querySelectorAll('.comment:not(.reply)').length;
     const countElements = document.querySelectorAll('.comment-count');
     
     countElements.forEach(el => {
         el.textContent = commentCount;
     });
-    
-    const commentsHeader = document.querySelector('.comments-header');
-    if (commentsHeader) {
-        commentsHeader.innerHTML = `<i class="fas fa-comments"></i> ${commentCount} Comments`;
-    }
     
     // Show empty state if no comments
     const commentsSection = document.querySelector('.comments-section');
@@ -475,8 +506,6 @@ function showToast(message) {
         toast.style.opacity = '0';
     }, 3000);
 }
-
-
 
 // Get CSRF token
 function getCookie(name) {
