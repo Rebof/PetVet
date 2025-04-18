@@ -28,4 +28,6 @@ urlpatterns = [
     
     # Account Deletion
     path('delete-account/', views.delete_account, name='delete_account'),
+
+    path('<int:appointment_id>/review/', views.review_vet, name='review_vet')
 ]

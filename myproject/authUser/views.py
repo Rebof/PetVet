@@ -1,9 +1,9 @@
-from django.http import Http404
+from django.http import Http404, HttpResponseForbidden
 from django.shortcuts import get_object_or_404, render, redirect
 from django.contrib.auth import authenticate, login, logout, get_user_model, update_session_auth_hash
 from django.contrib import messages
 from .forms import UserRegistrationForm,VetProfileForm, PetOwnerProfileForm
-from .models import VetProfile, PetOwnerProfile, Pet
+from .models import VetProfile, PetOwnerProfile, Pet, Review
 from django.contrib.auth.decorators import login_required
 from coreFunctions.models import Post, Comment, ReplyComment
 import random
@@ -12,6 +12,7 @@ from django.conf import settings
 from django.contrib.auth.forms import PasswordChangeForm
 from django.utils.crypto import get_random_string
 from django.urls import reverse
+from appointment.models import Appointment
 
 
 User = get_user_model()
@@ -342,7 +343,7 @@ def verify_otp(request):
             request.user.otp = ""  # Clear OTP 
             request.user.save()
             messages.success(request, "Your email has been verified successfully!")
-            return redirect('coreFunctions:feed')  
+            return redirect('coreFunctions:inbox')  
         else:
             messages.error(request, "Invalid OTP. Please try again.")
     
@@ -433,6 +434,55 @@ def pet_profile(request, pet_id):
         'species_choices': species_choices,
     }
     return render(request, 'authUser/pet_profile.html', context)
+
+
+@login_required
+def review_vet(request, appointment_id):
+    """View for reviewing a veterinarian after an appointment"""
+    appointment = get_object_or_404(Appointment, id=appointment_id)
+    
+    # Check if the user is authorized to review this appointment
+    if request.user != appointment.pet_owner.user:
+        return HttpResponseForbidden("Only the pet owner can review this appointment")
+    
+    # Check if the appointment is completed and paid
+    if appointment.status != 'completed' or appointment.payment_status != 'paid':
+        messages.error(request, "You can only review completed and paid appointments")
+        return redirect('appointment:appointment_detail', appointment_id=appointment.id)
+    
+    # Check if the user has already reviewed this appointment
+    existing_review = Review.objects.filter(
+        vet=appointment.vet,
+        reviewer=request.user,
+        appointment=appointment
+    ).first()
+    
+    if existing_review:
+        messages.info(request, "You have already reviewed this appointment")
+        return redirect('appointment:appointment_detail', appointment_id=appointment.id)
+    
+    if request.method == 'POST':
+        # Process the review submission
+        rating = int(request.POST.get('rating', 5))
+        comment = request.POST.get('comment', '')
+        
+        # Create the review
+        review = Review.objects.create(
+            vet=appointment.vet,
+            reviewer=request.user,
+            rating=rating,
+            comment=comment,
+            appointment=appointment  # Add this field to the Review model
+        )
+        
+        messages.success(request, "Thank you for your review!")
+        return redirect('appointment:appointment_detail', appointment_id=appointment.id)
+    
+    context = {
+        'appointment': appointment
+    }
+    return render(request, 'appointment/review_vet.html', context)
+
 
 @login_required
 def delete_pet(request, pk):

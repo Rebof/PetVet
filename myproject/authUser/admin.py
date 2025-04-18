@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import User , VetProfile , PetOwnerProfile
+from .models import User , VetProfile , PetOwnerProfile, Pet, Review
 # Register your models here.
 
 class UserAdmin(admin.ModelAdmin):
@@ -13,3 +13,5 @@ admin.site.register(VetProfile, VetAdmin)
 
 
 admin.site.register(PetOwnerProfile)
+admin.site.register(Review)
+admin.site.register(Pet)

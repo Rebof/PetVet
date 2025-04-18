@@ -88,10 +88,11 @@ class VetProfile(models.Model):
 
 class Review(models.Model):
     vet = models.ForeignKey(VetProfile, on_delete=models.CASCADE, related_name='reviews')
-    reviewer = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)  # Or PetOwnerProfile if you prefer
+    reviewer = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
     rating = models.PositiveIntegerField(default=5)
     comment = models.TextField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
+    appointment = models.ForeignKey('appointment.Appointment', on_delete=models.CASCADE, related_name='reviews', null=True, blank=True)
 
     def __str__(self):
         return f"Review by {self.reviewer} for {self.vet.user.username}"
