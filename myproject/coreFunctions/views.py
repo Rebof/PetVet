@@ -6,7 +6,7 @@ from .models import Post, Category, Comment, ReplyComment, ChatMessage
 from django.utils.text import slugify
 from django.utils.timesince import timesince
 from django.db.models import Q
-from authUser.models import User, PetOwnerProfile
+from authUser.models import User, PetOwnerProfile, VetProfile
 from django.db import models 
 from django.db.models import Count
 from django.contrib import messages
@@ -256,6 +256,8 @@ def inbox_details(request, username=None):
     # Organize conversations by partner, keeping the latest message
     conversation_partners = {}
     for message in recent_messages:
+        if not message.sender or not message.receiver:
+            continue
         partner = message.sender if message.sender != sender else message.receiver
         if partner.id not in conversation_partners:
             conversation_partners[partner.id] = message
@@ -451,7 +453,43 @@ def add_reply(request, comment_id):
     
     return JsonResponse({'success': False, 'error': 'Invalid request'}, status=400)
 
-
+def search_results(request):
+    query = request.GET.get('q', '')
+    
+    if query:
+        # Search for posts by title or body
+        posts = Post.objects.filter(
+            Q(title__icontains=query) | 
+            Q(body__icontains=query)
+        )
+        
+        # Search for vet profiles
+        vets = VetProfile.objects.filter(
+            Q(user__username__icontains=query) |
+            Q(user__first_name__icontains=query) |
+            Q(user__last_name__icontains=query) |
+            Q(specialization__icontains=query)  # Assuming vets have a specialization field
+        )
+        
+        # Search for pet owner profiles
+        pet_owners = PetOwnerProfile.objects.filter(
+            Q(user__username__icontains=query) |
+            Q(user__first_name__icontains=query) |
+            Q(user__last_name__icontains=query)
+        )
+    else:
+        posts = Post.objects.none()
+        vets = VetProfile.objects.none()
+        pet_owners = PetOwnerProfile.objects.none()
+    
+    context = {
+        'query': query,
+        'posts': posts,
+        'vets': vets,
+        'pet_owners': pet_owners,
+    }
+    
+    return render(request, 'main/search_results.html', context)
 
 
 def add_comment(request, slug):
