@@ -1,0 +1,618 @@
+{% extends 'main/base1.html' %}
+{% load static %}
+{% block title %}Search Results | PetVet Connect{% endblock %}
+
+{% block content %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+<div class="pet-feed-content">
+    <div class="search-results-container">
+        <!-- Header Section - Matches Find Vets page -->
+        <div class="section-header">
+            <div class="header-content">
+                <h1><i class="fas fa-search"></i> Search Results for "{{ query }}"</h1>
+                <p>Found across posts, veterinarians, and pet owners</p>
+            </div>
+        </div>
+        
+        {% if not posts and not vets and not pet_owners %}
+            <div class="no-results empty-state">
+                <i class="fas fa-search fa-3x"></i>
+                <h3>No Results Found</h3>
+                <p>We couldn't find any matches for "{{ query }}"</p>
+                <p>Try different keywords or check your spelling</p>
+            </div>
+        {% else %}
+            <!-- Posts Section -->
+            {% if posts %}
+            <div class="search-section">
+                <h3 class="section-title"><i class="fas fa-file-alt"></i> Posts ({{ posts|length }})</h3>
+                <div class="post-grid">
+                    {% for post in posts %}
+                    <div class="post-card">
+                        <div class="post-card-content">
+                            <h4 class="post-title"><a href="{% url 'coreFunctions:post-detail' post.slug %}">{{ post.title }}</a></h4>
+                            <p class="post-text">{{ post.body|truncatechars:150 }}</p>
+                            <div class="post-meta">
+                                <div class="meta-item">
+                                    <i class="fas fa-calendar"></i>
+                                    <span>{{ post.created_at|date:"M d, Y" }}</span>
+                                </div>
+                                <div class="meta-item">
+                                    <i class="fas fa-user"></i>
+                                    <span>{{ post.author.user.username }}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+            
+            <!-- Vets Section -->
+            {% if vets %}
+            <div class="search-section">
+                <h3 class="section-title"><i class="fas fa-user-md"></i> Veterinarians ({{ vets|length }})</h3>
+                <div class="vet-grid">
+                    {% for vet in vets %}
+                    <div class="vet-card">
+                        <div class="vet-card-header">
+                            <div class="vet-avatar">
+                                {% if vet.vet_image %}
+                                    <img src="{{ vet.vet_image.url }}" alt="{{ vet.user.full_name }}">
+                                {% else %}
+                                    <img src="{% static 'assets/default-avatar.png' %}" alt="{{ vet.user.full_name }}">
+                                {% endif %}
+                                {% if vet.verified %}
+                                <span class="verification-badge"><i class="fas fa-check-circle"></i> Verified</span>
+                                {% endif %}
+                            </div>
+                            <div class="vet-info">
+                                <h3>Dr. {{ vet.user.full_name }}</h3>
+                                <div class="vet-meta">
+                                    {% if vet.clinic_name %}
+                                    <span class="clinic">
+                                        <i class="fas fa-clinic-medical"></i> {{ vet.clinic_name }}
+                                    </span>
+                                    {% endif %}
+                                    
+                                    {% if vet.city %}
+                                    <span class="location">
+                                        <i class="fas fa-map-marker-alt"></i> {{ vet.city }}{% if vet.country %}, {{ vet.country }}{% endif %}
+                                    </span>
+                                    {% endif %}
+                                </div>
+                                <div class="rating">
+                                    {% with rating=vet.average_rating %}
+                                        {% for i in "12345" %}
+                                            {% if forloop.counter <= rating|floatformat:0 %}
+                                                <i class="fas fa-star"></i>
+                                            {% elif rating|floatformat:1|slice:"-1:" == "5" and forloop.counter == rating|floatformat:0|add:1 %}
+                                                <i class="fas fa-star-half-alt"></i>
+                                            {% else %}
+                                                <i class="far fa-star"></i>
+                                            {% endif %}
+                                        {% endfor %}
+                                        <span>{{ vet.average_rating|default:"0.0" }} ({{ vet.reviews.count }} reviews)</span>
+                                    {% endwith %}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="vet-card-body">
+                            <div class="vet-bio">
+                                <p>{{ vet.bio|default:"Experienced veterinarian dedicated to providing compassionate care for your pets."|truncatechars:150 }}</p>
+                            </div>
+                            
+                            <div class="vet-stats">
+                                {% if vet.experience_years %}
+                                <div class="stat">
+                                    <i class="fas fa-graduation-cap"></i>
+                                    <span>{{ vet.experience_years }} year{{ vet.experience_years|pluralize }} experience</span>
+                                </div>
+                                {% endif %}
+                                
+                                {% if vet.specialization %}
+                                <div class="stat">
+                                    <i class="fas fa-stethoscope"></i>
+                                    <span>Specializes in {{ vet.specialization }}</span>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="vet-card-footer">
+                            <a href="{% url 'appointment:vet_schedule' vet.id %}" class="btn btn-primary">
+                                <i class="fas fa-calendar-alt"></i> Book Appointment
+                            </a>
+                            <a href="{% url 'authUser:user_profile' vet.user.id %}" class="btn btn-outline">
+                                <i class="fas fa-user"></i> View Profile
+                            </a>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+            
+            <!-- Pet Owners Section -->
+            {% if pet_owners %}
+            <div class="search-section">
+                <h3 class="section-title"><i class="fas fa-users"></i> Pet Owners ({{ pet_owners|length }})</h3>
+                <div class="vet-grid">
+                    {% for owner in pet_owners %}
+                    <div class="vet-card">
+                        <div class="vet-card-header">
+                            <div class="vet-avatar">
+                                {% if owner.human_image %}
+                                    <img src="{{ owner.human_image.url }}" alt="{{ owner.user.full_name }}">
+                                {% else %}
+                                    <img src="{% static 'assets/default-avatar.png' %}" alt="{{ owner.user.full_name }}">
+                                {% endif %}
+                            </div>
+                            <div class="vet-info">
+                                <h3>{{ owner.user.full_name }}</h3>
+                                <div class="vet-meta">
+                                    <span class="role">
+                                        <i class="fas fa-paw"></i> Pet Owner
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="vet-card-body">
+                            <div class="vet-bio">
+                                <p>{{ owner.bio|default:"Pet owner and animal lover."|truncatechars:150 }}</p>
+                            </div>
+                        </div>
+                        
+                        <div class="vet-card-footer single-button">
+                            <a href="{% url 'authUser:user_profile' owner.user.id %}" class="btn btn-outline">
+                                <i class="fas fa-user"></i> View Profile
+                            </a>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+        {% endif %}
+    </div>
+</div>
+
+<style>
+    /* Base Container */
+    .pet-feed-content .search-results-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 2rem;
+        animation: fadeIn 0.5s ease-out;
+    }
+    
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    
+    /* Header Section */
+    .pet-feed-content .section-header {
+        margin-bottom: 2rem;
+        animation: slideDown 0.5s ease-out;
+    }
+    
+    @keyframes slideDown {
+        from { opacity: 0; transform: translateY(-15px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    
+    .pet-feed-content .header-content h1 {
+        font-size: 2rem;
+        color: #2D3142;
+        margin-bottom: 0.5rem;
+        display: flex;
+        align-items: center;
+        gap: 0.8rem;
+    }
+    
+    .pet-feed-content .header-content h1 i {
+        color: #4ECDC4;
+    }
+    
+    .pet-feed-content .header-content p {
+        color: #7C8798;
+        font-size: 1rem;
+    }
+    
+    /* Section Titles */
+    .pet-feed-content .section-title {
+        font-size: 1.5rem;
+        color: #2D3142;
+        margin: 2.5rem 0 1.5rem;
+        padding-bottom: 0.8rem;
+        border-bottom: 2px solid rgba(0, 0, 0, 0.05);
+        display: flex;
+        align-items: center;
+        gap: 0.8rem;
+        animation: fadeInUp 0.6s ease-out;
+    }
+    
+    @keyframes fadeInUp {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    
+    .pet-feed-content .section-title i {
+        color: #4ECDC4;
+    }
+    
+    /* Post Grid and Cards - Fixed Layout */
+    .pet-feed-content .post-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+        gap: 1.5rem;
+    }
+    
+    .pet-feed-content .post-card {
+        background: white;
+        border-radius: 15px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+        transition: all 0.3s ease;
+        border: 1px solid rgba(0, 0, 0, 0.05);
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+    }
+    
+    .pet-feed-content .post-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 15px 40px rgba(0, 0, 0, 0.1);
+    }
+    
+    .pet-feed-content .post-card-content {
+        padding: 1.5rem;
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+    }
+    
+    .pet-feed-content .post-title {
+        font-size: 1.2rem;
+        color: #2D3142;
+        margin-bottom: 1rem;
+        line-height: 1.4;
+    }
+    
+    .pet-feed-content .post-title a {
+        color: inherit;
+        text-decoration: none;
+        transition: color 0.3s ease;
+    }
+    
+    .pet-feed-content .post-title a:hover {
+        color: #4ECDC4;
+    }
+    
+    .pet-feed-content .post-text {
+        color: #4F5D75;
+        font-size: 0.95rem;
+        line-height: 1.6;
+        margin-bottom: 1.5rem;
+        flex-grow: 1;
+        overflow-wrap: break-word;
+        word-wrap: break-word;
+    }
+    
+    .pet-feed-content .post-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1.2rem;
+        margin-top: auto;
+        padding-top: 1rem;
+        border-top: 1px solid rgba(0, 0, 0, 0.05);
+    }
+    
+    .pet-feed-content .meta-item {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 0.85rem;
+        color: #7C8798;
+    }
+    
+    .pet-feed-content .meta-item i {
+        color: #4ECDC4;
+        font-size: 0.9rem;
+    }
+    
+    /* Vet Grid Layout */
+    .pet-feed-content .vet-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+        gap: 1.5rem;
+    }
+    
+    /* Vet Card */
+    .pet-feed-content .vet-card {
+        background: white;
+        border-radius: 15px;
+        overflow: hidden;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+        transition: all 0.3s ease;
+        border: 1px solid rgba(0, 0, 0, 0.05);
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+    }
+    
+    .pet-feed-content .vet-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 15px 40px rgba(0, 0, 0, 0.1);
+    }
+    
+    /* Card Header */
+    .pet-feed-content .vet-card-header {
+        display: flex;
+        gap: 1.5rem;
+        padding: 1.5rem;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+        background-color: #F8F9FA;
+    }
+    
+    .pet-feed-content .vet-avatar {
+        position: relative;
+        flex-shrink: 0;
+    }
+    
+    .pet-feed-content .vet-avatar img {
+        width: 70px;
+        height: 70px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 3px solid #4ECDC4;
+        background-color: white;
+    }
+    
+    .pet-feed-content .verification-badge {
+        position: absolute;
+        bottom: -5px;
+        right: -5px;
+        padding: 0.3rem 0.6rem;
+        border-radius: 50px;
+        font-size: 0.7rem;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 0.3rem;
+        background-color: rgba(78, 205, 196, 0.2);
+        color: #4ECDC4;
+    }
+    
+    .pet-feed-content .vet-info {
+        flex: 1;
+    }
+    
+    .pet-feed-content .vet-info h3 {
+        font-size: 1.2rem;
+        color: #2D3142;
+        margin-bottom: 0.5rem;
+        font-weight: 600;
+    }
+    
+    .pet-feed-content .vet-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.8rem;
+        margin-bottom: 0.8rem;
+        font-size: 0.9rem;
+    }
+    
+    .pet-feed-content .vet-meta span {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        color: #4F5D75;
+    }
+    
+    .pet-feed-content .vet-meta i {
+        color: #4ECDC4;
+        font-size: 0.8rem;
+    }
+    
+    .pet-feed-content .rating {
+        display: flex;
+        align-items: center;
+        gap: 0.3rem;
+        color: #FFD166;
+        font-size: 0.9rem;
+    }
+    
+    .pet-feed-content .rating span {
+        color: #7C8798;
+        margin-left: 0.5rem;
+    }
+    
+    /* Card Body */
+    .pet-feed-content .vet-card-body {
+        padding: 1.5rem;
+        flex-grow: 1;
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .pet-feed-content .vet-bio p {
+        color: #4F5D75;
+        font-size: 0.95rem;
+        line-height: 1.6;
+        margin-bottom: 1.5rem;
+    }
+    
+    .pet-feed-content .vet-stats {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+        margin-top: auto;
+    }
+    
+    .pet-feed-content .stat {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 0.85rem;
+        color: #4F5D75;
+    }
+    
+    .pet-feed-content .stat i {
+        color: #4ECDC4;
+        font-size: 0.9rem;
+    }
+    
+    /* Card Footer */
+    .pet-feed-content .vet-card-footer {
+        padding: 1.2rem 1.5rem;
+        display: flex;
+        gap: 1rem;
+        border-top: 1px solid rgba(0, 0, 0, 0.05);
+        background-color: #F8F9FA;
+    }
+    
+    .pet-feed-content .vet-card-footer.single-button {
+        justify-content: center;
+    }
+    
+    .pet-feed-content .vet-card-footer.single-button .btn {
+        flex: 0 1 auto;
+        min-width: 60%;
+    }
+    
+    /* Buttons */
+    .pet-feed-content .btn {
+        padding: 0.7rem 1.2rem;
+        border-radius: 50px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        font-size: 0.9rem;
+        text-decoration: none;
+        border: none;
+        flex: 1;
+    }
+    
+    .pet-feed-content .btn-primary {
+        background-color: #4ECDC4;
+        color: white;
+        box-shadow: 0 4px 15px rgba(78, 205, 196, 0.3);
+    }
+    
+    .pet-feed-content .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(78, 205, 196, 0.4);
+        background-color: #3dbeb5;
+    }
+    
+    .pet-feed-content .btn-outline {
+        background-color: transparent;
+        border: 2px solid #4ECDC4;
+        color: #4ECDC4;
+    }
+    
+    .pet-feed-content .btn-outline:hover {
+        background-color: #4ECDC4;
+        color: white;
+        transform: translateY(-2px);
+    }
+    
+    /* Empty States */
+    .pet-feed-content .empty-state {
+        text-align: center;
+        padding: 3rem;
+        background: white;
+        border-radius: 15px;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 1rem;
+        margin-top: 2rem;
+        animation: fadeIn 0.5s ease-out;
+    }
+    
+    .pet-feed-content .empty-state i {
+        color: #7C8798;
+        margin-bottom: 0.5rem;
+    }
+    
+    .pet-feed-content .empty-state h3 {
+        color: #2D3142;
+        margin-bottom: 0.5rem;
+        font-size: 1.3rem;
+    }
+    
+    .pet-feed-content .empty-state p {
+        color: #7C8798;
+        margin-bottom: 0.5rem;
+    }
+    
+    /* Responsive Styles */
+    @media (max-width: 992px) {
+        .pet-feed-content .search-results-container {
+            padding: 1.5rem 1rem;
+        }
+        
+        .pet-feed-content .post-grid,
+        .pet-feed-content .vet-grid {
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        }
+    }
+    
+    @media (max-width: 768px) {
+        .pet-feed-content .section-title {
+            font-size: 1.3rem;
+        }
+        
+        .pet-feed-content .vet-card-header {
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            padding-bottom: 1rem;
+        }
+        
+        .pet-feed-content .vet-avatar {
+            margin-bottom: 1rem;
+        }
+        
+        .pet-feed-content .vet-meta,
+        .pet-feed-content .rating {
+            justify-content: center;
+        }
+        
+        .pet-feed-content .vet-stats {
+            grid-template-columns: 1fr;
+        }
+        
+        .pet-feed-content .vet-card-footer {
+            flex-direction: column;
+        }
+    }
+    
+    @media (max-width: 480px) {
+        .pet-feed-content .post-grid,
+        .pet-feed-content .vet-grid {
+            grid-template-columns: 1fr;
+        }
+        
+        .pet-feed-content .header-content h1 {
+            font-size: 1.5rem;
+        }
+        
+        .pet-feed-content .empty-state {
+            padding: 2rem 1rem;
+        }
+    }
+</style>
+{% endblock %}

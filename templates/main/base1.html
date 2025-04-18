@@ -1,6 +1,6 @@
 {% load static %}
 
-{% block title %}PetFeed | PetCare Connect{% endblock %}
+{% block title %}PetVet | PetCare Connect{% endblock %}
 
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'assets/css/feed.css' %}">
@@ -20,8 +20,10 @@
         
         <div class="nav-center">
             <div class="search-bar">
-                <i class="fas fa-search"></i>
-                <input type="text" placeholder="Search for pets, vets, or posts...">
+                <form action="{% url 'coreFunctions:search_results' %}" method="GET">
+            
+                    <input type="text" name="q" placeholder="Search for pets, vets, or posts..." value="{{ request.GET.q|default:'' }}">
+                </form>
             </div>
         </div>
         
@@ -72,8 +74,20 @@
                 <ul>
                     {% for pet in pets %}
                         <li>
-                            <a href="{% url 'authUser:pet_profile' pet.id %}"><i class="fas fa-{{ pet.species|lower }}"></i> {{ pet.name }} ({{ pet.breed }})</a>
-                        </li>
+                            <a href="{% url 'authUser:pet_profile' pet.id %}">
+                                {% if pet.species == "dog" %}
+                                    <i class="fas fa-dog"></i>
+                                {% elif pet.species == "cat" %}
+                                    <i class="fas fa-cat"></i>
+                                {% elif pet.species == "bird" %}    
+                                    <i class="fas fa-dove"></i>
+                                {% elif pet.species == "rabbit" %}
+                                    <i class="fas fa-paw"></i> {# rabbit icon is pro - using fallback #}
+                                {% else %}
+                                    <i class="fas fa-paw"></i> {# default generic icon #}
+                                {% endif %}
+                                {{ pet.name }} ({{ pet.species }})
+                            </a>                        </li>
                     {% empty %}
                         <li><em>No pets added yet.</em></li>
                     {% endfor %}
