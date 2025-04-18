@@ -3,14 +3,191 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Verification In Progress</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <title>PetVet - Verification In Progress</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <style>
+        :root {
+            --primary: #4CAF50;
+            --primary-dark: #388E3C;
+            --primary-light: #A5D6A7;
+            --secondary: #81C784;
+            --accent: #1B5E20;
+            --text-dark: #263238;
+            --text-light: #78909C;
+            --white: #FFFFFF;
+            --error: #F44336;
+            --success: #4CAF50;
+            --green-text: #1B5E20;
+            --border-color: #E0E0E0;
+            --bg-light: #F5F5F5;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: var(--bg-light);
+            color: var(--text-dark);
+            line-height: 1.6;
+        }
+        
+        .container {
+            width: 100%;
+            max-width: 800px;
+            margin: 40px auto;
+            padding: 0 20px;
+        }
+        
+        .header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            text-decoration: none;
+            color: var(--text-dark);
+        }
+        
+        .logo-icon {
+            font-size: 1.8rem;
+            margin-right: 10px;
+            color: var(--primary);
+        }
+        
+        .logo-text {
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+        
+        .green-text {
+            color: var(--green-text);
+            font-weight: 700;
+        }
+        
+        .card {
+            background: var(--white);
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+            padding: 40px;
+            text-align: center;
+        }
+        
+        .verification-icon {
+            font-size: 5rem;
+            color: var(--primary);
+            margin-bottom: 20px;
+        }
+        
+        .card-title {
+            font-size: 1.8rem;
+            color: var(--text-dark);
+            margin-bottom: 20px;
+        }
+        
+        .card-text {
+            font-size: 1.1rem;
+            color: var(--text-light);
+            margin-bottom: 30px;
+        }
+        
+        .progress-container {
+            width: 100%;
+            height: 10px;
+            background-color: var(--bg-light);
+            border-radius: 5px;
+            margin: 30px 0;
+            overflow: hidden;
+        }
+        
+        .progress-bar {
+            height: 100%;
+            width: 70%;
+            background-color: var(--primary);
+            border-radius: 5px;
+            animation: progress 2s ease-in-out infinite;
+        }
+        
+        @keyframes progress {
+            0% {
+                width: 0%;
+            }
+            50% {
+                width: 70%;
+            }
+            100% {
+                width: 100%;
+            }
+        }
+        
+        .btn {
+            display: inline-block;
+            padding: 12px 24px;
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            font-family: 'Poppins', sans-serif;
+            text-decoration: none;
+        }
+        
+        .btn:hover {
+            background-color: var(--primary-dark);
+        }
+        
+        .contact-info {
+            margin-top: 30px;
+            font-size: 0.9rem;
+            color: var(--text-light);
+        }
+        
+        .contact-info a {
+            color: var(--primary);
+            text-decoration: none;
+        }
+        
+        .contact-info a:hover {
+            text-decoration: underline;
+        }
+    </style>
 </head>
 <body>
-    <div class="container mt-5">
-        <h2>Profile Submitted Successfully</h2>
-        <p>Your profile has been completed, but it is currently under review by an admin. Once verified, you'll be able to access the full features of the website.</p>
-        <p>Thank you for your patience.</p>
+    <div class="container">
+        <div class="header">
+            <a href="/" class="logo">
+                <i class="fas fa-paw logo-icon"></i>
+                <div class="logo-text">Pet<span class="green-text">Vet</span></div>
+            </a>
+        </div>
+        
+        <div class="card">
+            <i class="fas fa-clipboard-check verification-icon"></i>
+            <h2 class="card-title">Profile Submitted Successfully</h2>
+            <p class="card-text">Your profile has been completed and is currently under review by an admin. Once verified, you'll be able to access the full features of the website.</p>
+            
+            <div class="progress-container">
+                <div class="progress-bar"></div>
+            </div>
+            
+            <p>Thank you for your patience. This process usually takes 24-48 hours.</p>
+            
+            <div class="contact-info">
+                <p>If you have any questions, please contact us at <a href="">rebofkatwal7@gmail.com</a></p>
+            </div>
+            
+            <a href="/" class="btn">Return to Home</a>
+        </div>
     </div>
 </body>
 </html>

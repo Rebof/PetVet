@@ -1,7 +1,7 @@
 {% extends 'main/base1.html' %}
 {% load static %}
 
-{% block title %}Appointment Details | PetCare Connect{% endblock %}
+{% block title %}Appointment Details | PetVet{% endblock %}
 
 {% block content %}
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -21,11 +21,10 @@
             <div class="appointment-header">
                 <div class="vet-avatar">
                     {% if appointment.vet.vet_image %}
-    <img src="{{ appointment.vet.vet_image.url }}" alt="Dr. {{ appointment.vet.user.get_full_name|default:appointment.vet.user.username }}">
-{% else %}
-    <img src="/static/assets/default-avatar.png" alt="Dr. {{ appointment.vet.user.get_full_name|default:appointment.vet.user.username }}">
-{% endif %}
-
+                        <img src="{{ appointment.vet.vet_image.url }}" alt="Dr. {{ appointment.vet.user.get_full_name|default:appointment.vet.user.username }}">
+                    {% else %}
+                        <img src="{% static 'assets/default-avatar.png' %}" alt="Dr. {{ appointment.vet.user.get_full_name|default:appointment.vet.user.username }}">
+                    {% endif %}
                 </div>
                 <div class="appointment-info">
                     <h3>Appointment with Dr. {{ appointment.vet.user.full_name }}</h3>
@@ -33,7 +32,7 @@
                         <span class="date-time">
                             <i class="fas fa-calendar-day"></i> 
                             {{ appointment.schedule.day_of_week }}, 
-                            {{ appointment.schedule.created_at|date:"F j, Y" }}
+                            {{ appointment.updated_at|date:"F j, Y" }}
                         </span>
                         <span class="time-slot">
                             <i class="fas fa-clock"></i> 
@@ -86,7 +85,6 @@
                         {{ appointment.reason }}
                     </div>
                 </div>
-
             </div>
 
             <!-- Status Section - Matching appointments list -->
@@ -104,6 +102,7 @@
                 </div>
             </div>
 
+
             <!-- Actions - Consistent button styling -->
             <div class="appointment-actions">
                 <a href="{% url 'appointment:appointment_list' %}" class="btn btn-outline">
@@ -119,6 +118,13 @@
                 {% if appointment.status == 'pending' and appointment.payment_status == 'unpaid' %}
                 <a href="{% url 'payment:process_payment' appointment.id %}" class="btn btn-primary">
                     <i class="fas fa-credit-card"></i> Complete Payment
+                </a>
+                {% endif %}
+                
+                <!-- New Review Button - Only visible when appointment is completed and paid and user is pet owner and hasn't reviewed yet -->
+                {% if appointment.status == 'completed' and appointment.payment_status == 'paid' and user == appointment.pet_owner.user and not has_reviewed %}
+                <a href="{% url 'authUser:review_vet' appointment.id %}" class="btn btn-primary review-btn">
+                    <i class="fas fa-star"></i> Review Vet
                 </a>
                 {% endif %}
             </div>
@@ -318,6 +324,35 @@
         color: #28a745;
     }
     
+    /* Messages */
+    .pet-feed-content .messages {
+        margin: 1.5rem 0;
+    }
+    
+    .pet-feed-content .message {
+        padding: 0.8rem 1rem;
+        border-radius: 8px;
+        margin-bottom: 0.5rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .pet-feed-content .message.success {
+        background-color: rgba(40, 167, 69, 0.1);
+        color: #28a745;
+    }
+    
+    .pet-feed-content .message.error {
+        background-color: rgba(220, 53, 69, 0.1);
+        color: #dc3545;
+    }
+    
+    .pet-feed-content .message.info {
+        background-color: rgba(13, 202, 240, 0.1);
+        color: #0dcaf0;
+    }
+    
     /* Actions Section - matching other pages */
     .pet-feed-content .appointment-actions {
         display: flex;
@@ -372,6 +407,18 @@
     .pet-feed-content .cancel-btn:hover {
         background-color: #dc3545;
         color: white;
+    }
+    
+    /* Review Button - New Style */
+    .pet-feed-content .review-btn {
+        background-color: #FFD166;
+        color: #2D3142;
+        box-shadow: 0 4px 15px rgba(255, 209, 102, 0.3);
+    }
+    
+    .pet-feed-content .review-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(255, 209, 102, 0.4);
     }
     
     /* Responsive Styles */
@@ -432,6 +479,18 @@
                 }
             });
         });
+        
+        // Auto-hide messages after 5 seconds
+        setTimeout(function() {
+            const messages = document.querySelectorAll('.message');
+            messages.forEach(message => {
+                message.style.opacity = '0';
+                message.style.transition = 'opacity 0.5s ease';
+                setTimeout(() => {
+                    message.style.display = 'none';
+                }, 500);
+            });
+        }, 5000);
     });
 </script>
 {% endblock %}

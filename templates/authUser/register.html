@@ -1,61 +1,505 @@
-
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <title>PetVet - Login & Register</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <style>
+        :root {
+            --primary: #4CAF50;
+            --primary-dark: #388E3C;
+            --primary-light: #A5D6A7;
+            --secondary: #81C784;
+            --accent: #1B5E20;
+            --text-dark: #263238;
+            --text-light: #78909C;
+            --white: #FFFFFF;
+            --error: #F44336;
+            --success: #4CAF50;
+            --green-text: #1B5E20;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #f5f5f5;
+            color: var(--text-dark);
+            line-height: 1.6;
+        }
+        
+        .container {
+            display: flex;
+            min-height: 100vh;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .card {
+            width: 100%;
+            max-width: 900px;
+            background: var(--white);
+            border-radius: 20px;
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            display: flex;
+            flex-direction: row;
+        }
+        
+        .left-panel {
+            flex: 1;
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            padding: 40px;
+            color: var(--white);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .left-panel h1 {
+            font-size: 2.5rem;
+            margin-bottom: 20px;
+            position: relative;
+            z-index: 2;
+        }
+        
+        .left-panel p {
+            font-size: 1.1rem;
+            margin-bottom: 30px;
+            opacity: 0.9;
+            position: relative;
+            z-index: 2;
+        }
+        
+        .pet-illustrations {
+            position: absolute;
+            bottom: -50px;
+            right: -50px;
+            width: 300px;
+            height: 300px;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512' fill='%23ffffff' opacity='0.2'%3E%3Cpath d='M256 224c-79.41 0-192 122.76-192 200.25 0 34.9 26.81 55.75 71.74 55.75 48.84 0 81.09-25.08 120.26-25.08 39.51 0 71.85 25.08 120.26 25.08 44.93 0 71.74-20.85 71.74-55.75C448 346.76 335.41 224 256 224zm-147.28-12.61c-10.4-34.65-42.44-57.09-71.56-50.13-29.12 6.96-44.29 40.69-33.89 75.34 10.4 34.65 42.44 57.09 71.56 50.13 29.12-6.96 44.29-40.69 33.89-75.34zm84.72-20.78c30.94-8.14 46.42-49.94 34.58-93.36s-46.52-72.01-77.46-63.87-46.42 49.94-34.58 93.36c11.84 43.42 46.53 72.02 77.46 63.87zm281.39-29.34c-29.12-6.96-61.15 15.48-71.56 50.13-10.4 34.65 4.77 68.38 33.89 75.34 29.12 6.96 61.15-15.48 71.56-50.13 10.4-34.65-4.77-68.38-33.89-75.34zm-156.27 29.34c30.94 8.14 65.62-20.45 77.46-63.87 11.84-43.42-3.64-85.21-34.58-93.36s-65.62 20.45-77.46 63.87c-11.84 43.42 3.64 85.22 34.58 93.36z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: center;
+            z-index: 1;
+        }
+        
+        .right-panel {
+            flex: 1.2;
+            padding: 40px;
+        }
+        
+        .tabs {
+            display: flex;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #eee;
+        }
+        
+        .tab {
+            padding: 10px 20px;
+            font-size: 1.1rem;
+            font-weight: 500;
+            cursor: pointer;
+            position: relative;
+            color: var(--text-light);
+            transition: all 0.3s ease;
+        }
+        
+        .tab.active {
+            color: var(--primary);
+        }
+        
+        .tab.active::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background-color: var(--primary);
+        }
+        
+        .form-container {
+            display: none;
+        }
+        
+        .form-container.active {
+            display: block;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: var(--text-dark);
+        }
+        
+        .form-control {
+            width: 100%;
+            padding: 12px 15px;
+            font-size: 1rem;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            transition: border-color 0.3s;
+            font-family: 'Poppins', sans-serif;
+        }
+        
+        .form-control:focus {
+            border-color: var(--primary);
+            outline: none;
+        }
+        
+        .form-control.error {
+            border-color: var(--error);
+        }
+        
+        .error-message {
+            color: var(--error);
+            font-size: 0.85rem;
+            margin-top: 5px;
+        }
+        
+        .btn {
+            display: inline-block;
+            padding: 12px 24px;
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            font-family: 'Poppins', sans-serif;
+        }
+        
+        .btn:hover {
+            background-color: var(--primary-dark);
+        }
+        
+        .form-footer {
+            margin-top: 20px;
+            text-align: center;
+            color: var(--text-light);
+        }
+        
+        .form-footer a {
+            color: var(--primary);
+            text-decoration: none;
+            font-weight: 500;
+        }
+        
+        .form-footer a:hover {
+            text-decoration: underline;
+        }
+
+        .forgot-password {
+            text-align: right;
+            margin-top: 8px;
+        }
+
+        .forgot-password a {
+            color: var(--primary);
+            text-decoration: none;
+            font-size: 0.9rem;
+        }
+
+        .forgot-password a:hover {
+            text-decoration: underline;
+        }
+        
+        .alert {
+            padding: 12px 15px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            font-size: 0.9rem;
+        }
+        
+        .alert-danger {
+            background-color: #FFEBEE;
+            color: var(--error);
+            border: 1px solid #FFCDD2;
+        }
+        
+        .alert-success {
+            background-color: #E8F5E9;
+            color: var(--success);
+            border: 1px solid #C8E6C9;
+        }
+        
+        .form-row {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .form-row .form-group {
+            flex: 1;
+            margin-bottom: 0;
+        }
+        
+        .select-wrapper {
+            position: relative;
+        }
+        
+        .select-wrapper::after {
+            content: '▼';
+            font-size: 0.8rem;
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            pointer-events: none;
+            color: var(--text-light);
+        }
+        
+        select.form-control {
+            appearance: none;
+            padding-right: 30px;
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .logo-icon {
+            font-size: 2rem;
+            margin-right: 10px;
+            color: var(--white);
+        }
+        
+        .logo-text {
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+
+        .green-text {
+            color: var(--green-text);
+        }
+        
+        /* Responsive styles */
+        @media (max-width: 768px) {
+            .card {
+                flex-direction: column;
+            }
+            
+            .left-panel {
+                padding: 30px;
+                min-height: 200px;
+            }
+            
+            .right-panel {
+                padding: 30px;
+            }
+            
+            .form-row {
+                flex-direction: column;
+                gap: 20px;
+            }
+        }
+    </style>
 </head>
 <body>
-    <div class="container mt-5">
-        <div class="row justify-content-center">
-            <div class="col-md-6">
-                <h2>Login</h2>
+    <div class="container">
+        <div class="card">
+            <div class="left-panel">
+                <div class="logo">
+                    <i class="fas fa-paw logo-icon"></i>
+                    <div class="logo-text">Pet<span class="green-text">Vet</span></div>
+                </div>
+                <h1>Welcome to Pet<span class="green-text">Vet</span></h1>
+                <p>Connect with vets, schedule appointments, and care for your furry friends.</p>
+                <div class="pet-illustrations"></div>
+            </div>
+            <div class="right-panel">
+                <div class="tabs">
+                    <div class="tab active" data-tab="login">Login</div>
+                    <div class="tab" data-tab="register">Register</div>
+                </div>
                 
-                <!-- Display Django messages for feedback -->
                 {% if messages %}
-                    <div>
-                        {% for message in messages %}
-                            <div class="alert alert-{{ message.tags }}">{{ message }}</div>
-                        {% endfor %}
-                    </div>
+                    {% for message in messages %}
+                        <div class="alert {% if message.tags == 'error' %}alert-danger{% elif message.tags == 'success' %}alert-success{% endif %}">
+                            {{ message }}
+                        </div>
+                    {% endfor %}
                 {% endif %}
                 
+
+                
                 <!-- Login form -->
-                <form method="POST" action="{% url 'authUser:loginUser' %}">
-                    {% csrf_token %}
-                    <div class="form-group mb-3">
-                        <label for="email">Email</label>
-                        <input type="email" class="form-control" id="email" name="email" placeholder="Enter your email" required>
-                    </div>
-                    <div class="form-group mb-3">
-                        <label for="password">Password</label>
-                        <input type="password" class="form-control" id="password" name="password" placeholder="Enter your password" required>
-                    </div>
-                    <button type="submit" class="btn btn-primary">Login</button>
-                </form>
-
-                <p class="mt-3">Don't have an account? <a href="{% url 'authUser:register' %}">Register here</a>.</p>
+                <div class="form-container active" id="login-form">
+                    <form method="POST" action="{% url 'authUser:loginUser' %}">
+                        {% csrf_token %}
+                        <div class="form-group">
+                            <label for="email">Email</label>
+                            <input type="email" class="form-control" id="email" name="email" placeholder="Enter your email" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="password">Password</label>
+                            <input type="password" class="form-control" id="password" name="password" placeholder="Enter your password" required>
+                            <div class="forgot-password">
+                                <a href="{% url 'authUser:forgot_password' %}">Forgot Password?</a>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn">Login</button>
+                        <div class="form-footer">
+                            <p>Don't have an account? <a href="#" class="tab-link" data-tab="register">Register here</a></p>
+                        </div>
+                    </form>
+                </div>
+                
+                <!-- Registration form -->
+                <div class="form-container" id="register-form">
+                    <form method="POST" action="{% url 'authUser:register' %}">
+                        {% csrf_token %}
+                        <div class="form-group">
+                            <label for="full_name">Full Name</label>
+                            <input type="text" class="form-control {% if errors.full_name %}error{% endif %}" id="full_name" name="full_name" placeholder="Enter your full name" required>
+                            {% if errors.full_name %}<div class="error-message">{{ errors.full_name }}</div>{% endif %}
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="email">Email</label>
+                                <input type="email" class="form-control {% if errors.email %}error{% endif %}" id="email" name="email" placeholder="Enter your email" required>
+                                {% if errors.email %}<div class="error-message">{{ errors.email }}</div>{% endif %}
+                            </div>
+                            <div class="form-group">
+                                <label for="username">Username</label>
+                                <input type="text" class="form-control {% if errors.username %}error{% endif %}" id="username" name="username" placeholder="Choose a username" required>
+                                {% if errors.username %}<div class="error-message">{{ errors.username }}</div>{% endif %}
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="phone">Phone</label>
+                                <input type="tel" class="form-control {% if errors.phone %}error{% endif %}" id="phone" name="phone" placeholder="Enter your phone number" required>
+                                {% if errors.phone %}<div class="error-message">{{ errors.phone }}</div>{% endif %}
+                            </div>
+                            <div class="form-group">
+                                <label for="gender">Gender</label>
+                                <div class="select-wrapper">
+                                    <select class="form-control {% if errors.gender %}error{% endif %}" id="gender" name="gender" required>
+                                        <option value="" selected disabled>Select gender</option>
+                                        <option value="M">Male</option>
+                                        <option value="F">Female</option>
+                                        <option value="O">Other</option>
+                                    </select>
+                                    {% if errors.gender %}<div class="error-message">{{ errors.gender }}</div>{% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="user_type">User Type</label>
+                            <div class="select-wrapper">
+                                <select class="form-control {% if errors.user_type %}error{% endif %}" id="user_type" name="user_type" required>
+                                    <option value="" selected disabled>Select user type</option>
+                                    <option value="pet_owner">Pet Owner</option>
+                                    <option value="vet">Veterinarian</option>
+                                </select>
+                                {% if errors.user_type %}<div class="error-message">{{ errors.user_type }}</div>{% endif %}
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="password1">Password</label>
+                                <input type="password" class="form-control {% if errors.password1 %}error{% endif %}" id="password1" name="password1" placeholder="Create a password" required>
+                                {% if errors.password1 %}<div class="error-message">{{ errors.password1 }}</div>{% endif %}
+                            </div>
+                            <div class="form-group">
+                                <label for="password2">Confirm Password</label>
+                                <input type="password" class="form-control {% if errors.password2 %}error{% endif %}" id="password2" name="password2" placeholder="Confirm your password" required>
+                                {% if errors.password2 %}<div class="error-message">{{ errors.password2 }}</div>{% endif %}
+                            </div>
+                        </div>
+                        <button type="submit" class="btn">Register</button>
+                        <div class="form-footer">
+                            <p>Already have an account? <a href="#" class="tab-link" data-tab="login">Login here</a></p>
+                        </div>
+                    </form>
+                </div>
             </div>
         </div>
     </div>
 
-    <!-- registration form -->
-    <div class="container mt-5">
-        <div class="row justify-content-center">
-            <div class="col-md-6">
-                <h2>Register</h2>
-                <form method="POST">
-                    {% csrf_token %}
-                    {{ form.as_p }}
-                    <button type="submit" class="btn btn-primary">Register</button>
-                </form>
-            </div>
-        </div>
-    </div>
-
-
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Check URL hash on page load
+            if (window.location.hash === '#register') {
+                switchTab('register');
+            }
+    
+            // Get all tab elements
+            const tabs = document.querySelectorAll('.tab');
+            const tabLinks = document.querySelectorAll('.tab-link');
+            const formContainers = document.querySelectorAll('.form-container');
+            
+            // Function to switch between tabs
+            function switchTab(tabId) {
+                // Update active tab
+                tabs.forEach(tab => {
+                    if (tab.dataset.tab === tabId) {
+                        tab.classList.add('active');
+                    } else {
+                        tab.classList.remove('active');
+                    }
+                });
+                
+                // Show active form
+                formContainers.forEach(form => {
+                    if (form.id === tabId + '-form') {
+                        form.classList.add('active');
+                    } else {
+                        form.classList.remove('active');
+                    }
+                });
+                
+                // Update URL hash
+                window.location.hash = tabId;
+            }
+            
+            // Tab click event
+            tabs.forEach(tab => {
+                tab.addEventListener('click', function() {
+                    switchTab(this.dataset.tab);
+                });
+            });
+            
+            // Tab link click event (for "Register here" and "Login here" links)
+            tabLinks.forEach(link => {
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    switchTab(this.dataset.tab);
+                    
+                    // Scroll to top of form for better UX
+                    document.querySelector('.right-panel').scrollIntoView({
+                        behavior: 'smooth'
+                    });
+                });
+            });
+            
+            // Handle back/forward browser buttons
+            window.addEventListener('hashchange', function() {
+                const hash = window.location.hash.substring(1);
+                if (hash === 'login' || hash === 'register') {
+                    switchTab(hash);
+                }
+            });
+        });
+    </script>
 </body>
 </html>

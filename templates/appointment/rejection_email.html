@@ -10,11 +10,12 @@
     <p>Your payment of NPR {{ appointment.amount_paid }} has been refunded to your original payment method.</p>
     {% elif appointment.payment_status == 'refund_failed' %}
     <p>We encountered an issue processing your refund. Our team will contact you shortly to resolve this.</p>
+    <p>Store Credit Received: NPR 1000</p>
     {% endif %}
     
     <p>You may book another appointment at your convenience.</p>
     
     <p>Best regards,<br>
-    Vet Clinic Team</p>
+    PetVet Clinic Team</p>
 </body>
 </html>

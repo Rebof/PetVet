@@ -1,0 +1,201 @@
+{% extends 'main/base1.html' %}
+{% load static %}
+
+{% block title %}Payment Error | PetVet{% endblock %}
+
+{% block content %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+<div class="pet-feed-content">
+    <div class="payment-container">
+        <!-- Header Section - matches vets page styling -->
+        <div class="section-header">
+            <div class="header-content">
+                <h1><i class="fas fa-exclamation-circle"></i> Payment Error</h1>
+                <p>We encountered an issue with your payment</p>
+            </div>
+        </div>
+
+        <!-- Error Content -->
+        <div class="payment-card error">
+            <div class="payment-error-icon">
+                <i class="fas fa-times-circle"></i>
+            </div>
+            
+            <div class="payment-details">
+                <h3>Payment Failed</h3>
+                <p>We were unable to process your payment for the appointment with <strong>Dr. {{ appointment.vet.user.username }}</strong>.</p>
+                
+                <div class="error-message">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <p>{{ error_message|default:"Please try again later or contact support if the problem persists." }}</p>
+                </div>
+            </div>
+            
+        
+        </div>
+    </div>
+</div>
+
+<style>
+    /* Base Container - matches vets page */
+    .pet-feed-content .payment-container {
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 2rem;
+    }
+    
+    /* Header Section - matches vets page */
+    .pet-feed-content .section-header {
+        margin-bottom: 2rem;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        gap: 1.5rem;
+        text-align: center;
+    }
+    
+    .pet-feed-content .header-content {
+        text-align: center;
+        width: 100%;
+    }
+    
+    .pet-feed-content .header-content h1 {
+        font-size: 2rem;
+        color: #2D3142;
+        margin-bottom: 0.5rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.8rem;
+    }
+    
+    .pet-feed-content .header-content h1 i {
+        color: #FF6B6B; /* Error color */
+    }
+    
+    .pet-feed-content .header-content p {
+        color: #7C8798;
+        font-size: 1rem;
+    }
+    
+    /* Payment Card - Error State */
+    .pet-feed-content .payment-card.error {
+        border-left: 4px solid #FF6B6B;
+    }
+    
+    .pet-feed-content .payment-card {
+        background: white;
+        border-radius: 15px;
+        overflow: hidden;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+        transition: all 0.3s ease;
+        border: 1px solid rgba(0, 0, 0, 0.05);
+        padding: 2.5rem;
+        text-align: center;
+    }
+    
+    .pet-feed-content .payment-error-icon {
+        margin-bottom: 1.5rem;
+    }
+    
+    .pet-feed-content .payment-error-icon i {
+        font-size: 4rem;
+        color: #FF6B6B;
+    }
+    
+    .pet-feed-content .payment-details h3 {
+        font-size: 1.5rem;
+        color: #2D3142;
+        margin-bottom: 1rem;
+    }
+    
+    .pet-feed-content .payment-details p {
+        color: #4F5D75;
+        font-size: 1rem;
+        line-height: 1.6;
+        margin-bottom: 1.5rem;
+    }
+    
+    .pet-feed-content .error-message {
+        display: flex;
+        align-items: center;
+        gap: 0.8rem;
+        background: rgba(255, 107, 107, 0.1);
+        padding: 1rem;
+        border-radius: 8px;
+        margin: 1.5rem 0;
+        text-align: left;
+        justify-content: center;
+    }
+    
+    .pet-feed-content .error-message i {
+        color: #FF6B6B;
+        font-size: 1.2rem;
+        flex-shrink: 0;
+    }
+    
+    .pet-feed-content .error-message p {
+        margin: 0;
+        color: #4F5D75;
+        font-size: 0.95rem;
+    }
+    
+    /* Payment Actions - matches vets page buttons */
+    .pet-feed-content .payment-actions {
+        display: flex;
+        gap: 1rem;
+        margin-top: 2rem;
+        justify-content: center;
+    }
+    
+    .pet-feed-content .btn {
+        padding: 0.7rem 1.2rem;
+        border-radius: 50px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        font-size: 0.9rem;
+        text-decoration: none;
+        border: none;
+    }
+    
+    .pet-feed-content .btn-primary {
+        background-color: #FF6B6B;
+        color: white;
+        box-shadow: 0 4px 15px rgba(255, 107, 107, 0.3);
+    }
+    
+    .pet-feed-content .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(255, 107, 107, 0.4);
+    }
+    
+    /* Responsive adjustments */
+    @media (max-width: 768px) {
+        .pet-feed-content .payment-card {
+            padding: 1.5rem;
+        }
+        
+        .pet-feed-content .error-message {
+            flex-direction: column;
+            text-align: center;
+        }
+    }
+    
+    @media (max-width: 480px) {
+        .pet-feed-content .payment-container {
+            padding: 1rem;
+        }
+        
+        .pet-feed-content .payment-card {
+            padding: 1.2rem;
+        }
+    }
+</style>
+{% endblock %}

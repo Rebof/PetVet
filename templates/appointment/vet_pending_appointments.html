@@ -1,7 +1,7 @@
 {% extends 'main/base1.html' %}
 {% load static %}
 
-{% block title %}Pending Appointments | PetCare Connect{% endblock %}
+{% block title %}Pending Appointments | PetVet{% endblock %}
 
 {% block content %}
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -87,7 +87,7 @@
                                     <i class="fas fa-calendar-day"></i> Date:
                                 </div>
                                 <div class="detail-value">
-                                    {{ appointment.schedule.day_of_week }}, {{ appointment.schedule.date|date:"F j, Y" }}
+                                    {{ appointment.schedule.day_of_week }}
                                 </div>
                             </div>
 

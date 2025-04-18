@@ -2,7 +2,6 @@ from django.http import Http404, HttpResponseForbidden
 from django.shortcuts import get_object_or_404, render, redirect
 from django.contrib.auth import authenticate, login, logout, get_user_model, update_session_auth_hash
 from django.contrib import messages
-from .forms import UserRegistrationForm,VetProfileForm, PetOwnerProfileForm
 from .models import VetProfile, PetOwnerProfile, Pet, Review
 from django.contrib.auth.decorators import login_required
 from coreFunctions.models import Post, Comment, ReplyComment
@@ -14,13 +13,13 @@ from django.utils.crypto import get_random_string
 from django.urls import reverse
 from appointment.models import Appointment
 
-
 User = get_user_model()
 
 @login_required
 def account_settings(request):
     """View for displaying and handling account settings."""
     return render(request, 'authUser/settings.html')
+
 
 @login_required
 def change_password(request):
@@ -37,6 +36,7 @@ def change_password(request):
             for error in form.errors.values():
                 messages.error(request, error)
     return redirect('authUser:account_settings')
+
 
 @login_required
 def delete_account(request):
@@ -62,8 +62,13 @@ def delete_account(request):
     
     return redirect('authUser:account_settings')
 
+
 def forgot_password(request):
     """View for initiating password reset process."""
+    template_name = 'authUser/forgot_passwordunauth.html'
+    if request.user.is_authenticated:
+        template_name = 'authUser/forgot_password.html'
+
     if request.method == 'POST':
         email = request.POST.get('email')
         try:
@@ -73,27 +78,29 @@ def forgot_password(request):
             # Save token to user profile or a dedicated password reset model
             user.otp = token
             user.save()
-            
+
             # Create reset link
             reset_link = request.build_absolute_uri(
                 reverse('authUser:reset_password', kwargs={'token': token})
             )
-            
+
             # Send email
             send_mail(
-                'PetCare Connect - Password Reset',
+                'PetVet - Password Reset',
                 f'Click the following link to reset your password: {reset_link}',
                 settings.DEFAULT_FROM_EMAIL,
                 [email],
                 fail_silently=False,
             )
-            
-            messages.success(request, 'Password reset link has been sent to your email.')
+
         except User.DoesNotExist:
-            # Don't reveal that the user doesn't exist for security reasons
-            messages.success(request, 'If your email exists in our system, you will receive a password reset link.')
-    
-    return render(request, 'authUser/forgot_password.html')
+            # Do not reveal user existence for security
+            pass
+        
+        messages.success(request, 'If your email exists in our system, you will receive a password reset link.')
+
+    return render(request, template_name)
+
 
 def reset_password(request, token):
     """View for resetting password using token."""
@@ -112,7 +119,7 @@ def reset_password(request, token):
                 user.save()
                 
                 messages.success(request, 'Your password has been reset successfully. You can now log in with your new password.')
-                return redirect('authUser:login')
+                return redirect('authUser:loginUser')
             else:
                 messages.error(request, 'Passwords do not match.')
         
@@ -128,19 +135,70 @@ def RegisterView(request):
         messages.warning(request, "You are already registered!")
         return redirect("coreFunctions:index")
 
-    form = UserRegistrationForm(request.POST or None)
-
-    if form.is_valid():
-        user = form.save(commit=False)
-        user.set_password(form.cleaned_data.get("password1"))
+    if request.method == "POST":
+        # Extract data manually from request.POST
+        full_name = request.POST.get("full_name")
+        email = request.POST.get("email")
+        username = request.POST.get("username")
+        phone = request.POST.get("phone")
+        gender = request.POST.get("gender")
+        user_type = request.POST.get("user_type")
+        password1 = request.POST.get("password1")
+        password2 = request.POST.get("password2")
+        
+        # Basic validation
+        errors = {}
+        
+        if not full_name:
+            errors["full_name"] = "Full name is required."
+        
+        if not email:
+            errors["email"] = "Email is required."
+        elif User.objects.filter(email=email).exists():
+            errors["email"] = "Email already exists."
+            
+        if not username:
+            errors["username"] = "Username is required."
+        elif User.objects.filter(username=username).exists():
+            errors["username"] = "Username already exists."
+            
+        if not phone:
+            errors["phone"] = "Phone number is required."
+            
+        if not gender:
+            errors["gender"] = "Gender is required."
+            
+        if not user_type:
+            errors["user_type"] = "User type is required."
+            
+        if not password1:
+            errors["password1"] = "Password is required."
+            
+        if not password2:
+            errors["password2"] = "Password confirmation is required."
+        elif password1 != password2:
+            errors["password2"] = "Passwords do not match."
+            
+        # If there are errors, return them to the template
+        if errors:
+            for field, error in errors.items():
+                messages.error(request, error)
+            return render(request, "authUser/register.html", {"errors": errors})
+        
+        # Create user
+        user = User(
+            full_name=full_name,
+            email=email,
+            username=username,
+            phone=phone,
+            gender=gender,
+            user_type=user_type,
+        )
+        user.set_password(password1)
         user.otp = str(random.randint(100000, 999999))
         user.save()
 
-        full_name = form.cleaned_data.get("full_name")
-        email = form.cleaned_data.get("email")
-        user_type = form.cleaned_data.get("user_type")
-
-         # Send OTP email for pet_owner users
+        # Send OTP email for pet_owner users
         if user_type == "pet_owner":
             subject = "Your OTP for Verification"
             message = f"Hi {full_name},\n\nYour OTP for verification is: {user.otp}.\nPlease enter this OTP to complete your registration."
@@ -152,9 +210,8 @@ def RegisterView(request):
                 fail_silently=False,
             )
             messages.info(request, "An OTP has been sent to your email. Please verify to proceed.")
-
         
-        user = authenticate(email=email, password=form.cleaned_data.get("password1"))
+        user = authenticate(email=email, password=password1)
 
         if user is not None:
             login(request, user)
@@ -179,13 +236,12 @@ def RegisterView(request):
         else:
             messages.error(request, "There was an issue with your login. Please try again.")
 
-    context = {'form': form}
-    return render(request, "authUser/register.html", context)
+    return render(request, "authUser/register.html")
+
 
 
 def LoginView(request):
     if request.user.is_authenticated:
-        messages.warning(request, "You are already logged in!")
         return redirect("coreFunctions:index")
 
     if request.method == "POST":
@@ -197,7 +253,6 @@ def LoginView(request):
         if user is not None:
             # If authentication is successful
             login(request, user)
-            messages.success(request, "You are logged in")
             
             # Redirect to complete-profile if the profile is incomplete
             if not user.profile_completed: 
@@ -208,7 +263,7 @@ def LoginView(request):
         else:
             # If authentication fails
             messages.error(request, "Invalid username or password")
-            return redirect("authUser:register")
+            return redirect("authUser:loginUser")
 
     return render(request, "authUser/register.html")
 
@@ -217,9 +272,7 @@ def LoginView(request):
 def LogoutView(request):
     logout(request)
     messages.success(request, "You have successfully logged out.")
-    return redirect("authUser:register")
-
-
+    return redirect("authUser:loginUser")
 
 
 @login_required
@@ -288,35 +341,108 @@ def user_info(request, user_id=None):
     return render(request, 'authUser/user_info.html', context)
 
 
-
 def complete_profile(request):
-
     if request.user.user_type == 'vet':
         profile = VetProfile.objects.get(user=request.user)
-        FormClass = VetProfileForm
+        profile_type = 'vet'
     elif request.user.user_type == 'pet_owner':
         profile = PetOwnerProfile.objects.get(user=request.user)
-        FormClass = PetOwnerProfileForm
+        profile_type = 'pet_owner'
     else:
-        return redirect('/') 
+        return redirect('coreFunctions:index')
+    
+    errors = {}
     
     if request.method == 'POST':
-        form = FormClass(request.POST, request.FILES, instance=profile)
-        if form.is_valid():
-            form.save()
-            # Mark profile as completed
+        # Common fields for both profiles
+        country = request.POST.get('country')
+        city = request.POST.get('city')
+        address = request.POST.get('address')
+        use_default_image = request.POST.get('use_default_image') == 'on'
+        
+        # Update profile based on user type
+        if profile_type == 'pet_owner':
+            # Pet owner specific fields
+            bio = request.POST.get('bio')
+            pets_owned = request.POST.get('pets_owned')
+            
+            # Validate required fields
+            if not country:
+                errors['country'] = "Country is required."
+            if not city:
+                errors['city'] = "City is required."
+            
+            # Update profile if no errors
+            if not errors:
+                profile.bio = bio
+                profile.pets_owned = pets_owned
+                profile.country = country
+                profile.city = city
+                profile.address = address
+                
+                # Handle profile image
+                if use_default_image:
+                    profile.human_image = 'default.png'
+                elif request.FILES.get('human_image'):
+                    profile.human_image = request.FILES.get('human_image')
+                
+                profile.save()
+                
+        elif profile_type == 'vet':
+            # Vet specific fields
+            summary = request.POST.get('summary')
+            clinic_name = request.POST.get('clinic_name')
+            specialization = request.POST.get('specialization')
+            experience_years = request.POST.get('experience_years')
+            license_number = request.POST.get('license_number')
+            
+            # Validate required fields
+            if not clinic_name:
+                errors['clinic_name'] = "Clinic name is required."
+            if not license_number:
+                errors['license_number'] = "License number is required."
+            if not country:
+                errors['country'] = "Country is required."
+            if not city:
+                errors['city'] = "City is required."
+            
+            # Update profile if no errors
+            if not errors:
+                profile.summary = summary
+                profile.clinic_name = clinic_name
+                profile.specialization = specialization
+                profile.experience_years = experience_years if experience_years else 0
+                profile.license_number = license_number
+                profile.country = country
+                profile.city = city
+                profile.address = address
+                
+                # Handle profile image
+                if use_default_image:
+                    profile.vet_image = 'default.png'
+                elif request.FILES.get('vet_image'):
+                    profile.vet_image = request.FILES.get('vet_image')
+                
+                profile.save()
+        
+        # If no errors, mark profile as completed and redirect
+        if not errors:
             request.user.profile_completed = True
             request.user.save()
-            messages.success(request, "Your profile has been completed successfully.")
             
             if request.user.status_verification is False:
                 return redirect('authUser:profile_verification_in_progress')
-
-            return redirect('/')  
-    else:
-        form = FormClass(instance=profile)
-
-    return render(request, 'authUser/profile.html', {'form': form})
+            
+            return redirect('coreFunctions:index')
+    
+    # Prepare context for rendering the template
+    context = {
+        'profile': profile,
+        'profile_type': profile_type,
+        'errors': errors
+    }
+    
+    return render(request, 'authUser/profile.html', context)
 
 
 def profile_verification_in_progress(request):
@@ -350,6 +476,7 @@ def verify_otp(request):
     
     return render(request, 'authUser/verify_otp.html')
     
+
 @login_required
 def add_pet(request):
     if request.method == 'POST':
@@ -389,6 +516,7 @@ def add_pet(request):
         return redirect('coreFunctions:index')  # Replace with the correct URL name for pet list
 
     return render(request, 'authUser/add_pet.html')
+
 
 @login_required
 def pet_profile(request, pet_id):

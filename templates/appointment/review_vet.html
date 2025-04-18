@@ -1,0 +1,296 @@
+{% extends 'main/base1.html' %}
+{% load static %}
+
+{% block title %}Review Veterinarian | PetVet{% endblock %}
+
+{% block content %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+<div class="pet-feed-content">
+    <div class="review-container">
+        <!-- Header Section -->
+        <div class="section-header">
+            <div class="header-content">
+                <h1><i class="fas fa-star"></i> Review Your Veterinarian</h1>
+                <p>Share your experience with Dr. {{ appointment.vet.user.full_name }}</p>
+            </div>
+        </div>
+        
+        <!-- Review Card -->
+        <div class="review-card">
+            <div class="vet-profile">
+                <div class="vet-avatar">
+                    {% if appointment.vet.vet_image %}
+                        <img src="{{ appointment.vet.vet_image.url }}" alt="Dr. {{ appointment.vet.user.get_full_name|default:appointment.vet.user.username }}">
+                    {% else %}
+                        <img src="{% static 'assets/default-avatar.png' %}" alt="Dr. {{ appointment.vet.user.get_full_name|default:appointment.vet.user.username }}">
+                    {% endif %}
+                </div>
+                <div class="vet-info">
+                    <h3>Dr. {{ appointment.vet.user.full_name }}</h3>
+                    {% if appointment.vet.specialization %}
+                        <p>{{ appointment.vet.specialization }}</p>
+                    {% endif %}
+                    {% if appointment.vet.clinic_name %}
+                        <p>{{ appointment.vet.clinic_name }}</p>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <form method="post" class="review-form">
+                {% csrf_token %}
+                
+                <div class="form-group">
+                    <label>Your Rating</label>
+                    <div class="star-rating">
+                        <input type="radio" id="star5" name="rating" value="5" checked />
+                        <label for="star5" class="star"><i class="fas fa-star"></i></label>
+                        
+                        <input type="radio" id="star4" name="rating" value="4" />
+                        <label for="star4" class="star"><i class="fas fa-star"></i></label>
+                        
+                        <input type="radio" id="star3" name="rating" value="3" />
+                        <label for="star3" class="star"><i class="fas fa-star"></i></label>
+                        
+                        <input type="radio" id="star2" name="rating" value="2" />
+                        <label for="star2" class="star"><i class="fas fa-star"></i></label>
+                        
+                        <input type="radio" id="star1" name="rating" value="1" />
+                        <label for="star1" class="star"><i class="fas fa-star"></i></label>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="review-comment">Your Review</label>
+                    <textarea 
+                        id="review-comment"
+                        name="comment"
+                        rows="5"
+                        placeholder="Share your experience with this veterinarian..."
+                        required
+                    ></textarea>
+                </div>
+                
+                <div class="form-actions">
+                    <a href="{% url 'appointment:appointment_detail' appointment.id %}" class="btn btn-outline">
+                        <i class="fas fa-arrow-left"></i> Back
+                    </a>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-paper-plane"></i> Submit Review
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<style>
+    .pet-feed-content .review-container {
+        max-width: 900px;
+        margin: 0 auto;
+        padding: 2rem;
+    }
+    
+    .pet-feed-content .section-header {
+        margin-bottom: 2rem;
+    }
+    
+    .pet-feed-content .header-content h1 {
+        font-size: 2rem;
+        color: #2D3142;
+        margin-bottom: 0.5rem;
+        display: flex;
+        align-items: center;
+        gap: 0.8rem;
+    }
+    
+    .pet-feed-content .header-content h1 i {
+        color: #FFD166;
+    }
+    
+    .pet-feed-content .header-content p {
+        color: #7C8798;
+        font-size: 1rem;
+    }
+    
+    .pet-feed-content .review-card {
+        background: white;
+        border-radius: 15px;
+        overflow: hidden;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+        transition: all 0.3s ease;
+        border: 1px solid rgba(0, 0, 0, 0.05);
+        padding: 1.5rem;
+    }
+    
+    .pet-feed-content .vet-profile {
+        display: flex;
+        gap: 1.5rem;
+        padding-bottom: 1.5rem;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+        margin-bottom: 1.5rem;
+    }
+    
+    .pet-feed-content .vet-avatar img {
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 3px solid #4ECDC4;
+        background-color: white;
+    }
+    
+    .pet-feed-content .vet-info h3 {
+        font-size: 1.3rem;
+        color: #2D3142;
+        margin-bottom: 0.5rem;
+        font-weight: 600;
+    }
+    
+    .pet-feed-content .vet-info p {
+        color: #7C8798;
+        font-size: 0.9rem;
+        margin-bottom: 0.3rem;
+    }
+    
+    .pet-feed-content .review-form {
+        display: flex;
+        flex-direction: column;
+        gap: 1.5rem;
+    }
+    
+    .pet-feed-content .form-group {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+    
+    .pet-feed-content .form-group label {
+        font-weight: 500;
+        color: #2D3142;
+    }
+    
+    .pet-feed-content .star-rating {
+        display: flex;
+        flex-direction: row-reverse;
+        justify-content: flex-end;
+    }
+    
+    .pet-feed-content .star-rating input {
+        display: none;
+    }
+    
+    .pet-feed-content .star-rating label {
+        font-size: 1.8rem;
+        color: #e0e0e0;
+        cursor: pointer;
+        padding: 0 0.2rem;
+        transition: all 0.2s ease;
+    }
+    
+    .pet-feed-content .star-rating label:hover,
+    .pet-feed-content .star-rating label:hover ~ label,
+    .pet-feed-content .star-rating input:checked ~ label {
+        color: #FFD166;
+    }
+    
+    .pet-feed-content .star-rating label:hover {
+        transform: scale(1.1);
+    }
+    
+    .pet-feed-content textarea {
+        padding: 1rem;
+        border-radius: 8px;
+        border: 1px solid rgba(0, 0, 0, 0.1);
+        resize: vertical;
+        font-family: inherit;
+        font-size: 0.95rem;
+    }
+    
+    .pet-feed-content textarea:focus {
+        outline: none;
+        border-color: #4ECDC4;
+        box-shadow: 0 0 0 2px rgba(78, 205, 196, 0.2);
+    }
+    
+    .pet-feed-content .form-actions {
+        display: flex;
+        justify-content: space-between;
+        margin-top: 1rem;
+    }
+    
+    .pet-feed-content .btn {
+        padding: 0.7rem 1.2rem;
+        border-radius: 50px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        font-size: 0.9rem;
+        text-decoration: none;
+        border: none;
+    }
+    
+    .pet-feed-content .btn-primary {
+        background-color: #FF6B6B;
+        color: white;
+        box-shadow: 0 4px 15px rgba(255, 107, 107, 0.3);
+    }
+    
+    .pet-feed-content .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(255, 107, 107, 0.4);
+    }
+    
+    .pet-feed-content .btn-outline {
+        background-color: transparent;
+        border: 2px solid #FF6B6B;
+        color: #FF6B6B;
+    }
+    
+    .pet-feed-content .btn-outline:hover {
+        background-color: #FF6B6B;
+        color: white;
+    }
+    
+    @media (max-width: 768px) {
+        .pet-feed-content .vet-profile {
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+        }
+        
+        .pet-feed-content .form-actions {
+            flex-direction: column;
+            gap: 1rem;
+        }
+        
+        .pet-feed-content .star-rating {
+            justify-content: center;
+        }
+    }
+    
+    @media (max-width: 480px) {
+        .pet-feed-content .review-container {
+            padding: 1.5rem 1rem;
+        }
+    }
+</style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Star rating functionality
+        const stars = document.querySelectorAll('.star-rating label');
+        
+        stars.forEach(star => {
+            star.addEventListener('click', function() {
+                const value = this.previousElementSibling.value;
+                console.log('Rating selected:', value);
+            });
+        });
+    });
+</script>
+{% endblock %}

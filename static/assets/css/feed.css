@@ -34,10 +34,20 @@
     height: 70px;
 }
 
-.nav-left, .nav-center, .nav-right {
+.nav-left, .nav-right {
     display: flex;
     align-items: center;
     gap: 1.5rem;
+    flex-shrink: 0; 
+}
+
+.nav-center {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100%;
+    
 }
 
 .logo {
@@ -67,15 +77,19 @@
 .search-bar {
     position: relative;
     width: 400px;
+    margin: 0;
+    
 }
 
-.search-bar i {
-    position: absolute;
-    left: 1rem;
-    top: 50%;
-    transform: translateY(-50%);
+.search-bar input::placeholder {
+    font-family: "Poppins", sans-serif;
+    font-weight: 400;
     color: var(--text-light);
-}
+    opacity: 0.7;
+    font-size: 0.9rem;
+    line-height: normal; /* Reset line height for placeholder */
+  }
+
 
 .search-bar input {
     width: 100%;
@@ -94,48 +108,6 @@
     outline: none;
 }
 
-/* Notification/Messages Icons */
-.nav-icon {
-    position: relative;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    background-color: rgba(255, 255, 255, 0.7);
-    color: var(--text-light);
-    cursor: pointer;
-    transition: all 0.3s ease;
-}
-
-.nav-icon:hover {
-    color: var(--primary);
-    background-color: rgba(255, 107, 107, 0.1);
-    transform: translateY(-2px);
-}
-
-.notification-badge {
-    position: absolute;
-    top: -5px;
-    right: -5px;
-    background-color: var(--primary);
-    color: white;
-    border-radius: 50%;
-    width: 20px;
-    height: 20px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 0.7rem;
-    font-weight: 600;
-    box-shadow: 0 2px 5px rgba(255, 107, 107, 0.3);
-}
-
-/* Chat Symbol in Notifications */
-.chat-symbol {
-    font-size: 1.2rem;
-}
 
 /* User Profile */
 .user-profile {
@@ -359,4 +331,15 @@
     padding: 2rem;
     background-color: rgba(247, 255, 247, 0.7);
     min-height: calc(100vh - 70px);
+}
+
+
+
+/* Update search bar placeholder typography to match the page */
+.search-bar input::placeholder {
+    font-family: 'Poppins', sans-serif;
+    font-weight: 400;
+    color: var(--text-light);
+    opacity: 0.7;
+    font-size: 0.9rem;
 }

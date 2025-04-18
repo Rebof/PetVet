@@ -4,7 +4,7 @@ import uuid
 import requests
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
-from django.http import HttpResponseRedirect
+from django.http import HttpResponseForbidden, HttpResponseRedirect
 from django.urls import reverse
 from django.conf import settings
 from django.views.decorators.csrf import csrf_exempt
@@ -14,6 +14,7 @@ from django.utils.html import strip_tags
 from .models import VetProfile, VetSchedule, Appointment
 from authUser.models import VetProfile, PetOwnerProfile, Pet
 from datetime import datetime
+from authUser.models import Review
 
 
 # Khalti Configuration
@@ -112,7 +113,7 @@ def verify_khalti_payment(request, appointment_id):
         if data.get('status') != 'Completed':
             appointment.status = 'unpaid'
             appointment.payment_status = 'failed'
-            appointment.save()
+            appointment.delete()
             return redirect('appointment:payment_failed', appointment_id=appointment.id)
         
         # Payment successful - store details and await vet approval
@@ -132,12 +133,15 @@ def verify_khalti_payment(request, appointment_id):
         return redirect('appointment:payment_success', appointment_id=appointment.id)
         
     except requests.exceptions.RequestException as e:
+        appointment.status = 'unpaid'
+        appointment.payment_status = 'failed'
+        appointment.delete()
         return render(request, 'appointment/payment_error.html', {
             'error': str(e),
             'appointment': appointment
         })
 
-# Appointment Views
+
 @login_required
 def vet_list(request):
     vets = VetProfile.objects.all()
@@ -205,8 +209,7 @@ def edit_schedule(request, schedule_id):
         # Check for overlapping schedules (excluding the current schedule)
         overlapping_schedules = VetSchedule.objects.filter(
             vet=vet,
-            day_of_week=day_of_week,
-            available=True
+            day_of_week=day_of_week
         ).exclude(
             id=schedule_id  # Exclude the current schedule
         ).exclude(
@@ -387,7 +390,6 @@ def book_with_credit(request, vet_id, schedule_id):
                 "appointment/new_appointment_email.html"
             )
 
-            messages.success(request, "Appointment booked successfully using your credit balance!")
             return redirect('appointment:appointment_detail', appointment_id=appointment.id)
 
         except Pet.DoesNotExist:
@@ -411,13 +413,38 @@ def book_with_credit(request, vet_id, schedule_id):
 
 @login_required
 def appointment_list(request):
-    appointments = Appointment.objects.filter(pet_owner__user=request.user)
+    appointments = Appointment.objects.filter(
+        pet_owner__user=request.user
+    ).order_by('-created_at')  # or '-date' depending on your model
     return render(request, "appointment/appointment_list.html", {"appointments": appointments})
+
 
 @login_required
 def appointment_detail(request, appointment_id):
+    """View for displaying appointment details"""
     appointment = get_object_or_404(Appointment, id=appointment_id)
-    return render(request, "appointment/appointment_detail.html", {"appointment": appointment})
+    
+    # Check if the user is authorized to view this appointment
+    if request.user != appointment.pet_owner.user and request.user != appointment.vet.user:
+        return HttpResponseForbidden("You don't have permission to view this appointment")
+    
+    # Check if the user has already reviewed this appointment
+    has_reviewed = False
+    if appointment.status == 'completed' and appointment.payment_status == 'paid':
+        has_reviewed = Review.objects.filter(
+            vet=appointment.vet,
+            reviewer=request.user,
+            appointment=appointment
+        ).exists()
+    
+    context = {
+        'appointment': appointment,
+        'has_reviewed': has_reviewed
+    }
+    return render(request, 'appointment/appointment_detail.html', context)
+
+
+
 
 @login_required
 def cancel_appointment(request, appointment_id):
@@ -463,32 +490,43 @@ def vet_pending_appointments(request, vet_id):
 def accept_appointment(request, appointment_id):
     appointment = get_object_or_404(Appointment, id=appointment_id)
 
-    # Check if the appointment belongs to the logged-in vet and if it's in the 'paid_pending_approval' status
     if appointment.vet.user != request.user or appointment.status != "paid_pending_approval":
         return HttpResponseRedirect(reverse('appointment:vet_pending_appointments', args=[appointment.vet.id]))
 
-    # Change the appointment status to 'confirmed'
+    # Confirm the selected appointment
     appointment.status = "confirmed"
     appointment.save()
 
-    # Cancel other pending appointments for this slot
-    Appointment.objects.filter(
+    # Reject other appointments for the same schedule and notify them
+    other_appointments = Appointment.objects.filter(
         schedule=appointment.schedule
-    ).exclude(id=appointment.id).update(status="cancelled")
+    ).exclude(id=appointment.id)
 
-    # Update the availability of the schedule to False (unavailable) after confirming the appointment
+    for other in other_appointments:
+        other.status = "rejected"
+        other.save()
+
+        # Send rejection email
+        send_appointment_notification(
+            other,
+            "Appointment Rejected",
+            "appointment/rejection_email.html",
+            is_rejection=True
+        )
+
+    # Mark the schedule as unavailable
     appointment.schedule.available = False
     appointment.schedule.save()
 
-    # Send confirmation to the pet owner
+    # Notify the confirmed pet owner
     send_appointment_notification(
         appointment,
         "Appointment Confirmed",
         "appointment/confirmation_email.html"
     )
 
-    # Redirect to the vet's pending appointments page
     return HttpResponseRedirect(reverse('appointment:vet_pending_appointments', args=[appointment.vet.id]))
+
 
 
 @login_required
@@ -512,7 +550,7 @@ def reject_appointment(request, appointment_id):
         appointment.status = "rejected"
         appointment.save()
 
-        # Send rejection notification (unchanged)
+        # Send rejection notification
         send_appointment_notification(
             appointment,
             "Appointment Rejected",

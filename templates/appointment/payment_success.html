@@ -1,17 +1,269 @@
-
 {% extends 'main/base1.html' %}
+{% load static %}
+
+{% block title %}Payment Successful | PetVet{% endblock %}
+
 {% block content %}
-<div class="container">
-    <h2>Payment Successful</h2>
-    <div class="alert alert-success">
-        <p>Your payment for the appointment with Dr. {{ appointment.vet.user.username }} has been received.</p>
-        <p>Amount: NPR {{ appointment.amount_paid }}</p>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+<div class="pet-feed-content">
+    <div class="payment-container">
+        <!-- Header Section - matches vets page styling -->
+        <div class="section-header">
+            <div class="header-content">
+                <h1><i class="fas fa-check-circle"></i> Payment Successful</h1>
+                <p>Your appointment payment has been processed</p>
+            </div>
+        </div>
+
+        <!-- Payment Content -->
+        <div class="payment-card">
+            <div class="payment-success-icon">
+                <i class="fas fa-thumbs-up"></i>
+            </div>
+            
+            <div class="payment-details">
+                <h3>Thank you for your payment!</h3>
+                <p>Your payment for the appointment with <strong>Dr. {{ appointment.vet.user.username }}</strong> has been successfully processed.</p>
+                
+                <div class="payment-summary">
+                    <div class="summary-item">
+                        <span class="summary-label">Amount Paid:</span>
+                        <span class="summary-value">NPR 1000</span>
+                    </div>
+                    <div class="summary-item">
+                        <span class="summary-label">Appointment ID:</span>
+                        <span class="summary-value">#{{ appointment.id }}</span>
+                    </div>
+                    <div class="summary-item">
+                        <span class="summary-label">Status:</span>
+                        <span class="summary-value badge pending">Pending Vet Confirmation</span>
+                    </div>
+                </div>
+                
+                <div class="payment-note">
+                    <i class="fas fa-info-circle"></i>
+                    <p>The vet will now review your appointment request. You'll be notified once they accept or decline it.</p>
+                </div>
+            </div>
+            
+            <div class="payment-actions">
+                <a href="{% url 'appointment:appointment_detail' appointment.id %}" class="btn btn-primary">
+                    <i class="fas fa-calendar-alt"></i> View Appointment Details
+                </a>
+            </div>
+        </div>
     </div>
-    
-    <p>The vet will now review your appointment request. You'll be notified once they accept or reject it.</p>
-    
-    <a href="{% url 'appointment:appointment_detail' appointment.id %}" class="btn btn-primary">
-        View Appointment Details
-    </a>
 </div>
+
+<style>
+    /* Base Container - matches vets page */
+    .pet-feed-content .payment-container {
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 2rem;
+    }
+    
+    /* Header Section - matches vets page */
+    .pet-feed-content .section-header {
+        margin-bottom: 2rem;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        gap: 1.5rem;
+        text-align: center;
+    }
+    
+    .pet-feed-content .header-content {
+        text-align: center;
+        width: 100%;
+    }
+    
+    .pet-feed-content .header-content h1 {
+        font-size: 2rem;
+        color: #2D3142;
+        margin-bottom: 0.5rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.8rem;
+    }
+    
+    .pet-feed-content .header-content h1 i {
+        color: #4ECDC4;
+    }
+    
+    .pet-feed-content .header-content p {
+        color: #7C8798;
+        font-size: 1rem;
+    }
+    
+    /* Payment Card */
+    .pet-feed-content .payment-card {
+        background: white;
+        border-radius: 15px;
+        overflow: hidden;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+        transition: all 0.3s ease;
+        border: 1px solid rgba(0, 0, 0, 0.05);
+        padding: 2.5rem;
+        text-align: center;
+    }
+    
+    .pet-feed-content .payment-success-icon {
+        margin-bottom: 1.5rem;
+    }
+    
+    .pet-feed-content .payment-success-icon i {
+        font-size: 4rem;
+        color: #4ECDC4;
+    }
+    
+    .pet-feed-content .payment-details h3 {
+        font-size: 1.5rem;
+        color: #2D3142;
+        margin-bottom: 1rem;
+    }
+    
+    .pet-feed-content .payment-details p {
+        color: #4F5D75;
+        font-size: 1rem;
+        line-height: 1.6;
+        margin-bottom: 1.5rem;
+    }
+    
+    .pet-feed-content .payment-summary {
+        background: #F8F9FA;
+        border-radius: 10px;
+        padding: 1.5rem;
+        margin: 1.5rem 0;
+        text-align: left;
+    }
+    
+    .pet-feed-content .summary-item {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 0.8rem;
+        padding-bottom: 0.8rem;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    }
+    
+    .pet-feed-content .summary-item:last-child {
+        margin-bottom: 0;
+        padding-bottom: 0;
+        border-bottom: none;
+    }
+    
+    .pet-feed-content .summary-label {
+        color: #7C8798;
+        font-weight: 500;
+    }
+    
+    .pet-feed-content .summary-value {
+        color: #2D3142;
+        font-weight: 600;
+    }
+    
+    .pet-feed-content .badge {
+        display: inline-block;
+        padding: 0.3rem 0.8rem;
+        border-radius: 50px;
+        font-size: 0.8rem;
+        font-weight: 600;
+    }
+    
+    .pet-feed-content .badge.pending {
+        background-color: rgba(255, 193, 7, 0.2);
+        color: #FFC107;
+    }
+    
+    .pet-feed-content .payment-note {
+        display: flex;
+        align-items: flex-start;
+        gap: 0.8rem;
+        background: rgba(78, 205, 196, 0.1);
+        padding: 1rem;
+        border-radius: 8px;
+        margin: 1.5rem 0;
+        text-align: left;
+    }
+    
+    .pet-feed-content .payment-note i {
+        color: #4ECDC4;
+        margin-top: 0.2rem;
+    }
+    
+    .pet-feed-content .payment-note p {
+        margin: 0;
+        color: #4F5D75;
+        font-size: 0.9rem;
+    }
+    
+    /* Payment Actions - matches vets page buttons */
+    .pet-feed-content .payment-actions {
+        display: flex;
+        gap: 1rem;
+        margin-top: 2rem;
+        justify-content: center;
+    }
+    
+    .pet-feed-content .btn {
+        padding: 0.7rem 1.2rem;
+        border-radius: 50px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        font-size: 0.9rem;
+        text-decoration: none;
+        border: none;
+    }
+    
+    .pet-feed-content .btn-primary {
+        background-color: #FF6B6B;
+        color: white;
+        box-shadow: 0 4px 15px rgba(255, 107, 107, 0.3);
+    }
+    
+    .pet-feed-content .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(255, 107, 107, 0.4);
+    }
+    
+    .pet-feed-content .btn-outline {
+        background-color: transparent;
+        border: 2px solid #FF6B6B;
+        color: #FF6B6B;
+    }
+    
+    .pet-feed-content .btn-outline:hover {
+        background-color: #FF6B6B;
+        color: white;
+    }
+    
+    /* Responsive adjustments */
+    @media (max-width: 768px) {
+        .pet-feed-content .payment-card {
+            padding: 1.5rem;
+        }
+        
+        .pet-feed-content .payment-actions {
+            flex-direction: column;
+        }
+    }
+    
+    @media (max-width: 480px) {
+        .pet-feed-content .payment-container {
+            padding: 1rem;
+        }
+        
+        .pet-feed-content .payment-card {
+            padding: 1.2rem;
+        }
+    }
+</style>
 {% endblock %}

@@ -1,7 +1,7 @@
 {% extends 'main/base1.html' %}
 {% load static %}
 
-{% block title %}Accepted Appointments | PetCare Connect{% endblock %}
+{% block title %}Accepted Appointments | PetVet{% endblock %}
 
 {% block content %}
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -90,7 +90,82 @@
                                     {{ appointment.schedule.day_of_week }}, {{ appointment.schedule.created_at|date:"F j, Y" }}
                                 </div>
                             </div>
+                            <!-- Pet Information Section -->
+                            <div class="detail-row">
+                                <div class="detail-label">
+                                    <i class="fas fa-dna"></i> Breed:
+                                </div>
+                                <div class="detail-value">
+                                    {{ appointment.pet.breed|default:"Not specified" }}
+                                </div>
+                            </div>
+
+                            <div class="detail-row">
+                                <div class="detail-label">
+                                    <i class="fas fa-birthday-cake"></i> Age:
+                                </div>
+                                <div class="detail-value">
+                                    {{ appointment.pet.age }} year{{ appointment.pet.age|pluralize }}
+                                </div>
+                            </div>
+
+                            {% if appointment.pet.weight %}
+                            <div class="detail-row">
+                                <div class="detail-label">
+                                    <i class="fas fa-weight"></i> Weight:
+                                </div>
+                                <div class="detail-value">
+                                    {{ appointment.pet.weight }} kg
+                                </div>
+                            </div>
+                            {% endif %}
+
+                            {% if appointment.pet.color %}
+                            <div class="detail-row">
+                                <div class="detail-label">
+                                    <i class="fas fa-palette"></i> Color:
+                                </div>
+                                <div class="detail-value">
+                                    {{ appointment.pet.color }}
+                                </div>
+                            </div>
+                            {% endif %}
+
+                            {% if appointment.pet.vaccination_status %}
+                            <div class="detail-row">
+                                <div class="detail-label">
+                                    <i class="fas fa-syringe"></i> Vaccination:
+                                </div>
+                                <div class="detail-value">
+                                    {{ appointment.pet.vaccination_status }}
+                                </div>
+                            </div>
+                            {% endif %}
+
+                            {% if appointment.pet.allergies %}
+                            <div class="detail-row">
+                                <div class="detail-label">
+                                    <i class="fas fa-allergies"></i> Allergies:
+                                </div>
+                                <div class="detail-value">
+                                    {{ appointment.pet.allergies }}
+                                </div>
+                            </div>
+                            {% endif %}
+
+                            {% if appointment.pet.medical_history %}
+                            <div class="detail-row">
+                                <div class="detail-label">
+                                    <i class="fas fa-file-medical"></i> Medical History:
+                                </div>
+                                <div class="detail-value">
+                                    {{ appointment.pet.medical_history }}
+                                </div>
+                            </div>
+                            {% endif %}
                         </div>
+                        
+                        
 
                         <div class="appointment-actions">
                             <form method="POST" action="{% url 'appointment:mark_completed' appointment.id %}" class="completion-form">

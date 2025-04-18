@@ -1,7 +1,7 @@
 {% extends 'main/base1.html' %}
 {% load static %}
 
-{% block title %}Book Appointment | PetCare Connect{% endblock %}
+{% block title %}Book Appointment | PetVet{% endblock %}
 
 {% block content %}
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -58,7 +58,7 @@
                 
                 <div class="form-group">
                     <label for="pet"><i class="fas fa-paw"></i> Select Your Pet:</label>
-                    <select name="pet" id="pet" required>
+                    <select name="pet" id="pet">
                         <option value="">-- Choose a pet --</option>
                         {% for pet in pets %}
                         <option value="{{ pet.id }}">{{ pet.name }} ({{ pet.species }})</option>
@@ -74,7 +74,7 @@
                 
                 <div class="form-group">
                     <label for="reason"><i class="fas fa-comment-medical"></i> Reason for Visit:</label>
-                    <textarea name="reason" id="reason" required placeholder="Please describe your pet's symptoms or reason for the appointment..."></textarea>
+                    <textarea name="reason" id="reason" placeholder="Please describe your pet's symptoms or reason for the appointment..."></textarea>
                 </div>
                 
                 <div class="payment-options">

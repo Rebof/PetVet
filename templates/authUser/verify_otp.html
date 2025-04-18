@@ -3,25 +3,215 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Email Verification</title>
+    <title>PetVet - Email Verification</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <style>
+        :root {
+            --primary: #4CAF50;
+            --primary-dark: #388E3C;
+            --primary-light: #A5D6A7;
+            --secondary: #81C784;
+            --accent: #1B5E20;
+            --text-dark: #263238;
+            --text-light: #78909C;
+            --white: #FFFFFF;
+            --error: #F44336;
+            --success: #4CAF50;
+            --green-text: #1B5E20;
+            --border-color: #E0E0E0;
+            --bg-light: #F5F5F5;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: var(--bg-light);
+            color: var(--text-dark);
+            line-height: 1.6;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            width: 100%;
+            max-width: 500px;
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 30px;
+        }
+        
+        .logo-icon {
+            font-size: 2rem;
+            margin-right: 10px;
+            color: var(--primary);
+        }
+        
+        .logo-text {
+            font-size: 1.8rem;
+            font-weight: 700;
+        }
+        
+        .green-text {
+            color: var(--green-text);
+            font-weight: 700;
+        }
+        
+        .card {
+            background: var(--white);
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+            padding: 40px;
+            text-align: center;
+        }
+        
+        .card-title {
+            font-size: 1.5rem;
+            color: var(--text-dark);
+            margin-bottom: 20px;
+        }
+        
+        .card-text {
+            font-size: 1rem;
+            color: var(--text-light);
+            margin-bottom: 30px;
+        }
+        
+        .otp-container {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin: 30px 0;
+        }
+        
+        .otp-input {
+            width: 50px;
+            height: 60px;
+            font-size: 1.5rem;
+            text-align: center;
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            transition: all 0.3s;
+        }
+        
+        .otp-input:focus {
+            border-color: var(--primary);
+            outline: none;
+            box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.2);
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-control {
+            width: 100%;
+            padding: 15px;
+            font-size: 1rem;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            transition: border-color 0.3s;
+            font-family: 'Poppins', sans-serif;
+            text-align: center;
+            letter-spacing: 5px;
+            font-weight: 600;
+        }
+        
+        .form-control:focus {
+            border-color: var(--primary);
+            outline: none;
+        }
+        
+        .btn {
+            display: inline-block;
+            padding: 12px 24px;
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            font-family: 'Poppins', sans-serif;
+            width: 100%;
+        }
+        
+        .btn:hover {
+            background-color: var(--primary-dark);
+        }
+        
+        .resend-link {
+            display: block;
+            margin-top: 20px;
+            color: var(--primary);
+            text-decoration: none;
+            font-size: 0.9rem;
+        }
+        
+        .resend-link:hover {
+            text-decoration: underline;
+        }
+        
+        .alert {
+            padding: 12px 15px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            font-size: 0.9rem;
+        }
+        
+        .alert-danger {
+            background-color: #FFEBEE;
+            color: var(--error);
+            border: 1px solid #FFCDD2;
+        }
+        
+        .alert-success {
+            background-color: #E8F5E9;
+            color: var(--success);
+            border: 1px solid #C8E6C9;
+        }
+    </style>
 </head>
 <body>
-    <h2>Email Verification</h2>
-    <p>Hi {{ user.full_name }},</p>
-    <p>Please verify your email address by entering the OTP code:</p>
-    <form method="POST" action="{% url 'authUser:verify_otp' %}">
-        {% csrf_token %}
-        <label for="otp">Enter OTP:</label>
-        <input type="text" id="otp" name="otp" required>
-        <button type="submit">Verify</button>
-    </form>
-
-    {% if messages %}
-        <div class="messages">
-            {% for message in messages %}
-                <p class="alert {{ message.tags }}">{{ message }}</p>
-            {% endfor %}
+    <div class="container">
+        <div class="logo">
+            <i class="fas fa-paw logo-icon"></i>
+            <div class="logo-text">Pet<span class="green-text">Vet</span></div>
         </div>
-    {% endif %}
+        
+        <div class="card">
+            <h2 class="card-title">Email Verification</h2>
+            <p class="card-text">Hi {{ user.full_name }}, please verify your email address by entering the OTP code sent to your email.</p>
+            
+            <form method="POST" action="{% url 'authUser:verify_otp' %}">
+                {% csrf_token %}
+                <div class="form-group">
+                    <label for="otp">Enter OTP</label>
+                    <input type="text" class="form-control" id="otp" name="otp" maxlength="6" placeholder="------" required>
+                </div>
+                <button type="submit" class="btn">Verify</button>
+            </form>
+        </div>
+    </div>
+    
+    <script>
+        // Auto focus on OTP input when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('otp').focus();
+        });
+    </script>
 </body>
 </html>

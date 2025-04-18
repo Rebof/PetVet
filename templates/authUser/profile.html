@@ -3,17 +3,450 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Complete Your Profile</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <title>PetVet - Complete Your Profile</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <style>
+        :root {
+            --primary: #4CAF50;
+            --primary-dark: #388E3C;
+            --primary-light: #A5D6A7;
+            --secondary: #81C784;
+            --accent: #1B5E20;
+            --text-dark: #263238;
+            --text-light: #78909C;
+            --white: #FFFFFF;
+            --error: #F44336;
+            --success: #4CAF50;
+            --green-text: #1B5E20;
+            --border-color: #E0E0E0;
+            --bg-light: #F5F5F5;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: var(--bg-light);
+            color: var(--text-dark);
+            line-height: 1.6;
+        }
+        
+        .container {
+            width: 100%;
+            max-width: 1000px;
+            margin: 40px auto;
+            padding: 0 20px;
+        }
+        
+        .header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            text-decoration: none;
+            color: var(--text-dark);
+        }
+        
+        .logo-icon {
+            font-size: 1.8rem;
+            margin-right: 10px;
+            color: var(--primary);
+        }
+        
+        .logo-text {
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+        
+        .green-text {
+            color: var(--green-text);
+            font-weight: 700;
+        }
+        
+        .card {
+            background: var(--white);
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+            padding: 30px;
+            margin-bottom: 30px;
+        }
+        
+        .card-header {
+            margin-bottom: 25px;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 15px;
+        }
+        
+        .card-title {
+            font-size: 1.5rem;
+            color: var(--text-dark);
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+        }
+        
+        .card-title i {
+            margin-right: 10px;
+            color: var(--primary);
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: var(--text-dark);
+        }
+        
+        .form-control {
+            width: 100%;
+            padding: 12px 15px;
+            font-size: 1rem;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            transition: border-color 0.3s;
+            font-family: 'Poppins', sans-serif;
+        }
+        
+        .form-control:focus {
+            border-color: var(--primary);
+            outline: none;
+        }
+        
+        .form-control.error {
+            border-color: var(--error);
+        }
+        
+        .error-message {
+            color: var(--error);
+            font-size: 0.85rem;
+            margin-top: 5px;
+        }
+        
+        textarea.form-control {
+            resize: vertical;
+            min-height: 100px;
+        }
+        
+        .btn {
+            display: inline-block;
+            padding: 12px 24px;
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            font-family: 'Poppins', sans-serif;
+        }
+        
+        .btn:hover {
+            background-color: var(--primary-dark);
+        }
+        
+        .form-row {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .form-row .form-group {
+            flex: 1;
+            margin-bottom: 0;
+        }
+        
+        .select-wrapper {
+            position: relative;
+        }
+        
+        .select-wrapper::after {
+            content: '▼';
+            font-size: 0.8rem;
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            pointer-events: none;
+            color: var(--text-light);
+        }
+        
+        select.form-control {
+            appearance: none;
+            padding-right: 30px;
+        }
+        
+        .file-input-wrapper {
+            position: relative;
+            overflow: hidden;
+            display: inline-block;
+            cursor: pointer;
+            margin-bottom: 10px;
+        }
+        
+        .file-input-wrapper input[type="file"] {
+            position: absolute;
+            left: 0;
+            top: 0;
+            opacity: 0;
+            cursor: pointer;
+            width: 100%;
+            height: 100%;
+        }
+        
+        .file-input-label {
+            display: flex;
+            align-items: center;
+            padding: 10px 15px;
+            background-color: var(--primary-light);
+            color: var(--text-dark);
+            border-radius: 8px;
+            font-size: 0.9rem;
+            transition: background-color 0.3s;
+        }
+        
+        .file-input-label i {
+            margin-right: 8px;
+        }
+        
+        .file-input-wrapper:hover .file-input-label {
+            background-color: var(--secondary);
+        }
+        
+        .file-name {
+            margin-left: 10px;
+            font-size: 0.9rem;
+            color: var(--text-light);
+        }
+        
+        .alert {
+            padding: 12px 15px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            font-size: 0.9rem;
+        }
+        
+        .alert-danger {
+            background-color: #FFEBEE;
+            color: var(--error);
+            border: 1px solid #FFCDD2;
+        }
+        
+        .alert-success {
+            background-color: #E8F5E9;
+            color: var(--success);
+            border: 1px solid #C8E6C9;
+        }
+
+        .checkbox-wrapper {
+            display: flex;
+            align-items: center;
+            margin-top: 10px;
+        }
+
+        .checkbox-wrapper input[type="checkbox"] {
+            margin-right: 8px;
+        }
+        
+        /* Responsive styles */
+        @media (max-width: 768px) {
+            .form-row {
+                flex-direction: column;
+                gap: 20px;
+            }
+        }
+    </style>
 </head>
 <body>
-    <div class="container mt-5">
-        <h2>Complete Your Profile</h2>
-        <form method="POST" enctype="multipart/form-data">
-            {% csrf_token %}
-            {{ form.as_p }}
-            <button type="submit" class="btn btn-primary">Save</button>
-        </form>
+    <div class="container">
+        <div class="header">
+            <a href="/" class="logo">
+                <i class="fas fa-paw logo-icon"></i>
+                <div class="logo-text">Pet<span class="green-text">Vet</span></div>
+            </a>
+        </div>
+        
+        <!-- Display Django messages for feedback -->
+        {% if messages %}
+            <div>
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+                {% endfor %}
+            </div>
+        {% endif %}
+        
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title">
+                    <i class="fas fa-user-edit"></i> Complete Your Profile
+                </h2>
+                <p>Please provide the following information to complete your profile setup.</p>
+            </div>
+            
+            <!-- Pet Owner Profile Form -->
+            {% if profile_type == 'pet_owner' %}
+            <form method="POST" enctype="multipart/form-data">
+                {% csrf_token %}
+                
+                <div class="form-group">
+                    <label for="human_image">Profile Picture</label>
+                    <div class="file-input-wrapper">
+                        <label class="file-input-label">
+                            <i class="fas fa-upload"></i> Choose Image
+                            <input type="file" id="human_image" name="human_image" accept="image/*" onchange="updateFileName(this, 'file-name-display')">
+                        </label>
+                        <span class="file-name" id="file-name-display">No file chosen</span>
+                    </div>
+                    <div class="checkbox-wrapper">
+                        <input type="checkbox" id="use_default_image" name="use_default_image" onchange="toggleFileInput('human_image', this.checked)">
+                        <label for="use_default_image">Use default profile image</label>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="bio">Bio</label>
+                    <textarea class="form-control {% if errors.bio %}error{% endif %}" id="bio" name="bio" rows="3" placeholder="Write a short bio">{{ profile.bio }}</textarea>
+                    {% if errors.bio %}<div class="error-message">{{ errors.bio }}</div>{% endif %}
+                </div>
+                
+                <div class="form-group">
+                    <label for="pets_owned">Pets Owned</label>
+                    <input type="number" class="form-control {% if errors.pets_owned %}error{% endif %}" id="pets_owned" name="pets_owned" placeholder="e.g., 2 dogs, 1 cat" value="{{ profile.pets_owned }}">
+                    {% if errors.pets_owned %}<div class="error-message">{{ errors.pets_owned }}</div>{% endif %}
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="country">Country</label>
+                        <input type="text" class="form-control {% if errors.country %}error{% endif %}" id="country" name="country" placeholder="Enter your country" value="{{ profile.country }}" required>
+                        {% if errors.country %}<div class="error-message">{{ errors.country }}</div>{% endif %}
+                    </div>
+                    <div class="form-group">
+                        <label for="city">City</label>
+                        <input type="text" class="form-control {% if errors.city %}error{% endif %}" id="city" name="city" placeholder="Enter your city" value="{{ profile.city }}" required>
+                        {% if errors.city %}<div class="error-message">{{ errors.city }}</div>{% endif %}
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="address">Address</label>
+                    <textarea class="form-control {% if errors.address %}error{% endif %}" id="address" name="address" rows="2" placeholder="Enter your address">{{ profile.address }}</textarea>
+                    {% if errors.address %}<div class="error-message">{{ errors.address }}</div>{% endif %}
+                </div>
+                
+                <button type="submit" class="btn">Save Profile</button>
+            </form>
+            
+            <!-- Vet Profile Form -->
+            {% elif profile_type == 'vet' %}
+            <form method="POST" enctype="multipart/form-data">
+                {% csrf_token %}
+                
+                <div class="form-group">
+                    <label for="vet_image">Profile Picture</label>
+                    <div class="file-input-wrapper">
+                        <label class="file-input-label">
+                            <i class="fas fa-upload"></i> Choose Image
+                            <input type="file" id="vet_image" name="vet_image" accept="image/*" onchange="updateFileName(this, 'file-name-display')">
+                        </label>
+                        <span class="file-name" id="file-name-display">No file chosen</span>
+                    </div>
+                    <div class="checkbox-wrapper">
+                        <input type="checkbox" id="use_default_image" name="use_default_image" onchange="toggleFileInput('vet_image', this.checked)">
+                        <label for="use_default_image">Use default profile image</label>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="summary">Professional Summary</label>
+                    <textarea class="form-control {% if errors.summary %}error{% endif %}" id="summary" name="summary" rows="3" placeholder="Write a professional summary">{{ profile.summary }}</textarea>
+                    {% if errors.summary %}<div class="error-message">{{ errors.summary }}</div>{% endif %}
+                </div>
+                
+                <div class="form-group">
+                    <label for="clinic_name">Clinic Name</label>
+                    <input type="text" class="form-control {% if errors.clinic_name %}error{% endif %}" id="clinic_name" name="clinic_name" placeholder="Enter your clinic name" value="{{ profile.clinic_name }}" required>
+                    {% if errors.clinic_name %}<div class="error-message">{{ errors.clinic_name }}</div>{% endif %}
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="specialization">Specialization</label>
+                        <input type="text" class="form-control {% if errors.specialization %}error{% endif %}" id="specialization" name="specialization" placeholder="e.g., Small Animals, Exotics" value="{{ profile.specialization }}">
+                        {% if errors.specialization %}<div class="error-message">{{ errors.specialization }}</div>{% endif %}
+                    </div>
+                    <div class="form-group">
+                        <label for="experience_years">Years of Experience</label>
+                        <input type="number" class="form-control {% if errors.experience_years %}error{% endif %}" id="experience_years" name="experience_years" placeholder="Enter years of experience" value="{{ profile.experience_years }}">
+                        {% if errors.experience_years %}<div class="error-message">{{ errors.experience_years }}</div>{% endif %}
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="license_number">License Number</label>
+                    <input type="text" class="form-control {% if errors.license_number %}error{% endif %}" id="license_number" name="license_number" placeholder="Enter your license number" value="{{ profile.license_number }}" required>
+                    {% if errors.license_number %}<div class="error-message">{{ errors.license_number }}</div>{% endif %}
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="country">Country</label>
+                        <input type="text" class="form-control {% if errors.country %}error{% endif %}" id="country" name="country" placeholder="Enter your country" value="{{ profile.country }}" required>
+                        {% if errors.country %}<div class="error-message">{{ errors.country }}</div>{% endif %}
+                    </div>
+                    <div class="form-group">
+                        <label for="city">City</label>
+                        <input type="text" class="form-control {% if errors.city %}error{% endif %}" id="city" name="city" placeholder="Enter your city" value="{{ profile.city }}" required>
+                        {% if errors.city %}<div class="error-message">{{ errors.city }}</div>{% endif %}
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="address">Clinic Address</label>
+                    <textarea class="form-control {% if errors.address %}error{% endif %}" id="address" name="address" rows="2" placeholder="Enter your clinic address">{{ profile.address }}</textarea>
+                    {% if errors.address %}<div class="error-message">{{ errors.address }}</div>{% endif %}
+                </div>
+                
+                <button type="submit" class="btn">Save Profile</button>
+            </form>
+            {% endif %}
+        </div>
     </div>
+
+    <script>
+        function updateFileName(input, displayId) {
+            const fileNameDisplay = document.getElementById(displayId);
+            if (input.files.length > 0) {
+                fileNameDisplay.textContent = input.files[0].name;
+            } else {
+                fileNameDisplay.textContent = 'No file chosen';
+            }
+        }
+        
+        function toggleFileInput(inputId, isChecked) {
+            const fileInput = document.getElementById(inputId);
+            fileInput.disabled = isChecked;
+            
+            // Reset the file name display if default image is selected
+            if (isChecked) {
+                document.getElementById('file-name-display').textContent = 'Using default image';
+            } else {
+                document.getElementById('file-name-display').textContent = 'No file chosen';
+            }
+        }
+    </script>
 </body>
 </html>

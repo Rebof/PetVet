@@ -1,6 +1,6 @@
 {% extends 'main/base.html' %}
 
-{% block title %}Community | PetCare Connect{% endblock %}
+{% block title %}Community | PetVet{% endblock %}
 
 {% block content %}
 <section class="hero" style="min-height: 60vh;">
@@ -8,7 +8,15 @@
         <h1>Pet Lovers Community</h1>
         <p>Connect with fellow pet owners, share stories, ask questions, and get advice from our monitored community.</p>
         <div class="hero-buttons">
-            <button class="btn btn-primary"><i class="fas fa-users"></i> Join Discussions</button>
+            {% if user.is_authenticated %}
+    <a href="{% url 'coreFunctions:index' %}" class="btn btn-primary">
+        <i class="fas fa-users"></i> Join Discussions
+    </a>
+{% else %}
+    <a href="{% url 'authUser:register' %}" class="btn btn-primary">
+        <i class="fas fa-users"></i> Join Discussions
+    </a>
+{% endif %}
         </div>
     </div>
 </section>
