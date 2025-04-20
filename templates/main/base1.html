@@ -1,7 +1,7 @@
 {% load static %}
 
 <title>{% block title %}PetVet{% endblock %}</title>
-<link rel="icon" type="image/png" href="{% static 'assets/images/paw.png' %}">
+<link rel="icon" href="{% static 'assets/images/paw.png' %}?v=2" type="image/png">
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'assets/css/feed.css' %}">
 {% endblock %}
@@ -12,12 +12,13 @@
     <!-- Top Navigation Bar -->
     <nav class="pet-top-nav">
         <div class="nav-left">
-            <div class="logo">
-                <i class="fas fa-paw"></i>
-                <span>Pet<span class="vet-text">Vet</span></span>
-
-            </div>
+    <a href="{% url 'coreFunctions:home' %}" class="logo-link">
+        <div class="logo-container">
+            <img src="{% static 'assets/images/paw.png' %}" alt="PetVet Logo" class="logo-img">
+                <span class="logo-text">Pet<span class="vet-text">Vet</span></span>
         </div>
+    </a>
+</div>
         
         <div class="nav-center">
             <div class="search-bar">

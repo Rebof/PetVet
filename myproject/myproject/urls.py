@@ -6,7 +6,7 @@ from django.conf import settings
 from authUser.views import complete_profile
 from coreFunctions.routing import websocket_urlpatterns
 
-
+# handler404 = 'authUser.views.custom_404'
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -24,3 +24,4 @@ urlpatterns = [
 
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+    urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

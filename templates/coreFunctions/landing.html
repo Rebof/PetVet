@@ -1,6 +1,7 @@
 {% extends 'main/base.html' %}
 
 {% block content %}
+{% load static %}
 <section class="hero">
     <div class="hero-content">
         <h1>Complete Pet Care Platform</h1>
@@ -18,7 +19,7 @@
         </div>
     </div>
     <div class="hero-image">
-        <img src="https://images.unsplash.com/photo-1586671267731-da2cf3ceeb80?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1498&q=80" alt="Happy dog at vet">
+        <img src="{% static 'assets/images/dog.jpeg' %}" alt="Happy dog at vet">
     </div>
     <div class="hero-blob"></div>
 </section>

@@ -1,7 +1,9 @@
+{% load static %}
 <header>
+
     <div class="navbar">
         <a href="{% url 'coreFunctions:home' %}" class="logo">
-            <i class="fas fa-paw"></i>
+            <img src="{% static 'assets/images/paw.png' %}" alt="PetVet Logo" class="logo-img">
             Pet<span>Vet</span>
         </a>
         <div class="nav-links">

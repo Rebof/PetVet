@@ -1,10 +1,13 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    {% load static %}
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Login - PetVet</title>
+    <link rel="icon" href="{% static 'assets/images/paw.png' %}?v=2" type="image/png">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
             --primary-color: #4ecdc4;
@@ -20,6 +23,7 @@
             --transition: all 0.3s ease;
             --success-color: #10b981;
             --error-color: #ef4444;
+            --green-text: #2E7D32; /* Brighter shade of #1B5E20 */
         }
         
         * {
@@ -30,9 +34,10 @@
         }
         
         body {
-            background: linear-gradient(-45deg, #f5f7fa, #c3cfe2, #f5f7fa);
+            /* More subtle gradient for admin interface */
+            background: linear-gradient(-45deg, #f9f9f9, #f0f5f0, #f5f7fa);
             background-size: 400% 400%;
-            animation: gradient 15s ease infinite;
+            animation: gradient 25s ease infinite; /* Slower animation */
             color: var(--text-primary);
             line-height: 1.5;
             display: flex;
@@ -46,6 +51,21 @@
             0% { background-position: 0% 50%; }
             50% { background-position: 100% 50%; }
             100% { background-position: 0% 50%; }
+        }
+        
+        /* Add subtle pattern */
+        .background-pattern {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: -1;
+            opacity: 0.02; /* Very subtle */
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512' fill='%234CAF50'%3E%3Cpath d='M256 224c-79.41 0-192 122.76-192 200.25 0 34.9 26.81 55.75 71.74 55.75 48.84 0 81.09-25.08 120.26-25.08 39.51 0 71.85 25.08 120.26 25.08 44.93 0 71.74-20.85 71.74-55.75C448 346.76 335.41 224 256 224zm-147.28-12.61c-10.4-34.65-42.44-57.09-71.56-50.13-29.12 6.96-44.29 40.69-33.89 75.34 10.4 34.65 42.44 57.09 71.56 50.13 29.12-6.96 44.29-40.69 33.89-75.34zm84.72-20.78c30.94-8.14 46.42-49.94 34.58-93.36s-46.52-72.01-77.46-63.87-46.42 49.94-34.58 93.36c11.84 43.42 46.53 72.02 77.46 63.87zm281.39-29.34c-29.12-6.96-61.15 15.48-71.56 50.13-10.4 34.65 4.77 68.38 33.89 75.34 29.12 6.96 61.15-15.48 71.56-50.13 10.4-34.65-4.77-68.38-33.89-75.34zm-156.27 29.34c30.94 8.14 65.62-20.45 77.46-63.87 11.84-43.42-3.64-85.21-34.58-93.36s-65.62 20.45-77.46 63.87c-11.84 43.42 3.64 85.22 34.58 93.36z'/%3E%3C/svg%3E");
+            background-repeat: repeat;
+            background-size: 100px 100px;
         }
         
         .login-container {
@@ -77,13 +97,23 @@
             justify-content: center;
             font-size: 2rem;
             font-weight: 700;
-            color: var(--primary-color);
             margin-bottom: 0.5rem;
         }
 
-        .login-logo i {
-            margin-right: 0.5rem;
-            font-size: 1.8rem;
+        .logo-img {
+            height: 40px;
+            width: auto;
+            margin-right: 10px;
+        }
+        
+        .logo-text {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #000000; /* Black color for "Pet" */
+        }
+
+        .green-text {
+            color: var(--green-text); /* Brighter shade of #1B5E20 */
         }
         
         .login-title {
@@ -214,11 +244,12 @@
     </style>
 </head>
 <body>
+    <div class="background-pattern"></div>
     <div class="login-container">
         <div class="login-header">
             <div class="login-logo">
-                <i class="fas fa-paw"></i>
-                <span>PetVet</span>
+                <img src="{% static 'assets/images/paw.png' %}" alt="PetVet Logo" class="logo-img">
+                <span class="logo-text">Pet<span class="green-text">Vet</span></span>
             </div>
             <h1 class="login-title">Admin Login</h1>
         </div>

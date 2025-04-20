@@ -1,9 +1,11 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    {% load static %}
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PetVet - Login & Register</title>
+    <link rel="icon" href="{% static 'assets/images/paw.png' %}?v=2" type="image/png">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <style>
@@ -18,7 +20,7 @@
             --white: #FFFFFF;
             --error: #F44336;
             --success: #4CAF50;
-            --green-text: #1B5E20;
+            --green-text: #2E7D32;
         }
         
         * {
@@ -29,9 +31,62 @@
         
         body {
             font-family: 'Poppins', sans-serif;
-            background-color: #f5f5f5;
             color: var(--text-dark);
             line-height: 1.6;
+            background: linear-gradient(-45deg, #f5f7fa, #e8f5e9, #c8e6c9, #f5f7fa);
+            background-size: 400% 400%;
+            animation: gradient-animation 15s ease infinite;
+            position: relative;
+            overflow-x: hidden;
+        }
+        
+        @keyframes gradient-animation {
+            0% {
+                background-position: 0% 50%;
+            }
+            50% {
+                background-position: 100% 50%;
+            }
+            100% {
+                background-position: 0% 50%;
+            }
+        }
+        
+        /* Add decorative elements */
+        body::before,
+        body::after {
+            content: "";
+            position: absolute;
+            width: 300px;
+            height: 300px;
+            border-radius: 50%;
+            z-index: -1;
+        }
+        
+        body::before {
+            top: -100px;
+            right: -100px;
+            background: radial-gradient(circle, rgba(165, 214, 167, 0.4) 0%, rgba(165, 214, 167, 0) 70%);
+        }
+        
+        body::after {
+            bottom: -100px;
+            left: -100px;
+            background: radial-gradient(circle, rgba(129, 199, 132, 0.4) 0%, rgba(129, 199, 132, 0) 70%);
+        }
+        
+        .background-pattern {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: -2;
+            opacity: 0.05;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512' fill='%234CAF50'%3E%3Cpath d='M256 224c-79.41 0-192 122.76-192 200.25 0 34.9 26.81 55.75 71.74 55.75 48.84 0 81.09-25.08 120.26-25.08 39.51 0 71.85 25.08 120.26 25.08 44.93 0 71.74-20.85 71.74-55.75C448 346.76 335.41 224 256 224zm-147.28-12.61c-10.4-34.65-42.44-57.09-71.56-50.13-29.12 6.96-44.29 40.69-33.89 75.34 10.4 34.65 42.44 57.09 71.56 50.13 29.12-6.96 44.29-40.69 33.89-75.34zm84.72-20.78c30.94-8.14 46.42-49.94 34.58-93.36s-46.52-72.01-77.46-63.87-46.42 49.94-34.58 93.36c11.84 43.42 46.53 72.02 77.46 63.87zm281.39-29.34c-29.12-6.96-61.15 15.48-71.56 50.13-10.4 34.65 4.77 68.38 33.89 75.34 29.12 6.96 61.15-15.48 71.56-50.13 10.4-34.65-4.77-68.38-33.89-75.34zm-156.27 29.34c30.94 8.14 65.62-20.45 77.46-63.87 11.84-43.42-3.64-85.21-34.58-93.36s-65.62 20.45-77.46 63.87c-11.84 43.42 3.64 85.22 34.58 93.36z'/%3E%3C/svg%3E");
+            background-repeat: repeat;
+            background-size: 100px 100px;
         }
         
         .container {
@@ -47,10 +102,17 @@
             max-width: 900px;
             background: var(--white);
             border-radius: 20px;
-            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 15px 50px rgba(0, 0, 0, 0.1), 0 0 0 1px rgba(0, 0, 0, 0.05);
             overflow: hidden;
             display: flex;
             flex-direction: row;
+            position: relative;
+            z-index: 1;
+            transition: box-shadow 0.3s ease;
+        }
+        
+        .card:hover {
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(0, 0, 0, 0.05), 0 0 0 5px rgba(76, 175, 80, 0.1);
         }
         
         .left-panel {
@@ -63,6 +125,31 @@
             justify-content: center;
             position: relative;
             overflow: hidden;
+        }
+        
+        .home-btn {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            display: flex;
+            align-items: center;
+            padding: 8px 15px;
+            background-color: rgba(255, 255, 255, 0.2);
+            color: var(--white);
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            z-index: 10;
+        }
+        
+        .home-btn:hover {
+            background-color: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+        
+        .home-btn i {
+            margin-right: 8px;
         }
         
         .left-panel h1 {
@@ -274,21 +361,24 @@
             display: flex;
             align-items: center;
             margin-bottom: 20px;
+            position: relative;
+            z-index: 2;
         }
         
-        .logo-icon {
-            font-size: 2rem;
+        .logo-img {
+            height: 40px;
+            width: auto;
             margin-right: 10px;
-            color: var(--white);
         }
         
         .logo-text {
             font-size: 1.5rem;
             font-weight: 700;
+            color: #000000; /* Black color for "Pet" */
         }
 
         .green-text {
-            color: var(--green-text);
+            color: #2E7D32; /* Brighter shade of #1B5E20 */
         }
         
         /* Responsive styles */
@@ -310,15 +400,26 @@
                 flex-direction: column;
                 gap: 20px;
             }
+            
+            .home-btn {
+                top: 10px;
+                left: 10px;
+                padding: 6px 12px;
+                font-size: 0.9rem;
+            }
         }
     </style>
 </head>
 <body>
+    <div class="background-pattern"></div>
     <div class="container">
         <div class="card">
             <div class="left-panel">
+                <a href="{% url 'coreFunctions:home' %}" class="home-btn">
+                    <i class="fas fa-home"></i> Home
+                </a>
                 <div class="logo">
-                    <i class="fas fa-paw logo-icon"></i>
+                    <img src="{% static 'assets/images/paw.png' %}" alt="PetVet Logo" class="logo-img">
                     <div class="logo-text">Pet<span class="green-text">Vet</span></div>
                 </div>
                 <h1>Welcome to Pet<span class="green-text">Vet</span></h1>
@@ -338,8 +439,6 @@
                         </div>
                     {% endfor %}
                 {% endif %}
-                
-
                 
                 <!-- Login form -->
                 <div class="form-container active" id="login-form">

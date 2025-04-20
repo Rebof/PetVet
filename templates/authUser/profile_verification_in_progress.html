@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PetVet - Verification In Progress</title>
+    <link rel="icon" href="{% static 'assets/images/paw.png' %}?v=2" type="image/png">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <style>
@@ -186,7 +187,9 @@
                 <p>If you have any questions, please contact us at <a href="">rebofkatwal7@gmail.com</a></p>
             </div>
             
-            <a href="/" class="btn">Return to Home</a>
+            <a href="{% url 'coreFunctions:home' %}" class="btn">Return to Home</a>
+            <a href="{% url 'authUser:logoutUser' %}" class="btn" style="background-color: #f44336; color: white; padding: 8px 16px; border-radius: 5px; text-decoration: none;">Logout</a>
+
         </div>
     </div>
 </body>

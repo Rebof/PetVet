@@ -191,7 +191,15 @@
             <i class="fas fa-paw logo-icon"></i>
             <div class="logo-text">Pet<span class="green-text">Vet</span></div>
         </div>
-        
+        {% if messages %}
+  <div class="messages">
+    {% for message in messages %}
+      <div class="alert {% if message.tags %}alert-{{ message.tags }}{% endif %}">
+        {{ message }}
+      </div>
+    {% endfor %}
+  </div>
+{% endif %}
         <div class="card">
             <h2 class="card-title">Email Verification</h2>
             <p class="card-text">Hi {{ user.full_name }}, please verify your email address by entering the OTP code sent to your email.</p>
@@ -200,11 +208,14 @@
                 {% csrf_token %}
                 <div class="form-group">
                     <label for="otp">Enter OTP</label>
-                    <input type="text" class="form-control" id="otp" name="otp" maxlength="6" placeholder="------" required>
+                    <input type="number" class="form-control" id="otp" name="otp" maxlength="6" placeholder="------" required>
                 </div>
                 <button type="submit" class="btn">Verify</button>
             </form>
+            
         </div>
+        <a href="{% url 'authUser:logoutUser' %}" class="btn" style="background-color: #f44336; color: white; padding: 8px 16px; border-radius: 5px; text-decoration: none;">Logout</a>
+
     </div>
     
     <script>

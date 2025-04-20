@@ -73,6 +73,7 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'authUser.middleware.ProfileCompletionMiddleware',
+    'authUser.middleware.CustomErrorMiddleware',
 ]
 
 ROOT_URLCONF = 'myproject.urls'

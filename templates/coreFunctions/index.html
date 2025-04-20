@@ -8,6 +8,24 @@
 
 <div class="pet-feed-content">
     <div class="feed-wrapper">
+        {% if messages %}
+    <div id="message-container" class="fixed top-4 right-4 z-50 space-y-2">
+        {% for message in messages %}
+        <div class="alert px-4 py-2 rounded-lg shadow-lg text-white transition-opacity duration-300
+            {% if message.tags == 'success' %}
+                bg-green-500
+            {% elif message.tags == 'error' %}
+                bg-red-500
+            {% elif message.tags == 'warning' %}
+                bg-yellow-500 text-black
+            {% else %}
+                bg-blue-500
+            {% endif %}">
+            {{ message }}
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
         <div class="feed-container">
             <!-- Main Content Column -->
             <div class="main-content">
@@ -218,5 +236,14 @@
 </div>
 
 <script src="{% static 'assets/js/index.js' %}"></script>
+<script>
+    setTimeout(() => {
+      const messageContainer = document.getElementById('message-container');
+      if (messageContainer) {
+        messageContainer.style.opacity = '0';
+        setTimeout(() => messageContainer.remove(), 300);  // Fade out then remove
+      }
+    }, 3000); // 3 seconds
+</script>
 
 {% endblock %}

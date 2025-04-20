@@ -54,7 +54,7 @@ def delete_account(request):
                 # Delete the user account
                 user.delete()
                 messages.success(request, 'Your account has been permanently deleted.')
-                return redirect('authUser:login')
+                return redirect('authUser:loginUser')
             else:
                 messages.error(request, 'Incorrect password. Account deletion failed.')
         else:
@@ -203,9 +203,9 @@ def RegisterView(request):
             subject = "Your OTP for Verification"
             message = f"Hi {full_name},\n\nYour OTP for verification is: {user.otp}.\nPlease enter this OTP to complete your registration."
             send_mail(
-                subject,
+                subject,    
                 message,
-                'no-reply@example.com', 
+                settings.DEFAULT_FROM_EMAIL, 
                 [email],
                 fail_silently=False,
             )
@@ -250,6 +250,7 @@ def LoginView(request):
 
         user = authenticate(request, email=email, password=password)
 
+        
         if user is not None:
             # If authentication is successful
             login(request, user)
@@ -430,8 +431,11 @@ def complete_profile(request):
             request.user.profile_completed = True
             request.user.save()
             
-            if request.user.status_verification is False:
-                return redirect('authUser:profile_verification_in_progress')
+            if not request.user.status_verification:
+                if request.user.user_type == "vet":
+                    return redirect('authUser:profile_verification_in_progress')
+                else:
+                    return redirect('authUser:verify_otp')
             
             return redirect('coreFunctions:index')
     
@@ -460,20 +464,28 @@ def profile_verification_in_progress(request):
     
 
 def verify_otp(request):
+    # If user is already verified, redirect them
+    if request.user.status_verification:
+        return redirect("coreFunctions:index")
+    
     if request.method == 'POST':
         entered_otp = request.POST.get('otp')
 
-        # Compare the entered OTPs
+        if not entered_otp:
+            messages.error(request, "Please enter the OTP")
+            return render(request, 'authUser/verify_otp.html')
+
+        # Compare the entered OTP
         if request.user.otp == entered_otp:
             request.user.status_verification = True
-            request.user.otp = ""  # Clear OTP 
+            request.user.otp = None  # Clear OTP after verification
             request.user.save()
             messages.success(request, "Your email has been verified successfully!")
-            return redirect('coreFunctions:inbox')  
+            return redirect("coreFunctions:index")
         else:
             messages.error(request, "Invalid OTP. Please try again.")
     
-    
+    # Handle GET request
     return render(request, 'authUser/verify_otp.html')
     
 
@@ -610,6 +622,10 @@ def review_vet(request, appointment_id):
         'appointment': appointment
     }
     return render(request, 'appointment/review_vet.html', context)
+
+
+def custom_404(request, exception):
+    return render(request, 'errors/404.html', status=404)
 
 
 @login_required
