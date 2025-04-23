@@ -227,6 +227,6 @@ EMAIL_PORT = 587
 EMAIL_USE_TLS = True
 EMAIL_HOST_USER = 'rebofrebok@gmail.com'
 EMAIL_HOST_PASSWORD = 'lxvs lnjo rwpv pdkn'
-
+CONTACT_EMAIL = 'rebofkatwal10@gmail.com'
 EXPIRE_AFTER = '1d'  
 MAX_RETRIES = 3  
