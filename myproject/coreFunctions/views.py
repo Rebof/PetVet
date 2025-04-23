@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.contrib.auth.decorators import login_required
@@ -14,6 +15,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.template.loader import render_to_string
 from random import sample
 from django.db.models import Count, IntegerField, ExpressionWrapper
+from django.core.mail import send_mail
 
 
 @login_required(login_url='authUser:register')
@@ -380,27 +382,6 @@ def delete_reply(request, reply_id):
 
 @csrf_exempt
 @login_required
-def like_post(request, post_id):
-    if request.method == 'POST':
-        try:
-            post = Post.objects.get(id=post_id)
-            user = request.user
-
-            # Toggle like logic
-            if user in post.likes.all():
-                post.likes.remove(user)
-                liked = False
-            else:
-                post.likes.add(user)
-                liked = True
-
-            return JsonResponse({'success': True, 'likes': post.likes.count(), 'liked': liked})
-        except Post.DoesNotExist:
-            return JsonResponse({'success': False, 'error': 'Post not found'}, status=404)
-    return JsonResponse({'success': False, 'error': 'Invalid request'}, status=400)
-
-@csrf_exempt
-@login_required
 def like_comment(request, comment_id):
     if request.method == 'POST':
         try:
@@ -453,6 +434,7 @@ def add_reply(request, comment_id):
     
     return JsonResponse({'success': False, 'error': 'Invalid request'}, status=400)
 
+
 def search_results(request):
     query = request.GET.get('q', '')
     
@@ -490,6 +472,53 @@ def search_results(request):
     }
     
     return render(request, 'main/search_results.html', context)
+
+
+def contact(request):
+    if request.method == 'POST':
+        # Get form data
+        name = request.POST.get('name')
+        email = request.POST.get('email')
+        subject = request.POST.get('subject')
+        message = request.POST.get('message')
+        
+
+        
+        # Basic validation
+        if not all([name, email, subject, message]):
+            messages.error(request, "All fields are required!")
+            return redirect('coreFunctions:contact')
+        
+        if '@' not in email:
+            messages.error(request, "Please enter a valid email address")
+            return redirect('corefunctions:contact')
+        
+        try:
+            # Format the email content
+            email_subject = f"Contact Form: {subject}"
+            email_message = (
+                f"Name: {name}\n"
+                f"Email: {email}\n\n"
+                f"Message:\n{message}"
+            )
+            
+            # Send email (consistent with your working OTP code)
+            send_mail(
+                email_subject,
+                email_message,
+                settings.DEFAULT_FROM_EMAIL,  # From email
+                [settings.CONTACT_EMAIL],     # To email (add this to settings.py)
+                fail_silently=False,
+            )
+            
+            messages.success(request, "Your message has been sent successfully!")
+            return redirect('coreFunctions:contact')
+            
+        except Exception as e:
+            messages.error(request, f"Failed to send message. Error: {str(e)}")
+            return redirect('coreFunctions:contact')
+    
+    return render(request, 'coreFunctions/contact.html')
 
 
 def add_comment(request, slug):

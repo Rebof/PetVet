@@ -44,7 +44,7 @@ def send_appointment_notification(appointment, subject, template, is_rejection=F
         html_message=html_message
     )
 
-# Payment Views
+# Payment Views tested
 @login_required
 def initiate_khalti_payment(request, appointment_id):
     appointment = get_object_or_404(Appointment, id=appointment_id)
@@ -86,6 +86,7 @@ def initiate_khalti_payment(request, appointment_id):
             'appointment': appointment
         })
 
+#tested
 @login_required
 @csrf_exempt
 def verify_khalti_payment(request, appointment_id):
@@ -113,7 +114,7 @@ def verify_khalti_payment(request, appointment_id):
         if data.get('status') != 'Completed':
             appointment.status = 'unpaid'
             appointment.payment_status = 'failed'
-            appointment.delete()
+            appointment.save()
             return redirect('appointment:payment_failed', appointment_id=appointment.id)
         
         # Payment successful - store details and await vet approval
@@ -181,7 +182,7 @@ def vet_schedule(request, vet_id):
     })
 
 
-
+#tested
 def edit_schedule(request, schedule_id):
     user = request.user
     vet = get_object_or_404(VetProfile, user=user)
@@ -240,7 +241,7 @@ def edit_schedule(request, schedule_id):
     })
 
 
-
+#tested
 def add_schedule(request):
     user = request.user
     vet = get_object_or_404(VetProfile, user=user)
@@ -290,20 +291,13 @@ def add_schedule(request):
     return render(request, 'appointment/appointment_creation_vets.html', {'vet': vet})
 
 
+#test done
 @login_required
 def book_appointment(request, vet_id, schedule_id):
     vet = get_object_or_404(VetProfile, id=vet_id)
     schedule = get_object_or_404(VetSchedule, id=schedule_id)
     pet_owner = get_object_or_404(PetOwnerProfile, user=request.user)
     pets = pet_owner.pets.all()  # Fetch all pets for the dropdown
-
-    if Appointment.objects.filter(schedule=schedule, status="confirmed").exists():
-        return render(request, "appointment/book_appt.html", {
-            "vet": vet,
-            "schedule": schedule,
-            "pets": pets,
-            "error": "This slot is already booked."
-        })
 
     if request.method == "POST":
         pet_id = request.POST.get("pet")
@@ -337,6 +331,7 @@ def book_appointment(request, vet_id, schedule_id):
         "pets": pets
     })
 
+#test done
 @login_required
 def book_with_credit(request, vet_id, schedule_id):
     vet = get_object_or_404(VetProfile, id=vet_id)
@@ -397,7 +392,6 @@ def book_with_credit(request, vet_id, schedule_id):
             return redirect('appointment:book_appointment', vet_id=vet_id, schedule_id=schedule_id)
         except Exception as e:
             # Revert credit deduction if error occurs
-            pet_owner.credit_balance += 1000 * 100
             pet_owner.save()
             messages.error(request, f"Error booking appointment: {str(e)}")
             return redirect('appointment:book_appointment', vet_id=vet_id, schedule_id=schedule_id)
@@ -445,11 +439,12 @@ def appointment_detail(request, appointment_id):
 
 
 
-
+#tested
 @login_required
 def cancel_appointment(request, appointment_id):
     appointment = get_object_or_404(Appointment, id=appointment_id)
-    
+    if request.method != "POST":
+        return redirect('appointment:appointment_list')
     try:
         # Only process credit for paid appointments
         if appointment.payment_status == 'paid' and appointment.status in ['confirmed', 'paid_pending_approval']:
@@ -486,6 +481,8 @@ def vet_pending_appointments(request, vet_id):
         "vet": vet
     })
 
+
+#tested
 @login_required
 def accept_appointment(request, appointment_id):
     appointment = get_object_or_404(Appointment, id=appointment_id)
@@ -528,7 +525,7 @@ def accept_appointment(request, appointment_id):
     return HttpResponseRedirect(reverse('appointment:vet_pending_appointments', args=[appointment.vet.id]))
 
 
-
+#tested
 @login_required
 def reject_appointment(request, appointment_id):
     appointment = get_object_or_404(Appointment, id=appointment_id)
@@ -564,6 +561,7 @@ def reject_appointment(request, appointment_id):
 
     return HttpResponseRedirect(reverse('appointment:vet_pending_appointments', args=[appointment.vet.id]))
 
+
 @login_required
 def vet_accepted_appointments(request, vet_id):
     vet = get_object_or_404(VetProfile, id=vet_id)
@@ -573,10 +571,18 @@ def vet_accepted_appointments(request, vet_id):
         "vet": vet
     })
 
+
+#tested
 @login_required
 def mark_completed(request, appointment_id):
     appointment = get_object_or_404(Appointment, id=appointment_id)
 
+     # Check permissions
+    if not hasattr(appointment, 'vet') or not hasattr(appointment.vet, 'user') or \
+       request.user != appointment.vet.user:
+        messages.error(request, "You don't have permission to mark this appointment as completed.")
+        return HttpResponseRedirect(reverse('appointment:vet_accepted_appointments', args=[appointment.vet.id]))
+    
     if request.method == "POST":
         appointment.status = "completed"
         appointment.save()
@@ -585,6 +591,7 @@ def mark_completed(request, appointment_id):
 
     return redirect("appointment:vet_accepted_appointments", vet_id=appointment.vet.id)
 
+
 # Payment Status Views
 @login_required
 def payment_success(request, appointment_id):
@@ -592,6 +599,7 @@ def payment_success(request, appointment_id):
     return render(request, 'appointment/payment_success.html', {
         'appointment': appointment
     })
+
 
 @login_required
 def payment_failed(request, appointment_id):

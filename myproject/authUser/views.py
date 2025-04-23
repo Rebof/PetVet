@@ -257,7 +257,7 @@ def LoginView(request):
             
             # Redirect to complete-profile if the profile is incomplete
             if not user.profile_completed: 
-                print("redirect bhayo")
+                # print("redirect bhayo")
                 return redirect("complete-profile")
             
             return redirect("coreFunctions:index")

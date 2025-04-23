@@ -36,11 +36,9 @@ class ProfileCompletionMiddleware:
 
         user = request.user
 
-        # Bypass checks for unauthenticated users
         if not user.is_authenticated:
             return self.get_response(request)
 
-        # Bypass checks for admin/staff users
         if user.is_superuser or user.is_staff:
             return self.get_response(request)
 
@@ -48,11 +46,11 @@ class ProfileCompletionMiddleware:
         if request.path.startswith(exempt_prefixes) or (request.path in allowed_paths):
             return self.get_response(request)
 
-        # Step 1: Check if profile is completed
+        
         if not user.profile_completed:
             return redirect('complete-profile')
 
-        # Step 2: Check verification status
+        # Step 2
         if not user.status_verification:
             if user.user_type == "vet":
                 return redirect('authUser:profile_verification_in_progress')
@@ -60,7 +58,7 @@ class ProfileCompletionMiddleware:
                 # Only redirect to OTP verification if user is pet_owner and not verified
                 return redirect('authUser:verify_otp')
 
-        # If all checks pass, continue with the request
+
         return self.get_response(request)
     
 class CustomErrorMiddleware:

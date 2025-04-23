@@ -13,6 +13,7 @@ import json
 from django.core.serializers.json import DjangoJSONEncoder
 from authUser.models import User, VetProfile, PetOwnerProfile
 from coreFunctions.models import Post, Category, Comment, ReplyComment
+from .decorators import admin_required 
 
 def admin_login(request):
     if request.method == 'POST':
@@ -32,6 +33,7 @@ def admin_logout(request):
     messages.success(request, "You have been logged out!")
     return redirect('django_admin:admin_login')
 
+@admin_required
 def admin_dashboard(request):
     # Get counts for dashboard stats
     total_users = User.objects.count()
@@ -68,6 +70,7 @@ def admin_dashboard(request):
         'active_page': 'dashboard'
     })
 
+@admin_required
 def user_management(request):
     search_query = request.GET.get('search', '')
     user_type = request.GET.get('user_type', '')
@@ -96,6 +99,7 @@ def user_management(request):
         'active_page': 'users'
     })
 
+@admin_required
 def view_user(request, user_id):
     user = get_object_or_404(User, id=user_id)
     
@@ -117,6 +121,7 @@ def view_user(request, user_id):
         'active_page': 'users'
     })
 
+@admin_required
 def delete_user(request, user_id):
     user = get_object_or_404(User, id=user_id)
     
@@ -142,6 +147,7 @@ def delete_user(request, user_id):
     
     return redirect('django_admin:view_user', user_id=user_id)
 
+@admin_required
 def post_management(request):
     search_query = request.GET.get('search', '')
     category_id = request.GET.get('category', '')
@@ -173,6 +179,7 @@ def post_management(request):
         'active_page': 'posts'
     })
 
+@admin_required
 def view_post(request, post_id):
     post = get_object_or_404(Post, id=post_id)
     comments = Comment.objects.filter(post=post).order_by('-date')
@@ -184,6 +191,7 @@ def view_post(request, post_id):
         'active_page': 'posts'
     })
 
+@admin_required
 def delete_post(request, post_id):
     post = get_object_or_404(Post, id=post_id)
     
@@ -212,6 +220,7 @@ def delete_post(request, post_id):
     
     return redirect('django_admin:view_post', post_id=post_id)
 
+@admin_required
 def toggle_post_status(request, post_id):
     post = get_object_or_404(Post, id=post_id)
     
@@ -238,6 +247,7 @@ def toggle_post_status(request, post_id):
     
     return redirect('django_admin:view_post', post_id=post_id)
 
+@admin_required
 def delete_comment(request, comment_id):
     comment = get_object_or_404(Comment, id=comment_id)
     post_id = comment.post.id
@@ -248,6 +258,7 @@ def delete_comment(request, comment_id):
     
     return redirect('django_admin:view_post', post_id=post_id)
 
+@admin_required
 def delete_reply(request, reply_id):
     reply = get_object_or_404(ReplyComment, id=reply_id)
     post_id = reply.comment.post.id
@@ -258,6 +269,7 @@ def delete_reply(request, reply_id):
     
     return redirect('django_admin:view_post', post_id=post_id)
 
+@admin_required
 def vet_approvals(request):
     # Get pending vet approvals
     pending_vets = VetProfile.objects.filter(
@@ -287,6 +299,7 @@ def vet_approvals(request):
         'active_page': 'vet_approvals'
     })
 
+@admin_required
 def view_vet(request, vet_id):
     vet_profile = get_object_or_404(VetProfile, id=vet_id)
     
@@ -296,6 +309,8 @@ def view_vet(request, vet_id):
         'active_page': 'vet_approvals'
     })
 
+#tested
+@admin_required
 def approve_vet(request, vet_id):
     vet_profile = get_object_or_404(VetProfile, id=vet_id)
     vet_user = vet_profile.user
@@ -322,6 +337,8 @@ def approve_vet(request, vet_id):
     messages.success(request, f"Veterinarian '{vet_user.full_name or vet_user.username}' has been approved successfully.")
     return redirect('django_admin:vet_approvals')
 
+
+@admin_required
 def decline_vet(request, vet_id):
     vet_profile = get_object_or_404(VetProfile, id=vet_id)
     vet_user = vet_profile.user
@@ -347,6 +364,8 @@ def decline_vet(request, vet_id):
     messages.success(request, f"Veterinarian '{vet_user.full_name or vet_user.username}' has been declined.")
     return redirect('django_admin:vet_approvals')
 
+
+@admin_required
 def category_management(request):
     # Get all categories with post count
     categories = Category.objects.annotate(post_count=Count('post'))
@@ -357,6 +376,8 @@ def category_management(request):
         'active_page': 'categories'
     })
 
+
+@admin_required
 def add_category(request):
     if request.method == 'POST':
         name = request.POST.get('name')
@@ -370,6 +391,8 @@ def add_category(request):
     
     return redirect('django_admin:category_management')
 
+
+@admin_required
 def edit_category(request, category_id):
     category = get_object_or_404(Category, id=category_id)
     
@@ -388,6 +411,8 @@ def edit_category(request, category_id):
     
     return redirect('django_admin:category_management')
 
+
+@admin_required
 def delete_category(request, category_id):
     category = get_object_or_404(Category, id=category_id)
     
