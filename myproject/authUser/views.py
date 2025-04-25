@@ -565,7 +565,7 @@ def pet_profile(request, pet_id):
         try:
             pet.save()
             messages.success(request, f"{pet.name}'s profile has been updated successfully!")
-            return redirect('pet_profile', pet_id=pet.id)
+            return redirect('authUser:pet_profile', pet_id=pet.id)
         except Exception as e:
             messages.error(request, f"Error updating pet profile: {str(e)}")
     
@@ -612,7 +612,7 @@ def review_vet(request, appointment_id):
             reviewer=request.user,
             rating=rating,
             comment=comment,
-            appointment=appointment  # Add this field to the Review model
+            appointment=appointment
         )
         
         messages.success(request, "Thank you for your review!")

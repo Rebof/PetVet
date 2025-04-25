@@ -119,14 +119,14 @@ def create_post(request):
         # Validate required fields
         if not title or not body or not category_id:
             messages.error(request, 'Please fill in all required fields')
-            return redirect('coreFunctions:feed')
+            return redirect('coreFunctions:index')
         
         # Get category
         try:
             category = Category.objects.get(id=category_id)
         except Category.DoesNotExist:
             messages.error(request, 'Invalid category')
-            return redirect('coreFunctions:feed')
+            return redirect('coreFunctions:index')
         
         # Create slug from title
         slug = slugify(title)
@@ -169,10 +169,21 @@ def post_detail(request, slug):
     # Categories with annotated post counts
     categories = Category.objects.annotate(post_count=Count('post'))
 
-    # Trending posts from same category, excluding current post
-    trending_posts = Post.objects.filter(
-        category=post.category, active=True
-    ).exclude(id=post.id).order_by('-likes')[:5]
+
+    posts_with_engagement = Post.objects.filter(
+    category=post.category,  # assuming `post` is defined
+    active=True
+).annotate(
+    like_count=Count('likes'),
+    comment_count=Count('comments'),
+    engagement_score=ExpressionWrapper(
+        Count('likes') + Count('comments'),
+        output_field=IntegerField()
+    )
+).order_by('-engagement_score')[:10] # top 10 by total engagement
+
+    # Pick 5 random ones from top 10
+    trending_posts = sample(list(posts_with_engagement), min(5, len(posts_with_engagement)))    
 
     # Active comments and their active replies
     comments = post.comments.filter(active=True).prefetch_related(
@@ -348,14 +359,28 @@ def edit_post(request, slug):
 
 @login_required
 def delete_post(request, post_id):
-    if request.method == 'POST':
-        try:
-            post = Post.objects.get(id=post_id, user=request.user)
-            post.delete()
-            return JsonResponse({'success': True})
-        except Post.DoesNotExist:
-            return JsonResponse({'success': False, 'error': 'Post not found or unauthorized'}, status=404)
-    return JsonResponse({'success': False, 'error': 'Invalid request method'}, status=400)
+    if request.method != 'POST':
+        return JsonResponse({
+            'success': False,
+            'error': 'Invalid request method'
+        }, status=400, content_type='application/json')
+
+    try:
+        post = Post.objects.get(id=post_id)
+        if post.user != request.user:
+            return JsonResponse({
+                'success': False,
+                'error': 'Post not found or unauthorized'
+            }, status=404, content_type='application/json')
+        
+        post.delete()
+        return JsonResponse({'success': True}, content_type='application/json')
+        
+    except Post.DoesNotExist:
+        return JsonResponse({
+            'success': False,
+            'error': 'Post not found'
+        }, status=404, content_type='application/json')
 
 @login_required
 def delete_comment(request, comment_id):
@@ -450,7 +475,7 @@ def search_results(request):
             Q(user__username__icontains=query) |
             Q(user__full_name__icontains=query) |
             Q(user__last_name__icontains=query) |
-            Q(specialization__icontains=query)  # Assuming vets have a specialization field
+            Q(specialization__icontains=query)  
         )
         
         # Search for pet owner profiles

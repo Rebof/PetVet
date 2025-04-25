@@ -220,6 +220,8 @@ def delete_post(request, post_id):
     
     return redirect('django_admin:view_post', post_id=post_id)
 
+
+
 @admin_required
 def toggle_post_status(request, post_id):
     post = get_object_or_404(Post, id=post_id)
@@ -349,13 +351,18 @@ def decline_vet(request, vet_id):
     vet_user.save()
     vet_profile.save()
     
+    # Prepare email details
+    subject = 'Your Veterinarian Account Application'
+    message = f'Dear {vet_user.full_name or vet_user.username},\n\nWe regret to inform you that your application to register as a veterinarian on PetVet has been declined. This may be due to incomplete or incorrect information provided. Please update your profile with accurate information and try again.\n\nBest regards,\nThe PetVet Team'
+    recipient = [vet_user.email]
+    
     # Send email notification
     try:
         send_mail(
-            'Your Veterinarian Account Application',
-            f'Dear {vet_user.full_name or vet_user.username},\n\nWe regret to inform you that your application to register as a veterinarian on PetVet has been declined. This may be due to incomplete or incorrect information provided. Please update your profile with accurate information and try again.\n\nBest regards,\nThe PetVet Team',
+            subject,
+            message,
             settings.DEFAULT_FROM_EMAIL,
-            [vet_user.email],
+            recipient,
             fail_silently=False,
         )
     except Exception as e:

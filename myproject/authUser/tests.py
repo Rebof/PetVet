@@ -3,11 +3,151 @@ from django.contrib.messages import get_messages
 from django.urls import reverse
 from django.contrib.auth import get_user_model
 from django.core import mail
-from .models import User, VetProfile, PetOwnerProfile
+from .models import User, VetProfile, PetOwnerProfile, Review, Pet
+from appointment.models import Appointment, VetSchedule
+from django.contrib import messages
 
 User = get_user_model()
 
+class ReviewVetTestCase(TestCase):
+    def setUp(self):
+        # Create vet user and profile
+        self.vet_user = User.objects.create_user(
+            email='vet@example.com',
+            username='vetuser',
+            password='testpass123',
+            user_type='vet',
+            profile_completed=True,
+            status_verification=True 
+        )
+        self.vet_profile = self.vet_user.vetprofile
 
+        # Create owner user and profile
+        self.owner_user = User.objects.create_user(
+            email='owner@example.com',
+            username='petowner',
+            password='testpass123',
+            user_type='pet_owner',
+            profile_completed=True,
+            status_verification=True 
+        )
+        self.pet_owner = self.owner_user.petownerprofile
+        # Create pet
+        self.pet = Pet.objects.create(
+            owner=self.pet_owner,
+            name='Fluffy',
+            breed='Persian',
+            species='Cat',
+            age=9
+        )
+        # Create schedule
+        self.schedule = VetSchedule.objects.create(
+            vet=self.vet_profile,
+            day_of_week='Monday',
+            start_time='09:00:00',
+            end_time='12:00:00',
+            available=True
+        )
+
+        # Create completed and paid appointment
+        self.appointment = Appointment.objects.create(
+            pet_owner=self.pet_owner,
+            vet=self.vet_profile,
+            schedule=self.schedule,
+            status='completed',
+            payment_status='paid',
+            pet=self.pet,
+            amount_paid=100 * 100  # 1000 NPR in paisa
+        )
+
+    def test_review_vet_unauthorized_user(self):
+        """Test that only the pet owner can review the appointment"""
+        # Create another user who didn't make the appointment
+        other_user = User.objects.create_user(
+            email='other@example.com',
+            username='otheruser',
+            password='testpass123',
+            user_type='pet_owner',
+            profile_completed=True,
+            status_verification=True 
+        )
+        self.client.force_login(other_user)
+        
+        url = reverse('authUser:review_vet', args=[self.appointment.id])
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 403)
+
+    def test_review_vet_not_completed_appointment(self):
+        """Test that only completed appointments can be reviewed"""
+        # Change appointment status to pending
+        self.appointment.status = 'paid_pending_approval'
+        self.appointment.save()
+        
+        self.client.force_login(self.owner_user)
+        url = reverse('authUser:review_vet', args=[self.appointment.id])
+        response = self.client.get(url)
+        
+        self.assertRedirects(response, reverse('appointment:appointment_detail', args=[self.appointment.id]))
+        
+        # Check for error message
+        messages_list = list(messages.get_messages(response.wsgi_request))
+        self.assertEqual(len(messages_list), 1)
+        self.assertIn("You can only review completed and paid appointments", str(messages_list[0]))
+
+    def test_review_vet_already_reviewed(self):
+        """Test that a user can't review the same appointment twice"""
+        # Create existing review
+        Review.objects.create(
+            vet=self.vet_profile,
+            reviewer=self.owner_user,
+            rating=5,
+            comment='Great!',
+            appointment=self.appointment
+        )
+        
+        self.client.force_login(self.owner_user)
+        url = reverse('authUser:review_vet', args=[self.appointment.id])
+        response = self.client.get(url)
+        
+        self.assertRedirects(response, reverse('appointment:appointment_detail', args=[self.appointment.id]))
+        
+        # Check for info message
+        messages_list = list(messages.get_messages(response.wsgi_request))
+        self.assertEqual(len(messages_list), 1)
+        self.assertIn("You have already reviewed this appointment", str(messages_list[0]))
+
+    def test_review_vet_successful_submission(self):
+        """Test successful review submission"""
+        self.client.force_login(self.owner_user)
+        url = reverse('authUser:review_vet', args=[self.appointment.id])
+        
+        data = {
+            'rating': 5,
+            'comment': 'Excellent service!'
+        }
+        
+        response = self.client.post(url, data)
+        
+        # Check if review was created
+        self.assertTrue(Review.objects.filter(appointment=self.appointment).exists())
+        
+        # Check redirect
+        self.assertRedirects(response, reverse('appointment:appointment_detail', args=[self.appointment.id]))
+        
+        # Check success message
+        messages_list = list(messages.get_messages(response.wsgi_request))
+        self.assertEqual(len(messages_list), 1)
+        self.assertIn("Thank you for your review", str(messages_list[0]))
+
+    def test_review_vet_template_used(self):
+        """Test that the correct template is used for GET request"""
+        self.client.force_login(self.owner_user)
+        url = reverse('authUser:review_vet', args=[self.appointment.id])
+        response = self.client.get(url)
+        
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'appointment/review_vet.html')
+        self.assertEqual(response.context['appointment'], self.appointment)
 
 class LoginViewTest(TestCase):
     def setUp(self):

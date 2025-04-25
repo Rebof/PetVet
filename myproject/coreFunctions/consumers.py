@@ -102,7 +102,7 @@ class NotificationConsumer(AsyncWebsocketConsumer):
     async def send_notification(self, event):
         # Send notification to WebSocket
         await self.send(text_data=json.dumps({
-            'type': 'new_message',  # Changed to match what the frontend expects
+            'type': 'new_message',  
             'message': event['message'],
             'sender': event.get('sender'),
             'timestamp': event.get('timestamp'),

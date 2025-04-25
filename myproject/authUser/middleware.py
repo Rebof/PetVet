@@ -71,7 +71,7 @@ class CustomErrorMiddleware:
 
             # You can handle 404 here if status_code is 404
             if response.status_code == 404:
-                return render(request, 'error.html', status=404)
+                return render(request, 'errors/404.html', status=404)
 
             return response
 

@@ -443,8 +443,6 @@ def appointment_detail(request, appointment_id):
 @login_required
 def cancel_appointment(request, appointment_id):
     appointment = get_object_or_404(Appointment, id=appointment_id)
-    if request.method != "POST":
-        return redirect('appointment:appointment_list')
     try:
         # Only process credit for paid appointments
         if appointment.payment_status == 'paid' and appointment.status in ['confirmed', 'paid_pending_approval']:
