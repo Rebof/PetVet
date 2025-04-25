@@ -59,7 +59,7 @@
                 <td>
                     <div class="table-actions">
                         <a href="{% url 'django_admin:view_user' user.id %}" class="btn btn-primary btn-sm">View</a>
-                        <button type="button" class="btn btn-danger btn-sm" onclick="confirmDelete('{{ user.id }}', '{{ user.username }}')">Delete</button>
+                        <!-- <button type="button" class="btn btn-danger btn-sm" onclick="confirmDelete('{{ user.id }}', '{{ user.username }}')">Delete</button> -->
                     </div>
                 </td>
             </tr>
@@ -115,7 +115,7 @@
 {% endif %}
 
 <!-- Delete Confirmation Modal -->
-<div id="deleteModal" class="modal" style="display: none;">
+<!-- <div id="deleteModal" class="modal" style="display: none;">
     <div class="modal-content">
         <h3>Confirm Deletion</h3>
         <p>Are you sure you want to delete user <span id="deleteUserName"></span>?</p>
@@ -128,7 +128,7 @@
             </form>
         </div>
     </div>
-</div>
+</div> -->
 
 <style>
 .modal {
@@ -181,7 +181,6 @@
 <script>
 function confirmDelete(userId, username) {
     document.getElementById('deleteUserName').textContent = username;
-    document.getElementById('deleteForm').action = "{% url 'django_admin:delete_user' 0 %}".replace('0', userId);
     document.getElementById('deleteModal').style.display = 'flex';
 }
 

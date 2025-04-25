@@ -23,7 +23,7 @@
                     <i class="fas fa-envelope"></i>
                 </div>
                 <h3>Email Us</h3>
-                <p>hello@petcareconnect.com</p>
+                <p>rebofkatwal7@gmail.com</p>
                 <p>We typically respond within 24 hours.</p>
             </div>
             
@@ -32,8 +32,8 @@
                     <i class="fas fa-phone"></i>
                 </div>
                 <h3>Call Us</h3>
-                <p>(555) 123-4567</p>
-                <p>Monday-Friday, 9am-5pm EST</p>
+                <p>+977 9803030887</p>
+                <p>Sunday-Friday, 9am-5pm</p>
             </div>
             
             <div class="feature-card">
@@ -41,8 +41,8 @@
                     <i class="fas fa-map-marker-alt"></i>
                 </div>
                 <h3>Visit Us</h3>
-                <p>123 Pet Street</p>
-                <p>Pet City, PC 12345</p>
+                <p>Bagdol</p>
+                <p>Pet City, Lalitpur</p>
             </div>
         </div>
     </div>
@@ -55,25 +55,33 @@
             <p>Send us a message directly</p>
         </div>
         
-        <form class="contact-form" style="max-width: 600px; margin: 0 auto;">
+        {% if messages %}
+  {% for message in messages %}
+    <div class="alert {{ message.tags }}">{{ message }}</div>
+  {% endfor %}
+{% endif %}
+        
+        <form method="POST" action="{% url 'coreFunctions:contact' %}" class="contact-form" style="max-width: 600px; margin: 0 auto;">
+            {% csrf_token %}
+            
             <div class="form-group" style="margin-bottom: 1.5rem;">
                 <label for="name" style="display: block; margin-bottom: 0.5rem;">Your Name</label>
-                <input type="text" id="name" style="width: 100%; padding: 0.75rem; border-radius: 5px; border: 1px solid #ddd;">
+                <input type="text" id="name" name="name" required style="width: 100%; padding: 0.75rem; border-radius: 5px; border: 1px solid #ddd;">
             </div>
             
             <div class="form-group" style="margin-bottom: 1.5rem;">
                 <label for="email" style="display: block; margin-bottom: 0.5rem;">Email Address</label>
-                <input type="email" id="email" style="width: 100%; padding: 0.75rem; border-radius: 5px; border: 1px solid #ddd;">
+                <input type="email" id="email" name="email" required style="width: 100%; padding: 0.75rem; border-radius: 5px; border: 1px solid #ddd;">
             </div>
             
             <div class="form-group" style="margin-bottom: 1.5rem;">
                 <label for="subject" style="display: block; margin-bottom: 0.5rem;">Subject</label>
-                <input type="text" id="subject" style="width: 100%; padding: 0.75rem; border-radius: 5px; border: 1px solid #ddd;">
+                <input type="text" id="subject" name="subject" required style="width: 100%; padding: 0.75rem; border-radius: 5px; border: 1px solid #ddd;">
             </div>
             
             <div class="form-group" style="margin-bottom: 1.5rem;">
                 <label for="message" style="display: block; margin-bottom: 0.5rem;">Message</label>
-                <textarea id="message" rows="5" style="width: 100%; padding: 0.75rem; border-radius: 5px; border: 1px solid #ddd;"></textarea>
+                <textarea id="message" name="message" rows="5" required style="width: 100%; padding: 0.75rem; border-radius: 5px; border: 1px solid #ddd;"></textarea>
             </div>
             
             <button type="submit" class="btn btn-primary" style="width: 100%;">Send Message</button>

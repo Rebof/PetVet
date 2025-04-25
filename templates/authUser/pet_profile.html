@@ -10,6 +10,16 @@
 <div class="pet-feed-content">
     <div class="pet-profile-container">
         <!-- Header Section - Now matches appointments page -->
+        <div class="message-container">
+            {% for message in messages %}
+            <div class="message {% if message.tags %}{{ message.tags }}{% endif %}">
+                <span class="message-text">{{ message }}</span>
+                <button class="message-close" aria-label="Close message">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            {% endfor %}
+        </div>
         <div class="section-header">
             <div class="header-content">
                 <h1><i class="fas fa-paw"></i> {{ pet.name }}'s Profile</h1>
@@ -213,7 +223,64 @@
         margin: 0 auto;
         padding: 2rem;
     }
-    
+    /* Message styles - matches page design */
+.message-container {
+    margin-bottom: 2rem;
+    width: 100%;
+}
+
+.message {
+    padding: 1rem 1.5rem;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 0.5rem;
+    font-size: 0.95rem;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+}
+
+.message.success {
+    background-color: rgba(78, 205, 196, 0.15);
+    border-left: 4px solid #4ECDC4;
+    color: #2D3142;
+}
+
+.message.error {
+    background-color: rgba(255, 107, 107, 0.15);
+    border-left: 4px solid #FF6B6B;
+    color: #2D3142;
+}
+
+.message.warning {
+    background-color: rgba(255, 193, 7, 0.15);
+    border-left: 4px solid #FFC107;
+    color: #2D3142;
+}
+
+.message-info {
+    background-color: rgba(66, 165, 245, 0.15);
+    border-left: 4px solid #42A5F5;
+    color: #2D3142;
+}
+
+.message-close {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: inherit;
+    margin-left: 1rem;
+    opacity: 0.7;
+    transition: opacity 0.3s ease;
+}
+
+.message-close:hover {
+    opacity: 1;
+}
+
+.message-text {
+    flex-grow: 1;
+}
     /* Header Section - consistent with appointments */
     .pet-feed-content .section-header {
         margin-bottom: 2rem;
@@ -694,6 +761,12 @@
 </style>
 
 <script>
+    // Message close functionality
+document.querySelectorAll('.message-close').forEach(button => {
+    button.addEventListener('click', (e) => {
+        e.target.closest('.message').remove();
+    });
+});
     document.addEventListener('DOMContentLoaded', function() {
         // Toggle between view and edit modes
         const toggleEdit = document.getElementById('toggleEdit');

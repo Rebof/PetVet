@@ -6,7 +6,18 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
 <div class="pet-feed-content">
+    
 <div class="post-detail-wrapper">
+    <div class="message-container">
+        {% for message in messages %}
+        <div class="message {% if message.tags %}{{ message.tags }}{% endif %}">
+            <span class="message-text">{{ message }}</span>
+            <button class="message-close" aria-label="Close message">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        {% endfor %}
+    </div>
     <div class="post-detail-container">
         <!-- Main Content Column -->
         <div class="main-content">

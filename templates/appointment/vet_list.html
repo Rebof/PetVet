@@ -35,7 +35,7 @@
         <!-- Vet Cards Grid - updated to match appointments styling -->
         <div class="vet-grid">
             {% for vet in vets %}
-            <div class="vet-card" data-experience="{{ vet.experience_years|default:0 }}" data-location="{{ vet.city|default:''|lower }}">
+            <div class="vet-card" data-experience="{{ vet.experience_years|default:0 }}" data-location="{{ vet.city|default:''|lower }}" data-verified="{{ vet.verified|yesno:'true,false' }}">
                 <div class="vet-card-header">
                     <div class="vet-avatar">
                         {% if vet.user.vetprofile.vet_image %}
@@ -43,12 +43,14 @@
                         {% else %}
                             <img src="/static/assets/default-avatar.png" alt="{{ vet.user.full_name }}">
                         {% endif %}
-                        {% if vet.verified %}
-                        <span class="verification-badge"><i class="fas fa-check-circle"></i> Verified</span>
-                        {% endif %}
                     </div>
                     <div class="vet-info">
-                        <h3>Dr. {{ vet.user.full_name }}</h3>
+                        <div class="vet-name-container">
+                            <h3>Dr. {{ vet.user.full_name }}</h3>
+                            {% if vet.verified %}
+                            <div class="verification-badge-inline"><i class="fas fa-check-circle"></i> Verified</div>
+                            {% endif %}
+                        </div>
                         <div class="vet-meta">
                             {% if vet.clinic_name %}
                             <span class="clinic">
@@ -76,7 +78,6 @@
                                 <span>{{ rating|floatformat:1 }} ({{ vet.reviews.count }} reviews)</span>
                             {% endwith %}
                         </div>
-                        
                     </div>
                 </div>
                 
@@ -266,6 +267,28 @@
         background-color: white;
     }
     
+    /* New styles for the name container and inline verification badge */
+    .pet-feed-content .vet-name-container {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin-bottom: 0.5rem;
+        flex-wrap: wrap;
+    }
+    
+    .pet-feed-content .verification-badge-inline {
+        display: flex;
+        align-items: center;
+        gap: 0.3rem;
+        font-size: 0.7rem;
+        font-weight: 600;
+        padding: 0.2rem 0.5rem;
+        border-radius: 50px;
+        background-color: rgba(78, 205, 196, 0.2);
+        color: #4ECDC4;
+    }
+    
+    /* Keep the original verification badge style for reference */
     .pet-feed-content .verification-badge {
         position: absolute;
         bottom: -5px;
@@ -279,6 +302,7 @@
         gap: 0.3rem;
         background-color: rgba(78, 205, 196, 0.2);
         color: #4ECDC4;
+        z-index: 10; 
     }
     
     .pet-feed-content .vet-info {
@@ -288,8 +312,8 @@
     .pet-feed-content .vet-info h3 {
         font-size: 1.2rem;
         color: #2D3142;
-        margin-bottom: 0.5rem;
         font-weight: 600;
+        margin: 0;
     }
     
     .pet-feed-content .vet-meta {
@@ -488,6 +512,10 @@
         .pet-feed-content .vet-card-footer {
             flex-direction: column;
         }
+        
+        .pet-feed-content .vet-name-container {
+            justify-content: center;
+        }
     }
     
     @media (max-width: 480px) {
@@ -515,6 +543,25 @@
         const vetGrid = document.querySelector('.vet-grid');
         const resetFiltersBtn = document.getElementById('reset-filters');
         
+        // Function to ensure verification badges remain visible
+        function ensureVerificationBadgesVisible() {
+            vetCards.forEach(card => {
+                // Check if this vet is verified using the data attribute
+                const isVerified = card.dataset.verified === 'true';
+                
+                if (isVerified) {
+                    // Make sure the badge is visible
+                    const badge = card.querySelector('.verification-badge-inline');
+                    if (badge) {
+                        badge.style.display = 'flex';
+                    }
+                }
+            });
+        }
+        
+        // Call this function initially
+        ensureVerificationBadgesVisible();
+        
         // Sort functionality
         if (experienceSort) {
             experienceSort.addEventListener('change', function() {
@@ -534,18 +581,27 @@
                 if (locationSearch.value) {
                     filterByLocation();
                 }
+                
+                // Ensure verification badges are visible after sorting
+                ensureVerificationBadgesVisible();
             });
         }
         
         // Location search functionality
         if (locationSearch) {
-            locationSearch.addEventListener('input', filterByLocation);
+            locationSearch.addEventListener('input', function() {
+                filterByLocation();
+                // Ensure verification badges are visible after filtering
+                ensureVerificationBadgesVisible();
+            });
             
             // Clear search on ESC key
             locationSearch.addEventListener('keydown', function(e) {
                 if (e.key === 'Escape') {
                     this.value = '';
                     filterByLocation();
+                    // Ensure verification badges are visible after clearing filter
+                    ensureVerificationBadgesVisible();
                 }
             });
         }
@@ -556,6 +612,8 @@
                 if (experienceSort) experienceSort.value = '';
                 if (locationSearch) locationSearch.value = '';
                 filterByLocation();
+                // Ensure verification badges are visible after resetting filters
+                ensureVerificationBadgesVisible();
             });
         }
         
@@ -590,12 +648,28 @@
                         if (experienceSort) experienceSort.value = '';
                         if (locationSearch) locationSearch.value = '';
                         filterByLocation();
+                        // Ensure verification badges are visible after resetting filters
+                        ensureVerificationBadgesVisible();
                     });
                 }
             } else if (noResultsEl && vetCards.length > 0) {
                 noResultsEl.remove();
             }
         }
+        
+        // Add a MutationObserver to watch for changes to the DOM
+        // This will help ensure verification badges remain visible even if the DOM is modified
+        const observer = new MutationObserver(function(mutations) {
+            ensureVerificationBadgesVisible();
+        });
+        
+        // Start observing the vet grid for changes
+        observer.observe(vetGrid, { 
+            childList: true,
+            subtree: true,
+            attributes: true,
+            attributeFilter: ['style', 'class']
+        });
     });
 </script>
 {% endblock %}

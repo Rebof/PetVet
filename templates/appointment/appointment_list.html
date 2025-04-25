@@ -8,6 +8,16 @@
 
 <div class="pet-feed-content">
     <div class="appointments-container">
+        <div class="message-container">
+            {% for message in messages %}
+            <div class="message {% if message.tags %}{{ message.tags }}{% endif %}">
+                <span class="message-text">{{ message }}</span>
+                <button class="message-close" aria-label="Close message">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            {% endfor %}
+        </div>
         <!-- Header Section -->
         <div class="section-header">
             <div class="header-content">
@@ -101,7 +111,7 @@
                     <a href="{% url 'appointment:appointment_detail' appointment.id %}" class="btn btn-primary">
                         <i class="fas fa-info-circle"></i> View Details
                     </a>
-                    {% if appointment.status == 'paid_pending_approval' or appointment.status == 'confirmed' %}
+                    {% if appointment.status == 'paid_pending_approval' %}
                     <a href="{% url 'appointment:cancel_appointment' appointment.id %}" class="btn btn-outline cancel-btn">
                         <i class="fas fa-times"></i> Cancel Appointment
                     </a>
@@ -138,6 +148,139 @@
         margin: 0 auto;
         padding: 2rem;
     }
+
+    /* Message styles - matches appointments page design */
+.message-container {
+    max-width: 900px;
+    margin: 0 auto 2rem;
+    width: 100%;
+    padding: 0 2rem;
+}
+
+.message {
+    padding: 1rem 1.5rem;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1rem;
+    font-size: 0.95rem;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+    background-color: rgba(255, 255, 255, 0.98);
+    backdrop-filter: blur(5px);
+    border-left: 4px solid;
+    transition: all 0.3s ease;
+}
+
+.message.success {
+    border-left-color: #4ECDC4;
+    color: #2D3142;
+    background-color: rgba(78, 205, 196, 0.15);
+}
+
+.message.error {
+    border-left-color: #FF6B6B;
+    color: #2D3142;
+    background-color: rgba(255, 107, 107, 0.15);
+}
+
+.message.warning {
+    border-left-color: #FFC107;
+    color: #2D3142;
+    background-color: rgba(255, 193, 7, 0.15);
+}
+
+.message.info {
+    border-left-color: #42A5F5;
+    color: #2D3142;
+    background-color: rgba(66, 165, 245, 0.15);
+}
+
+.message-close {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: inherit;
+    margin-left: 1rem;
+    opacity: 0.7;
+    transition: all 0.3s ease;
+    padding: 0.25rem;
+    border-radius: 50%;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.message-close:hover {
+    opacity: 1;
+    background-color: rgba(0, 0, 0, 0.05);
+}
+
+.message-text {
+    flex-grow: 1;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.message-text::before {
+    font-family: "Font Awesome 6 Free";
+    font-weight: 900;
+    display: inline-block;
+    width: 1.25em;
+    font-size: 1.1em;
+}
+
+.message.success .message-text::before {
+    content: "\f058";
+    color: #4ECDC4;
+}
+
+.message.error .message-text::before {
+    content: "\f06a";
+    color: #FF6B6B;
+}
+
+.message.warning .message-text::before {
+    content: "\f071";
+    color: #FFC107;
+}
+
+.message.info .message-text::before {
+    content: "\f05a";
+    color: #42A5F5;
+}
+
+/* Animation for message appearing and disappearing */
+@keyframes slideIn {
+    from {
+        transform: translateY(-20px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+@keyframes fadeOut {
+    from {
+        opacity: 1;
+    }
+    to {
+        opacity: 0;
+    }
+}
+
+.message {
+    animation: slideIn 0.3s ease-out forwards;
+}
+
+.message.hide {
+    animation: fadeOut 0.3s ease-out forwards;
+}
     
     /* Header Section */
     .pet-feed-content .section-header {
@@ -584,6 +727,26 @@
 </style>
 
 <script>
+    // Message close functionality
+document.querySelectorAll('.message-close').forEach(button => {
+    button.addEventListener('click', (e) => {
+        const message = e.target.closest('.message');
+        message.classList.add('hide');
+        setTimeout(() => {
+            message.remove();
+        }, 300);
+    });
+});
+
+// Auto-hide messages after 5 seconds
+setTimeout(() => {
+    document.querySelectorAll('.message').forEach(message => {
+        message.classList.add('hide');
+        setTimeout(() => {
+            message.remove();
+        }, 300);
+    });
+}, 5000);
     document.addEventListener('DOMContentLoaded', function() {
         // Cache DOM elements
         const statusFilter = document.getElementById('status-filter');

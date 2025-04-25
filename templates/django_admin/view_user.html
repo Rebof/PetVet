@@ -28,9 +28,9 @@
                 {% endif %}
             </div>
         </div>
-        <div class="user-profile-actions">
+        <!-- <div class="user-profile-actions">
             <button type="button" class="btn btn-danger" onclick="confirmDelete('{{ user_obj.id }}', '{{ user_obj.username }}')">Delete User</button>
-        </div>
+        </div> -->
     </div>
 
     <div class="user-profile-details">
@@ -360,7 +360,6 @@
 <script>
 function confirmDelete(userId, username) {
     document.getElementById('deleteUserName').textContent = username;
-    document.getElementById('deleteForm').action = "{% url 'django_admin:delete_user' 0 %}".replace('0', userId);
     document.getElementById('deleteModal').style.display = 'flex';
 }
 
