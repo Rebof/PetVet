@@ -12,6 +12,7 @@ from django.contrib.auth.forms import PasswordChangeForm
 from django.utils.crypto import get_random_string
 from django.urls import reverse
 from appointment.models import Appointment
+import re
 
 User = get_user_model()
 
@@ -27,6 +28,12 @@ def change_password(request):
     if request.method == 'POST':
         form = PasswordChangeForm(request.user, request.POST)
         if form.is_valid():
+            new_password = form.cleaned_data.get('new_password1')
+
+            if not validate_password_strength(new_password):
+                messages.error(request, 'Password must be at least 8 characters long, include at least one uppercase letter, one number, and one special character.')
+                return redirect('authUser:account_settings')
+
             user = form.save()
             # Keep the user logged in after password change
             update_session_auth_hash(request, user)
@@ -36,6 +43,15 @@ def change_password(request):
             for error in form.errors.values():
                 messages.error(request, error)
     return redirect('authUser:account_settings')
+
+def validate_password_strength(password):
+    """Validates that the password meets the required strength."""
+    if (len(password) < 8 or
+        not re.search(r'[A-Z]', password) or
+        not re.search(r'\d', password) or
+        not re.search(r'[!@#$%^&*(),.?":{}|<>]', password)):
+        return False
+    return True
 
 
 @login_required
@@ -83,11 +99,19 @@ def forgot_password(request):
             reset_link = request.build_absolute_uri(
                 reverse('authUser:reset_password', kwargs={'token': token})
             )
-
+            message = (
+    f"Hello {user.full_name},\n\n"
+    f"We received a request to reset your password.\n\n"
+    f"Please click the link below to reset your password:\n"
+    f"{reset_link}\n\n"
+    f"If you did not request a password reset, please ignore this email.\n\n"
+    f"Best regards,\n"
+    f"The PetVet Team"
+)
             # Send email
             send_mail(
                 'PetVet - Password Reset',
-                f'Click the following link to reset your password: {reset_link}',
+                message,
                 settings.DEFAULT_FROM_EMAIL,
                 [email],
                 fail_silently=False,
@@ -110,8 +134,12 @@ def reset_password(request, token):
         if request.method == 'POST':
             password1 = request.POST.get('new_password1')
             password2 = request.POST.get('new_password2')
-            
-            if password1 == password2:
+
+            if password1 != password2:
+                messages.error(request, 'Passwords do not match.')
+            elif not validate_password_strength(password1):
+                messages.error(request, 'Password must be at least 8 characters long, include at least one uppercase letter, one number, and one special character.')
+            else:
                 # Set new password
                 user.set_password(password1)
                 # Clear the token
@@ -120,8 +148,6 @@ def reset_password(request, token):
                 
                 messages.success(request, 'Your password has been reset successfully. You can now log in with your new password.')
                 return redirect('authUser:loginUser')
-            else:
-                messages.error(request, 'Passwords do not match.')
         
         return render(request, 'authUser/reset_password.html')
     
@@ -201,7 +227,15 @@ def RegisterView(request):
         # Send OTP email for pet_owner users
         if user_type == "pet_owner":
             subject = "Your OTP for Verification"
-            message = f"Hi {full_name},\n\nYour OTP for verification is: {user.otp}.\nPlease enter this OTP to complete your registration."
+            message = (
+    f"Hello {full_name},\n\n"
+    f"Thank you for registering with PetVet!\n\n"
+    f"Your One-Time Password (OTP) for verification is: {user.otp}\n\n"
+    f"Please enter this OTP to complete your registration.\n\n"
+    f"If you did not request this, please ignore this message.\n\n"
+    f"Best regards,\n"
+    f"The PetVet Team"
+)
             send_mail(
                 subject,    
                 message,
@@ -343,107 +377,146 @@ def user_info(request, user_id=None):
 
 
 def complete_profile(request):
-    if request.user.user_type == 'vet':
-        profile = VetProfile.objects.get(user=request.user)
-        profile_type = 'vet'
-    elif request.user.user_type == 'pet_owner':
-        profile = PetOwnerProfile.objects.get(user=request.user)
-        profile_type = 'pet_owner'
-    else:
+    if not request.user.is_authenticated:
+        messages.error(request, "You need to log in to complete your profile.")
+        return redirect('authUser:loginUser')
+    
+    try:
+        if request.user.user_type == 'vet':
+            profile = VetProfile.objects.get(user=request.user)
+            profile_type = 'vet'
+        elif request.user.user_type == 'pet_owner':
+            profile = PetOwnerProfile.objects.get(user=request.user)
+            profile_type = 'pet_owner'
+        else:
+            messages.error(request, "Invalid user type.")
+            return redirect('coreFunctions:index')
+    except (VetProfile.DoesNotExist, PetOwnerProfile.DoesNotExist):
+        messages.error(request, "Profile not found. Please contact support.")
         return redirect('coreFunctions:index')
     
     errors = {}
     
     if request.method == 'POST':
         # Common fields for both profiles
-        country = request.POST.get('country')
-        city = request.POST.get('city')
-        address = request.POST.get('address')
+        country = request.POST.get('country', '').strip()
+        city = request.POST.get('city', '').strip()
+        address = request.POST.get('address', '').strip()
         use_default_image = request.POST.get('use_default_image') == 'on'
         
-        # Update profile based on user type
+        # Validate common fields
+        if not country:
+            errors['country'] = "Country is required."
+        if not city:
+            errors['city'] = "City is required."
+        if len(address) > 500:
+            errors['address'] = "Address cannot exceed 500 characters."
+        
+        # Profile-specific validation
         if profile_type == 'pet_owner':
-            # Pet owner specific fields
-            bio = request.POST.get('bio')
-            pets_owned = request.POST.get('pets_owned')
+            bio = request.POST.get('bio', '').strip()
+            pets_owned = request.POST.get('pets_owned', '0').strip()
             
-            # Validate required fields
-            if not country:
-                errors['country'] = "Country is required."
-            if not city:
-                errors['city'] = "City is required."
+            try:
+                pets_owned = int(pets_owned)
+                if pets_owned < 0 or pets_owned > 20:
+                    errors['pets_owned'] = "Please enter a valid number between 0 and 20."
+            except ValueError:
+                errors['pets_owned'] = "Please enter a valid number."
             
-            # Update profile if no errors
-            if not errors:
-                profile.bio = bio
-                profile.pets_owned = pets_owned
-                profile.country = country
-                profile.city = city
-                profile.address = address
-                
-                # Handle profile image
-                if use_default_image:
-                    profile.human_image = 'default.png'
-                elif request.FILES.get('human_image'):
-                    profile.human_image = request.FILES.get('human_image')
-                
-                profile.save()
+            if len(bio) > 1000:
+                errors['bio'] = "Bio cannot exceed 1000 characters."
                 
         elif profile_type == 'vet':
-            # Vet specific fields
-            summary = request.POST.get('summary')
-            clinic_name = request.POST.get('clinic_name')
-            specialization = request.POST.get('specialization')
-            experience_years = request.POST.get('experience_years')
-            license_number = request.POST.get('license_number')
+            summary = request.POST.get('summary', '').strip()
+            clinic_name = request.POST.get('clinic_name', '').strip()
+            specialization = request.POST.get('specialization', '').strip()
+            experience_years = request.POST.get('experience_years', '0').strip()
+            license_number = request.POST.get('license_number', '').strip()
             
-            # Validate required fields
             if not clinic_name:
                 errors['clinic_name'] = "Clinic name is required."
+            elif len(clinic_name) > 100:
+                errors['clinic_name'] = "Clinic name cannot exceed 100 characters."
+                
             if not license_number:
                 errors['license_number'] = "License number is required."
-            if not country:
-                errors['country'] = "Country is required."
-            if not city:
-                errors['city'] = "City is required."
+            elif len(license_number) > 50:
+                errors['license_number'] = "License number cannot exceed 50 characters."
+                
+            try:
+                experience_years = int(experience_years)
+                if experience_years < 0 or experience_years > 60:
+                    errors['experience_years'] = "Please enter valid experience years (0-60)."
+            except ValueError:
+                errors['experience_years'] = "Please enter a valid number."
             
-            # Update profile if no errors
-            if not errors:
-                profile.summary = summary
-                profile.clinic_name = clinic_name
-                profile.specialization = specialization
-                profile.experience_years = experience_years if experience_years else 0
-                profile.license_number = license_number
+            if len(summary) > 2000:
+                errors['summary'] = "Summary cannot exceed 2000 characters."
+            if len(specialization) > 100:
+                errors['specialization'] = "Specialization cannot exceed 100 characters."
+        
+        # Image validation
+        if not use_default_image:
+            image_field = 'vet_image' if profile_type == 'vet' else 'human_image'
+            uploaded_image = request.FILES.get(image_field)
+            
+            if uploaded_image:
+                if uploaded_image.size > 5 * 1024 * 1024:  # 5MB limit
+                    errors[image_field] = "Image size cannot exceed 5MB."
+                elif not uploaded_image.content_type.startswith('image/'):
+                    errors[image_field] = "Only image files are allowed."
+        
+        if not errors:
+            try:
+                # Update profile based on user type
+                if profile_type == 'pet_owner':
+                    profile.bio = bio
+                    profile.pets_owned = pets_owned
+                else:
+                    profile.summary = summary
+                    profile.clinic_name = clinic_name
+                    profile.specialization = specialization
+                    profile.experience_years = experience_years
+                    profile.license_number = license_number
+                
+                # Update common fields
                 profile.country = country
                 profile.city = city
                 profile.address = address
                 
                 # Handle profile image
                 if use_default_image:
-                    profile.vet_image = 'default.png'
-                elif request.FILES.get('vet_image'):
-                    profile.vet_image = request.FILES.get('vet_image')
+                    setattr(profile, f"{profile_type}_image", 'default.png')
+                elif request.FILES.get(f"{profile_type}_image"):
+                    setattr(profile, f"{profile_type}_image", request.FILES.get(f"{profile_type}_image"))
                 
                 profile.save()
-        
-        # If no errors, mark profile as completed and redirect
-        if not errors:
-            request.user.profile_completed = True
-            request.user.save()
-            
-            if not request.user.status_verification:
-                if request.user.user_type == "vet":
-                    return redirect('authUser:profile_verification_in_progress')
-                else:
-                    return redirect('authUser:verify_otp')
-            
-            return redirect('coreFunctions:index')
+                
+                # Mark profile as completed
+                request.user.profile_completed = True
+                request.user.save()
+                
+                messages.success(request, "Profile successfully updated!")
+                
+                if not request.user.status_verification:
+                    if request.user.user_type == "vet":
+                        return redirect('authUser:profile_verification_in_progress')
+                    else:
+                        return redirect('authUser:verify_otp')
+                
+                return redirect('coreFunctions:index')
+                
+            except Exception as e:
+                messages.error(request, f"An error occurred while saving your profile: {str(e)}")
+                # Log the error here if you have logging set up
     
     # Prepare context for rendering the template
     context = {
         'profile': profile,
         'profile_type': profile_type,
-        'errors': errors
+        'errors': errors,
+        'messages': messages.get_messages(request)
     }
     
     return render(request, 'authUser/profile.html', context)
@@ -491,43 +564,94 @@ def verify_otp(request):
 
 @login_required
 def add_pet(request):
+    errors = {}
+    
     if request.method == 'POST':
-        name = request.POST.get('name')
-        species = request.POST.get('species')
-        breed = request.POST.get('breed')
-        age = request.POST.get('age')
-        color = request.POST.get('color')
-        weight = request.POST.get('weight')
-        vaccination_status = request.POST.get('vaccination_status')
-        allergies = request.POST.get('allergies')
-        medical_history = request.POST.get('medical_history')
+        # Get form data
+        name = request.POST.get('name', '').strip()
+        species = request.POST.get('species', '').strip()
+        breed = request.POST.get('breed', '').strip()
+        age = request.POST.get('age', '').strip()
+        color = request.POST.get('color', '').strip()
+        weight = request.POST.get('weight', '').strip()
+        vaccination_status = request.POST.get('vaccination_status', '').strip()
+        allergies = request.POST.get('allergies', '').strip()
+        medical_history = request.POST.get('medical_history', '').strip()
         pet_image = request.FILES.get('pet_image')
 
-        # Get the PetOwnerProfile linked to the current user
-        try:
-            owner_profile = PetOwnerProfile.objects.get(user=request.user)
-        except PetOwnerProfile.DoesNotExist:
-            # Handle case where the user is not a pet owner
-            return redirect('coreFunctions:index')  # or any fallback
+        # Validate required fields
+        if not name:
+            errors['name'] = "Pet name is required."
+        if not species:
+            errors['species'] = "Species is required."
+        if not age:
+            errors['age'] = "Age is required."
+        elif not age.isdigit() or int(age) < 0 or int(age) > 50:
+            errors['age'] = "Please enter a valid age (0-50)."
+        if not color:
+            errors['color'] = "Color is required."
 
-        # Create and save the pet instance
-        pet = Pet.objects.create(
-            owner=owner_profile,
-            name=name,
-            species=species,
-            breed=breed,
-            age=age,
-            color=color,
-            weight=weight if weight else None,
-            vaccination_status=vaccination_status,
-            allergies=allergies,
-            medical_history=medical_history,
-            pet_image=pet_image
-        )
+        # Validate optional fields
+        if weight and (not weight.replace('.', '').isdigit() or float(weight) <= 0):
+            errors['weight'] = "Please enter a valid weight."
+        
+        # Validate image if provided
+        if pet_image:
+            if pet_image.size > 5 * 1024 * 1024:  # 5MB limit
+                errors['pet_image'] = "Image size cannot exceed 5MB."
+            elif not pet_image.content_type.startswith('image/'):
+                errors['pet_image'] = "Only image files are allowed."
 
-        return redirect('coreFunctions:index')  # Replace with the correct URL name for pet list
-
-    return render(request, 'authUser/add_pet.html')
+        if not errors:
+            try:
+                # Get owner profile
+                owner_profile = PetOwnerProfile.objects.get(user=request.user)
+                
+                # Create pet with optional fields set to None if empty
+                pet = Pet.objects.create(
+                    owner=owner_profile,
+                    name=name,
+                    species=species,
+                    breed=breed if breed else None,
+                    age=age,
+                    color=color,
+                    weight=float(weight) if weight else None,
+                    vaccination_status=vaccination_status if vaccination_status else None,
+                    allergies=allergies if allergies else None,
+                    medical_history=medical_history if medical_history else None,
+                    pet_image=pet_image if pet_image else None
+                )
+                
+                messages.success(request, f"{pet.name} has been successfully added to your pets!")
+                return redirect('authUser:add_pet') 
+                
+            except PetOwnerProfile.DoesNotExist:
+                messages.error(request, "You need to complete your profile before adding pets.")
+                return redirect('authUser:complete_profile')
+            except Exception as e:
+                messages.error(request, f"An error occurred while adding your pet: {str(e)}")
+        else:
+            # Store the form data to repopulate the form
+            request.session['pet_form_data'] = {
+                'name': name,
+                'species': species,
+                'breed': breed,
+                'age': age,
+                'color': color,
+                'weight': weight,
+                'vaccination_status': vaccination_status,
+                'allergies': allergies,
+                'medical_history': medical_history
+            }
+            
+            for field, error in errors.items():
+                messages.error(request, error)
+    
+    # Check for saved form data in session
+    form_data = request.session.pop('pet_form_data', None)
+    context = {'form_data': form_data} if form_data else {}
+    
+    return render(request, 'authUser/add_pet.html', context)
 
 
 @login_required
@@ -543,37 +667,91 @@ def pet_profile(request, pet_id):
     ]
     
     if request.method == 'POST':
-        # Handle form submission for updating pet info
-        pet.name = request.POST.get('name')
-        pet.species = request.POST.get('species')
-        pet.breed = request.POST.get('breed')
-        pet.age = request.POST.get('age')
-        pet.color = request.POST.get('color', '')
+        errors = {}
         
-        # Handle optional fields
-        weight = request.POST.get('weight')
-        pet.weight = float(weight) if weight else None
+        # Get form data
+        name = request.POST.get('name', '').strip()
+        species = request.POST.get('species', '').strip()
+        breed = request.POST.get('breed', '').strip()
+        age = request.POST.get('age', '').strip()
+        color = request.POST.get('color', '').strip()
+        weight = request.POST.get('weight', '').strip()
+        vaccination_status = request.POST.get('vaccination_status', '').strip()
+        allergies = request.POST.get('allergies', '').strip()
+        medical_history = request.POST.get('medical_history', '').strip()
+        pet_image = request.FILES.get('pet_image')
+
+        # Validate required fields
+        if not name:
+            errors['name'] = "Pet name is required."
+        if not species:
+            errors['species'] = "Species is required."
+        elif species not in [choice[0] for choice in species_choices]:
+            errors['species'] = "Please select a valid species."
+        if not age:
+            errors['age'] = "Age is required."
+        elif not age.isdigit() or int(age) < 0 or int(age) > 50:
+            errors['age'] = "Please enter a valid age (0-50)."
+        if not color:
+            errors['color'] = "Color is required."
+        if not breed:  # Add breed validation if it's required
+            errors['breed'] = "Breed is required."
+
+        # Validate optional fields
+        if weight and (not weight.replace('.', '').isdigit() or float(weight) <= 0):
+            errors['weight'] = "Please enter a valid weight."
         
-        pet.vaccination_status = request.POST.get('vaccination_status', '')
-        pet.allergies = request.POST.get('allergies', '')
-        pet.medical_history = request.POST.get('medical_history', '')
-        
-        # Handle image upload
-        if 'pet_image' in request.FILES:
-            pet.pet_image = request.FILES['pet_image']
-        
-        try:
-            pet.save()
-            messages.success(request, f"{pet.name}'s profile has been updated successfully!")
-            return redirect('authUser:pet_profile', pet_id=pet.id)
-        except Exception as e:
-            messages.error(request, f"Error updating pet profile: {str(e)}")
-    
+        # Validate image if provided
+        if pet_image:
+            if pet_image.size > 5 * 1024 * 1024:  # 5MB limit
+                errors['pet_image'] = "Image size cannot exceed 5MB."
+            elif not pet_image.content_type.startswith('image/'):
+                errors['pet_image'] = "Only image files are allowed."
+
+        if not errors:
+            try:
+                # Update pet information
+                pet.name = name
+                pet.species = species
+                pet.breed = breed  # Don't set to None if it's required
+                pet.age = age
+                pet.color = color
+                pet.weight = float(weight) if weight else None
+                pet.vaccination_status = vaccination_status if vaccination_status else None
+                pet.allergies = allergies if allergies else None
+                pet.medical_history = medical_history if medical_history else None
+                
+                if pet_image:
+                    pet.pet_image = pet_image
+                
+                pet.save()
+                messages.success(request, f"{pet.name}'s profile has been updated successfully!")
+                return redirect('authUser:pet_profile', pet_id=pet.id)
+                
+            except Exception as e:
+                messages.error(request, f"An error occurred while updating the pet profile: {str(e)}")
+        else:
+            # Store the current valid values to repopulate the form
+            pet.name = name
+            pet.species = species
+            pet.breed = breed  # Keep the breed value
+            pet.age = age
+            pet.color = color
+            if weight and weight.replace('.', '').isdigit():
+                pet.weight = float(weight)
+            pet.vaccination_status = vaccination_status
+            pet.allergies = allergies
+            pet.medical_history = medical_history
+            
+            for field, error in errors.items():
+                messages.error(request, error)
+
     context = {
         'pet': pet,
         'species_choices': species_choices,
     }
     return render(request, 'authUser/pet_profile.html', context)
+
 
 
 @login_required
@@ -635,5 +813,5 @@ def delete_pet(request, pk):
         pet_name = pet.name
         pet.delete()
         messages.success(request, f"{pet_name} has been removed from your profile.")
-        return redirect('coreFunctions:index')  # Make sure this is your correct redirect target
+        return redirect('authUser:add_pet')
     raise Http404("Invalid request method")

@@ -1,3 +1,10 @@
+// Message close functionality
+document.querySelectorAll('.message-close').forEach(button => {
+    button.addEventListener('click', (e) => {
+        e.target.closest('.message').remove();
+    });
+});
+
 document.addEventListener('DOMContentLoaded', function() {
     // Initialize all interactive elements
     initializePostLikes();

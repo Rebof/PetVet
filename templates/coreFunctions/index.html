@@ -13,16 +13,6 @@
             
             <!-- Main Content Column -->
             <div class="main-content">
-                <div class="message-container">
-                    {% for message in messages %}
-                    <div class="message {% if message.tags %}{{ message.tags }}{% endif %}">
-                        <span class="message-text">{{ message }}</span>
-                        <button class="message-close" aria-label="Close message">
-                            <i class="fas fa-times"></i>
-                        </button>
-                    </div>
-                    {% endfor %}
-                </div>
                 <!-- Create Post Card -->
 <div class="create-post-card glass-card">
     <div class="create-post-input" id="create-post-trigger">

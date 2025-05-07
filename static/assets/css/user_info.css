@@ -1161,3 +1161,136 @@
         left: 100%;
     }
 }
+
+/* Message styles - matches user profile design */
+.message-container {
+  margin: 0 auto 2rem;
+  max-width: 1200px;
+  width: 100%;
+  padding: 0 1rem;
+}
+
+.message {
+  padding: 1rem 1.5rem;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+  font-size: 0.95rem;
+  box-shadow: 0 2px 15px rgba(0, 0, 0, 0.1);
+  background-color: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(5px);
+  border-left: 4px solid;
+  transition: all 0.3s ease;
+}
+
+.message.success {
+  border-left-color: #4ECDC4;
+  color: #2D3142;
+  background-color: rgba(78, 205, 196, 0.15);
+}
+
+.message.error {
+  border-left-color: #FF6B6B;
+  color: #2D3142;
+  background-color: rgba(255, 107, 107, 0.15);
+}
+
+.message.warning {
+  border-left-color: #FFC107;
+  color: #2D3142;
+  background-color: rgba(255, 193, 7, 0.15);
+}
+
+.message.info {
+  border-left-color: #42A5F5;
+  color: #2D3142;
+  background-color: rgba(66, 165, 245, 0.15);
+}
+
+.message-close {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: inherit;
+  margin-left: 1rem;
+  opacity: 0.7;
+  transition: all 0.3s ease;
+  padding: 0.25rem;
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.message-close:hover {
+  opacity: 1;
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+.message-text {
+  flex-grow: 1;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.message-text::before {
+  font-family: "Font Awesome 6 Free";
+  font-weight: 900;
+  display: inline-block;
+  width: 1.25em;
+  font-size: 1.1em;
+}
+
+.message.success .message-text::before {
+  content: "\f058";
+  color: #4ECDC4;
+}
+
+.message.error .message-text::before {
+  content: "\f06a";
+  color: #FF6B6B;
+}
+
+.message.warning .message-text::before {
+  content: "\f071";
+  color: #FFC107;
+}
+
+.message.info .message-text::before {
+  content: "\f05a";
+  color: #42A5F5;
+}
+
+/* Animation for message appearing and disappearing */
+@keyframes slideIn {
+  from {
+      transform: translateY(-20px);
+      opacity: 0;
+  }
+  to {
+      transform: translateY(0);
+      opacity: 1;
+  }
+}
+
+@keyframes fadeOut {
+  from {
+      opacity: 1;
+  }
+  to {
+      opacity: 0;
+  }
+}
+
+.message {
+  animation: slideIn 0.3s ease-out forwards;
+}
+
+.message.hide {
+  animation: fadeOut 0.3s ease-out forwards;
+}

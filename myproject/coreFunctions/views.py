@@ -127,14 +127,11 @@ def create_post(request):
         except Category.DoesNotExist:
             messages.error(request, 'Invalid category')
             return redirect('coreFunctions:index')
-        
         # Create slug from title
         slug = slugify(title)
-        
         # Check if slug already exists, if so, add a unique identifier
         if Post.objects.filter(slug=slug).exists():
             slug = f"{slug}-{shortuuid.uuid()[:6]}"
-        
         # Create post
         post = Post.objects.create(
             title=title,
@@ -143,7 +140,6 @@ def create_post(request):
             user=request.user,
             slug=slug
         )
-        
         # Add image if provided
         if image:
             post.image = image
@@ -219,30 +215,6 @@ def contact(request):
 def appointment(request):
     return render(request, 'coreFunctions/appointment.html')
 
-    if request.method == "POST":
-        title = request.POST.get("title")
-        category = request.POST.get("category")#outputs 1 as the html has category id in its value
-        body = request.POST.get("body")
-        image = request.FILES.get("image")
-
-        uid_key = shortuuid.uuid()
-        uniqueid = uid_key[:4]
-        
-        category = get_object_or_404(Category, id=category)  # retrieve the category instance
-
-        if title:
-            post = Post(  #can use create here too 
-                title=title,
-                image=image,
-                category=category,
-                body=body,
-                user=request.user,
-                slug=slugify(title) + "-" + str(uniqueid.lower())
-            )
-            post.save()
-            return redirect("coreFunctions:feed")
-
-    return JsonResponse({"data": "sent"})
 
 
 
@@ -522,17 +494,21 @@ def contact(request):
             # Format the email content
             email_subject = f"Contact Form: {subject}"
             email_message = (
-                f"Name: {name}\n"
-                f"Email: {email}\n\n"
-                f"Message:\n{message}"
-            )
+    f"Hello Admin,\n\n"
+    f"You have received a new message through the contact form.\n\n"
+    f"Name: {name}\n"
+    f"Email: {email}\n\n"
+    f"Message:\n{message}\n\n"
+    f"Best regards,\n"
+    f"The PetVet Website"
+)
             
             # Send email (consistent with your working OTP code)
             send_mail(
                 email_subject,
                 email_message,
                 settings.DEFAULT_FROM_EMAIL,  # From email
-                [settings.CONTACT_EMAIL],     # To email (add this to settings.py)
+                [settings.CONTACT_EMAIL],     # To email
                 fail_silently=False,
             )
             

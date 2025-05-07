@@ -44,6 +44,25 @@ def send_appointment_notification(appointment, subject, template, is_rejection=F
         html_message=html_message
     )
 
+def send_vet_appointment_notification(appointment, subject, template):
+    """
+    Send appointment notification email to the vet.
+    """
+    context = {
+        'appointment': appointment,
+        'amount': appointment.amount_paid / 100,  # Convert paisa to NPR
+    }
+    html_message = render_to_string(template, context)
+    plain_message = strip_tags(html_message)
+    
+    send_mail(
+        subject,
+        plain_message,
+        settings.DEFAULT_FROM_EMAIL,
+        [appointment.vet.user.email],  # Correctly sending to vet
+        html_message=html_message
+    )
+
 # Payment Views tested
 @login_required
 def initiate_khalti_payment(request, appointment_id):
@@ -125,7 +144,7 @@ def verify_khalti_payment(request, appointment_id):
         appointment.save()
         
         # Notify vet
-        send_appointment_notification(
+        send_vet_appointment_notification(
             appointment,
             "New Appointment Request",
             "appointment/new_appointment_email.html"
@@ -379,7 +398,7 @@ def book_with_credit(request, vet_id, schedule_id):
             appointment.save()
 
             # Send notification to vet
-            send_appointment_notification(
+            send_vet_appointment_notification(
                 appointment,
                 "New Appointment Booking",
                 "appointment/new_appointment_email.html"

@@ -87,3 +87,25 @@ function getCsrfToken() {
 function editPost(postSlug) {
     window.location.href = `/edit-post/${postSlug}/`;
 }
+
+
+// Message close functionality
+document.querySelectorAll('.message-close').forEach(button => {
+    button.addEventListener('click', (e) => {
+        const message = e.target.closest('.message');
+        message.classList.add('hide');
+        setTimeout(() => {
+            message.remove();
+        }, 300);
+    });
+});
+
+// Auto-hide messages after 5 seconds
+setTimeout(() => {
+    document.querySelectorAll('.message').forEach(message => {
+        message.classList.add('hide');
+        setTimeout(() => {
+            message.remove();
+        }, 300);
+    });
+}, 5000);

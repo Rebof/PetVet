@@ -24,7 +24,7 @@
             <div class="user-avatar">
                 {% if user.petownerprofile %}
                     {% if user.petownerprofile.human_image %}
-                        <img src="{{ user.petownerprofile.human_image.url }}" alt="{{ user.full_name }}" class="user-avatar-img">
+                        <img src="{{ user.petownerprofile.human_image.url }}?v={{ user.petownerprofile.last_updated.timestamp }}" alt="{{ user.full_name }}" class="user-avatar-img">
                     {% else %}
                         <div class="no-image">
                             <i class="fas fa-user-circle"></i>
@@ -32,7 +32,7 @@
                     {% endif %}
                 {% elif user.vetprofile %}
                     {% if user.vetprofile.vet_image %}
-                        <img src="{{ user.vetprofile.vet_image.url }}" alt="{{ user.full_name }}" class="user-avatar-img">
+                        <img src="{{ user.vetprofile.vet_image.url }}?v={{ request.user.vetprofile.last_updated|date:'U' }}" alt="{{ user.full_name }}" class="user-avatar-img">
                     {% else %}
                         <div class="no-image">
                             <i class="fas fa-user-circle"></i>

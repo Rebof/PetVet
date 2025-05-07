@@ -55,11 +55,7 @@
             <p>Send us a message directly</p>
         </div>
         
-        {% if messages %}
-  {% for message in messages %}
-    <div class="alert {{ message.tags }}">{{ message }}</div>
-  {% endfor %}
-{% endif %}
+        
         
         <form method="POST" action="{% url 'coreFunctions:contact' %}" class="contact-form" style="max-width: 600px; margin: 0 auto;">
             {% csrf_token %}

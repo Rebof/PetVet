@@ -66,6 +66,7 @@ class VetProfile(models.Model):
     status_change = models.DateTimeField(null=True, blank=True)
     # blocked = models.ManyToManyField(User, blank=True, related_name="blocked")
     slug = models.SlugField(max_length=200, unique=True, blank=True)  # Add slug field
+    last_updated = models.DateTimeField(auto_now=True)
 
     date = models.DateTimeField(auto_now_add=True, null=True, blank=True)
 
@@ -113,6 +114,7 @@ class PetOwnerProfile(models.Model):
     verified = models.BooleanField(default=False)
     slug = models.SlugField(max_length=200, unique=True, blank=True)
     credit_balance = models.PositiveIntegerField(default=0)
+    last_updated = models.DateTimeField(auto_now=True)
 
 
     def save(self, *args, **kwargs):
@@ -128,7 +130,7 @@ class PetOwnerProfile(models.Model):
 class Pet(models.Model):
     owner = models.ForeignKey(PetOwnerProfile, on_delete=models.CASCADE, related_name='pets')
     name = models.CharField(max_length=100)
-    breed = models.CharField(max_length=100)
+    breed = models.CharField(max_length=100, null=True, blank=True)
     species = models.CharField(max_length=100)
     age = models.PositiveIntegerField()
     pet_image = models.ImageField(upload_to='pet_images/', default="default-pet.png" ,null=True, blank=True)

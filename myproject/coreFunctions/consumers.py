@@ -39,7 +39,7 @@ class ChatConsumer(WebsocketConsumer):
             
             # Create and save the chat message
             chat_message = ChatMessage(
-                user=sender,  # Set user as sender (adjust if needed)
+                user=sender,  # Set user as sender 
                 sender=sender,
                 receiver=receiver,
                 message=message,

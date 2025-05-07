@@ -35,13 +35,13 @@
                 {% if request.user.is_authenticated %}
     {% if request.user.petownerprofile %}
         {% if request.user.petownerprofile.human_image %}
-            <img src="{{ request.user.petownerprofile.human_image.url }}" alt="{{ request.user.username }}" class="user-avatar">
+            <img src="{{ request.user.petownerprofile.human_image.url }}?v={{ user.petownerprofile.last_updated|date:'U' }}" alt="{{ request.user.username }}" class="user-avatar">
         {% else %}
             <img src="/static/assets/default-avatar.png" alt="{{ request.user.username }}" class="user-avatar">
         {% endif %}
     {% elif request.user.vetprofile %}
         {% if request.user.vetprofile.vet_image %}
-            <img src="{{ request.user.vetprofile.vet_image.url }}" alt="{{ request.user.username }}" class="user-avatar">
+            <img src="{{ request.user.vetprofile.vet_image.url }}?v={{ request.user.vetprofile.last_updated|date:'U' }}" alt="{{ request.user.username }}" class="user-avatar">
         {% else %}
             <img src="/static/assets/default-avatar.png" alt="{{ request.user.username }}" class="user-avatar">
         {% endif %}
