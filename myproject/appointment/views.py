@@ -18,7 +18,7 @@ from authUser.models import Review
 
 
 # Khalti Configuration
-KHALTI_SECRET_KEY = 'key 669c9d57a23f42edbd586629b54b0a25'
+KHALTI_SECRET_KEY = ''
 KHALTI_PUBLIC_KEY = 'key aa619b6a9ea94e4fa2cddd9eb1541d27'
 KHALTI_BASE_URL = 'https://a.khalti.com/api/v2/epayment'
 
